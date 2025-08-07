@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
+import VerifyEmail from "./verify";
 
 // Zod Schema
 const formSchema = z.object({
@@ -128,6 +129,9 @@ export default function InventorySignup() {
     try {
       console.log("Form submitted:", data);
       // Here you would typically send the data to your API
+      {
+        <VerifyEmail />;
+      }
       // await createAccount(data)
     } catch (error) {
       console.error("Submission error:", error);
