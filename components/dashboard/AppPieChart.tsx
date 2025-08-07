@@ -6,7 +6,7 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "./ui/chart";
+} from "../ui/chart";
 import { Label, Pie, PieChart } from "recharts";
 
 const AppPieChart = () => {

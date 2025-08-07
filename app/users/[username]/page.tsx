@@ -1,4 +1,4 @@
-import CardList from "@/components/CardList";
+import CardList from "@/components/dashboard/CardList";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -17,9 +17,9 @@ import { Progress } from "@/components/ui/progress";
 import { BadgeCheck, Candy, Citrus, Shield } from "lucide-react";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import EditUser from "@/components/EditUser";
+import EditUser from "@/components/dashboard/EditUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AppLineChart from "@/components/AppLineChart";
+import AppLineChart from "@/components/dashboard/AppLineChart";
 
 const SingleUserPage = () => {
   return (

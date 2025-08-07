@@ -1,7 +1,7 @@
 import { latestTransactions, popularContent } from "@/constants/carddata";
-import { Card, CardContent, CardFooter, CardTitle } from "./ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "../ui/card";
 import Image from "next/image";
-import { Badge } from "./ui/badge";
+import { Badge } from "../ui/badge";
 
 const CardList = ({ title }: { title: string }) => {
   const List =
