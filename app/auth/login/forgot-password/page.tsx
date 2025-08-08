@@ -100,18 +100,18 @@ export default function Component() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-10 left-10">
-            <Package className="w-8 h-8 text-primary" />
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-10 left-40">
+            <Package className="w-20 h-20 text-primary" />
           </div>
           <div className="absolute top-32 right-20">
-            <Warehouse className="w-6 h-6 text-secondary" />
+            <Warehouse className="w-20 h-20 text-secondary" />
           </div>
-          <div className="absolute bottom-20 left-20">
-            <BarChart3 className="w-7 h-7 text-primary" />
+          <div className="absolute bottom-20 left-60">
+            <BarChart3 className="w-20 h-20 text-primary" />
           </div>
-          <div className="absolute bottom-32 right-10">
-            <Package className="w-5 h-5 text-secondary" />
+          <div className="absolute bottom-32 right-52">
+            <Package className="w-20 h-20 text-secondary" />
           </div>
         </div>
 

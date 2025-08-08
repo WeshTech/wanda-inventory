@@ -91,18 +91,18 @@ export default function Component() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10">
-          <Package className="w-8 h-8 text-primary" />
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-10 left-40">
+          <Package className="w-20 h-20 text-primary" />
         </div>
         <div className="absolute top-32 right-20">
-          <Warehouse className="w-6 h-6 text-secondary" />
+          <Warehouse className="w-20 h-20 text-secondary" />
         </div>
-        <div className="absolute bottom-20 left-20">
-          <BarChart3 className="w-7 h-7 text-primary" />
+        <div className="absolute bottom-20 left-60">
+          <BarChart3 className="w-20 h-20 text-primary" />
         </div>
-        <div className="absolute bottom-32 right-10">
-          <Package className="w-5 h-5 text-secondary" />
+        <div className="absolute bottom-32 right-52">
+          <Package className="w-20 h-20 text-secondary" />
         </div>
       </div>
 
@@ -182,14 +182,14 @@ export default function Component() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-0 top-0 h-11 px-3 hover:bg-transparent"
+                            className="group absolute right-0 top-0 h-11 px-3 hover:bg-transparent"
                             onClick={() => setShowPassword(!showPassword)}
                             disabled={isLoading}
                           >
                             {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-gray-400" />
+                              <EyeOff className="h-4 w-4 text-gray-400 transition-transform duration-200 group-hover:scale-125" />
                             ) : (
-                              <Eye className="h-4 w-4 text-gray-400" />
+                              <Eye className="h-4 w-4 text-gray-400 transition-transform duration-200 group-hover:scale-125" />
                             )}
                           </Button>
                         </div>
@@ -223,7 +223,9 @@ export default function Component() {
                         disabled={isLoading}
                         type="button"
                       >
-                        Forgot password?
+                        <Link href="/auth/login/forgot-password">
+                          Forgot password?
+                        </Link>
                       </Button>
                     </FormItem>
                   )}
@@ -232,7 +234,7 @@ export default function Component() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-secondary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="group w-full h-11 bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-secondary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -242,8 +244,10 @@ export default function Component() {
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
-                      <span>Sign In</span>
-                      <ArrowRight className="w-4 h-4 transition-all duration-200 group-hover:scale-125" />{" "}
+                      <span className="transition-transform duration-200 group-hover:translate-x-1">
+                        Sign In
+                      </span>
+                      <ArrowRight className="w-4 h-4 transition-all duration-200 group-hover:scale-125 group-hover:translate-x-1" />
                     </div>
                   )}
                 </Button>
