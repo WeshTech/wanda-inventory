@@ -358,82 +358,103 @@ export function UsersTable() {
 
   return (
     <div className="grid gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        {/* Search Input - Full width on mobile, constrained on larger screens */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by name or email..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+            className="w-full rounded-lg bg-background pl-10 pr-3 h-10"
             value={globalFilter ?? ""}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
+
+        {/* Action Buttons - Wrap on small screens, stay in row on larger */}
+        <div className="flex flex-wrap gap-2 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none min-w-[100px]"
+            onClick={handleExport}
+          >
             <Download className="mr-2 h-4 w-4" />
-            Export
+            <span className="hidden lg:flex">Export</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={handleImport}>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none min-w-[100px]"
+            onClick={handleImport}
+          >
             <Upload className="mr-2 h-4 w-4" />
-            Import
+            <span className="hidden lg:flex">Import</span>
           </Button>
-          <Button size="sm" onClick={() => setIsInviteDialogOpen(true)}>
+
+          <Button
+            size="sm"
+            className="flex-1 sm:flex-none min-w-[120px]"
+            onClick={() => setIsInviteDialogOpen(true)}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
-            Invite Users
+            <span className="sr-only sm:not-sr-only">Invite Users</span>
           </Button>
         </div>
       </div>
 
       <div className="rounded-lg border shadow-sm">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+        <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  No users found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       <DataTablePagination table={table} />
 
