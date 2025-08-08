@@ -1,3 +1,5 @@
+//
+
 "use client";
 
 import {
@@ -32,18 +34,28 @@ const AppBarChart = () => {
   ];
   return (
     <div>
-      <h1 className="text-lg font-medium mb-6 ">Total revenue</h1>
+      <h1 className="text-lg font-medium mb-6">Total revenue</h1>
       <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-        <BarChart accessibilityLayer data={chartData}>
+        <BarChart
+          accessibilityLayer
+          data={chartData}
+          margin={{
+            top: 10,
+            right: 10,
+            left: 10,
+            bottom: 10,
+          }}
+        >
           <CartesianGrid vertical={false} />
           <XAxis
             dataKey="month"
             tickLine={false}
-            tickMargin={10}
+            tickMargin={5}
             axisLine={false}
             tickFormatter={(value) => value.slice(0, 3)}
+            padding={{ left: 10, right: 10 }}
           />
-          <YAxis tickLine={false} tickMargin={10} axisLine={false} />
+          <YAxis tickLine={false} tickMargin={5} axisLine={false} width={30} />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
