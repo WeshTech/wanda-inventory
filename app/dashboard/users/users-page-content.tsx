@@ -10,8 +10,8 @@ export default function UsersPageContent() {
   const userCount = 5; // This would typically come from a data source
 
   return (
-    <div className="flex min-h-screen max-w-screen w-full flex-col bg-muted/40 p-2 lg:p-8">
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background/95 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-4">
+    <div className="flex min-h-screen max-w-screen w-full flex-col bg-muted/40 p-2 lg:p-4">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background/95 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-4 m-4">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold sm:text-2xl">Users & Invites</h1>
           <span className="flex sm:hidden items-center justify-center rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground">
@@ -19,9 +19,9 @@ export default function UsersPageContent() {
           </span>
         </div>
       </header>
-      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+      <div className="grid flex-1 items-start gap-4 p-4 sm:px-4 sm:py-0 md:gap-8">
         <Tabs defaultValue="users">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsList className="grid lg:w-1/2 w-full grid-cols-3 ">
             {" "}
             {/* Adjusted grid-cols */}
             <TabsTrigger value="users">Users ({userCount})</TabsTrigger>
@@ -41,7 +41,7 @@ export default function UsersPageContent() {
             <RolesTable />
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
     </div>
   );
 }

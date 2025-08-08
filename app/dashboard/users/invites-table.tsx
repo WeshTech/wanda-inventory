@@ -217,7 +217,7 @@ export function InvitesTable() {
         {/* No export/import/invite buttons for invites table as per previous request, but can be added */}
       </div>
 
-      <div className="rounded-lg border shadow-sm">
+      <div className="rounded-lg border shadow-sm max-w-screen overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

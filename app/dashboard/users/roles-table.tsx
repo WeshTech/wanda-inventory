@@ -244,7 +244,7 @@ export function RolesTable() {
 
   return (
     <div className="grid gap-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center sm:flex-col lg:flex-row lg:justify-between gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -267,7 +267,7 @@ export function RolesTable() {
         </div>
       </div>
 
-      <div className="rounded-lg border shadow-sm">
+      <div className="rounded-lg border shadow-sm max-w-screen overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
