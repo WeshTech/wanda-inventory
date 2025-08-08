@@ -452,7 +452,7 @@ export default function InventorySignup() {
                   {form.formState.isSubmitting
                     ? "Creating Account..."
                     : "Create Account"}
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                  <ChevronRight className="ml-2 h-4 w-4 transition-all duration-200 group-hover:scale-125" />{" "}
                 </Button>
 
                 {/* Additional Links */}
@@ -460,7 +460,7 @@ export default function InventorySignup() {
                   <p className="text-sm text-gray-600">
                     Already have an account?{" "}
                     <a
-                      href="#"
+                      href="/auth/login"
                       className="text-primary hover:underline font-medium"
                     >
                       Sign in here
