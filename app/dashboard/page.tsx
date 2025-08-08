@@ -32,7 +32,7 @@ const HomePage = () => {
                   Dashboard Overview
                 </h1>
                 <p className="text-xs lg:text-sm text-muted-foreground">
-                  Monitor your inventory system performance
+                  Monitor your inventory product performance
                 </p>
               </div>
             </div>

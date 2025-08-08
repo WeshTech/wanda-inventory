@@ -20,12 +20,19 @@ const Navbar = () => {
 
   return (
     <nav className="p-4 flex items-center justify-between sticky top-0 z-50 bg-background border-b">
-      {/* left */}
-      {/* collapseButton */}
-      <SidebarTrigger />
-      {/* right */}
+      {/* Left section with dashboard name */}
       <div className="flex items-center gap-4">
-        <Link href="/">Dashboard</Link>
+        <SidebarTrigger />
+        <Link
+          href="/"
+          className="text-xl font-semibold tracking-tight hidden sm:block"
+        >
+          Dashboard
+        </Link>
+      </div>
+
+      {/* Right section with controls */}
+      <div className="flex items-center gap-4">
         {/* theme menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -47,6 +54,7 @@ const Navbar = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
         {/* usermenu */}
         <DropdownMenu>
           <DropdownMenuTrigger>
