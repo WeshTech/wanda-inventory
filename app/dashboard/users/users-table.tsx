@@ -12,7 +12,15 @@ import {
   Trash2,
   Search,
 } from "lucide-react";
-import { toast } from "sonner"; // Updated import
+import { toast } from "sonner";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +67,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DataTablePagination } from "@/components/dashboard/TablePagination";
 
 type User = {
   id: string;
@@ -104,6 +113,55 @@ const MOCK_USERS: User[] = [
     role: "Member",
     email: "eve.adams@example.com",
   },
+  {
+    id: "6",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Frank White",
+    role: "Viewer",
+    email: "frank.white@example.com",
+  },
+  {
+    id: "7",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Grace Lee",
+    role: "Admin",
+    email: "grace.lee@example.com",
+  },
+  {
+    id: "8",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Henry King",
+    role: "Member",
+    email: "henry.king@example.com",
+  },
+  {
+    id: "9",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Ivy Queen",
+    role: "Viewer",
+    email: "ivy.queen@example.com",
+  },
+  {
+    id: "10",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Jack Black",
+    role: "Admin",
+    email: "jack.black@example.com",
+  },
+  {
+    id: "11",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Karen Green",
+    role: "Member",
+    email: "karen.green@example.com",
+  },
+  {
+    id: "12",
+    profilePhoto: "/placeholder.svg?height=40&width=40",
+    name: "Liam Blue",
+    role: "Viewer",
+    email: "liam.blue@example.com",
+  },
 ];
 
 const getRoleColor = (role: User["role"]) => {
@@ -120,7 +178,8 @@ const getRoleColor = (role: User["role"]) => {
 };
 
 export function UsersTable() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const [globalFilter, setGlobalFilter] = useState("");
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
@@ -129,19 +188,103 @@ export function UsersTable() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<User["role"]>("Member");
-  const [users, setUsers] = useState<User[]>(MOCK_USERS); // State to manage users for deletion/blocking
 
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery) {
-      return users;
-    }
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    return users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(lowerCaseQuery) ||
-        user.email.toLowerCase().includes(lowerCaseQuery)
-    );
-  }, [searchQuery, users]);
+  const columns: ColumnDef<User>[] = useMemo(
+    () => [
+      {
+        accessorKey: "profilePhoto",
+        header: "Photo",
+        cell: ({ row }) => (
+          <Image
+            src={row.original.profilePhoto || "/placeholder.svg"}
+            alt={`${row.original.name}'s profile photo`}
+            width={40}
+            height={40}
+            className="rounded-full object-cover"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => (
+          <div className="font-medium">{row.original.name}</div>
+        ),
+      },
+      {
+        accessorKey: "role",
+        header: "Role",
+        cell: ({ row }) => (
+          <Badge className={getRoleColor(row.original.role)}>
+            {row.original.role}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+        cell: ({ row }) => <div>{row.original.email}</div>,
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const user = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button aria-haspopup="true" size="icon" variant="ghost">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit User
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleBlockUser(user)}>
+                  <Ban className="mr-2 h-4 w-4" />
+                  Block User
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleDeleteUser(user)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete User
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+        enableSorting: false,
+        enableHiding: false,
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
+    state: {
+      globalFilter,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 10, // Default page size
+      },
+    },
+  });
 
   const handleInviteUser = () => {
     console.log("Inviting user:", inviteEmail, "with role:", inviteRole);
@@ -185,6 +328,7 @@ export function UsersTable() {
   const confirmBlockUser = () => {
     if (selectedUser) {
       console.log("Blocking user:", selectedUser.name);
+      setUsers(users.filter((u) => u.id !== selectedUser.id)); // Remove from local state for demo
       toast.warning("User Blocked", {
         description: `${selectedUser.name} has been blocked.`,
       });
@@ -202,7 +346,7 @@ export function UsersTable() {
   const confirmDeleteUser = () => {
     if (selectedUser) {
       console.log("Deleting user:", selectedUser.name);
-      setUsers(users.filter((user) => user.id !== selectedUser.id));
+      setUsers(users.filter((u) => u.id !== selectedUser.id)); // Remove from local state for demo
       toast.error("User Deleted", {
         description: `${selectedUser.name} has been permanently deleted.`,
       });
@@ -221,8 +365,8 @@ export function UsersTable() {
             type="search"
             placeholder="Search by name or email..."
             className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={globalFilter ?? ""}
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
           />
         </div>
         <div className="flex gap-2">
@@ -244,73 +388,44 @@ export function UsersTable() {
       <div className="rounded-lg border shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[60px]">Photo</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="w-[80px]">Actions</TableHead>
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
           </TableHeader>
           <TableBody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <Image
-                      src={user.profilePhoto || "/placeholder.svg"}
-                      alt={`${user.name}'s profile photo`}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>
-                    <Badge className={getRoleColor(user.role)}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit User
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleBlockUser(user)}>
-                          <Ban className="mr-2 h-4 w-4" />
-                          Block User
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteUser(user)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
                   No users found.
@@ -320,6 +435,7 @@ export function UsersTable() {
           </TableBody>
         </Table>
       </div>
+      <DataTablePagination table={table} />
 
       {/* Invite User Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
