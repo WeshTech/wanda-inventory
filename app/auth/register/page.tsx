@@ -217,7 +217,7 @@ export default function InventorySignup() {
 
       {/* Right Side - Signup Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
-        <Card className="w-full m-5">
+        <Card className="w-full mx-2 my-2 sm:mx-3 sm:my-3 md:mx-4 md:my-4 lg:mx-5 lg:my-5">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4 lg:hidden">
               <Package className="h-10 w-10 text-primary" />

@@ -98,20 +98,20 @@ export default function Component() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
+      <div className="relative min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center p-4">
+        {/* Enhanced Background Pattern */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none z-0 overflow-visible">
           <div className="absolute top-10 left-40">
-            <Package className="w-20 h-20 text-primary" />
+            <Package className="w-16 h-16 md:w-24 md:h-24 text-primary-600/50" />
           </div>
           <div className="absolute top-32 right-20">
-            <Warehouse className="w-20 h-20 text-secondary" />
+            <Warehouse className="w-16 h-16 md:w-24 md:h-24 text-secondary-600/50" />
           </div>
           <div className="absolute bottom-20 left-60">
-            <BarChart3 className="w-20 h-20 text-primary" />
+            <BarChart3 className="w-16 h-16 md:w-24 md:h-24 text-primary-600/50" />
           </div>
           <div className="absolute bottom-32 right-52">
-            <Package className="w-20 h-20 text-secondary" />
+            <Package className="w-16 h-16 md:w-24 md:h-24 text-secondary-600/50" />
           </div>
         </div>
 
@@ -187,18 +187,18 @@ export default function Component() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10">
-          <Package className="w-8 h-8 text-primary" />
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-10 left-40">
+          <Package className="w-20 h-20 text-primary" />
         </div>
         <div className="absolute top-32 right-20">
-          <Warehouse className="w-6 h-6 text-secondary" />
+          <Warehouse className="w-20 h-20 text-secondary" />
         </div>
-        <div className="absolute bottom-20 left-20">
-          <BarChart3 className="w-7 h-7 text-primary" />
+        <div className="absolute bottom-20 left-60">
+          <BarChart3 className="w-20 h-20 text-primary" />
         </div>
-        <div className="absolute bottom-32 right-10">
-          <Package className="w-5 h-5 text-secondary" />
+        <div className="absolute bottom-32 right-52">
+          <Package className="w-20 h-20 text-secondary" />
         </div>
       </div>
 
@@ -208,7 +208,15 @@ export default function Component() {
           <CardHeader className="text-center pb-2">
             {/* Logo/Icon Section */}
             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-              <Shield className="w-8 h-8 text-white" />
+              <div className="relative inline-block w-8 h-8">
+                {/* Gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+
+                {/* Icon with white fill that will show the gradient beneath */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+              </div>{" "}
             </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               Forgot Password?
