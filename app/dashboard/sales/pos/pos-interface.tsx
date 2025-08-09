@@ -9,7 +9,7 @@ import { CheckoutModal } from "./checkout-modal";
 const MOCK_PRODUCTS = [
   {
     id: "prod-001",
-    image: "/ripe-red-apple.png",
+    image: "/product1.jpg",
     serialNumber: "SN001",
     name: "Apple (Red)",
     category: "Fruits",
@@ -18,7 +18,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-002",
-    image: "/ripe-banana.png",
+    image: "/product2.jpg",
     serialNumber: "SN002",
     name: "Banana (Yellow)",
     category: "Fruits",
@@ -27,7 +27,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-003",
-    image: "/fresh-spinach.png",
+    image: "/product3.jpg",
     serialNumber: "SN003",
     name: "Spinach (Fresh)",
     category: "Vegetables",
@@ -36,7 +36,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-004",
-    image: "/glass-of-milk.png",
+    image: "/product4.jpg",
     serialNumber: "SN004",
     name: "Milk (Whole)",
     category: "Dairy",
@@ -45,7 +45,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-005",
-    image: "/assorted-breads.png",
+    image: "/product5.jpg",
     serialNumber: "SN005",
     name: "Bread (Wheat)",
     category: "Bakery",
@@ -54,7 +54,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-006",
-    image: "/roasted-chicken.png",
+    image: "/product6.jpg",
     serialNumber: "SN006",
     name: "Chicken Breast",
     category: "Meat",
@@ -63,7 +63,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-007",
-    image: "/assorted-soda-cans.png",
+    image: "/product7.jpg",
     serialNumber: "SN007",
     name: "Cola (Can)",
     category: "Beverages",
@@ -72,7 +72,7 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "prod-008",
-    image: "/assorted-cheese-platter.png",
+    image: "/product8.jpg",
     serialNumber: "SN008",
     name: "Cheddar Cheese",
     category: "Dairy",

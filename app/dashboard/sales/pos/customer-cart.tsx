@@ -1,30 +1,30 @@
-"use client";
+"use client"
 
-import type React from "react";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import type React from "react"
+import { ShoppingCart } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import Image from "next/image"
+import { Minus, Plus, Trash2 } from "lucide-react"
 
 interface CartItem {
-  id: string;
-  image: string;
-  name: string;
-  price: number;
-  quantity: number;
-  serialNumber: string;
+  id: string
+  image: string
+  name: string
+  price: number
+  quantity: number
+  serialNumber: string
 }
 
 interface CustomerCartProps {
-  cartItems: CartItem[];
-  onScan: (serialNumber: string) => void;
-  onUpdateQuantity: (productId: string, delta: number) => void;
-  onRemoveItem: (productId: string) => void;
-  totalCost: number;
-  onCheckout: () => void;
-  availableStock: { [key: string]: number };
+  cartItems: CartItem[]
+  onScan: (serialNumber: string) => void
+  onUpdateQuantity: (productId: string, delta: number) => void
+  onRemoveItem: (productId: string) => void
+  totalCost: number
+  onCheckout: () => void
+  availableStock: { [key: string]: number }
 }
 
 export function CustomerCart({
@@ -38,14 +38,17 @@ export function CustomerCart({
 }: CustomerCartProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      onScan(e.currentTarget.value);
-      e.currentTarget.value = ""; // Clear input after scan
+      onScan(e.currentTarget.value)
+      e.currentTarget.value = "" // Clear input after scan
     }
-  };
+  }
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="text-2xl font-bold mb-4 text-primary">Customer Cart</h2>
+      <h2 className="text-2xl font-bold mb-4 text-primary flex items-center gap-2">
+        <ShoppingCart className="h-6 w-6" />
+        Customer Cart
+      </h2>
       <div className="relative mb-4">
         <Input
           type="text"
@@ -57,15 +60,10 @@ export function CustomerCart({
 
       <div className="flex-1 overflow-auto space-y-4 pr-2 -mr-2">
         {cartItems.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">
-            Your cart is empty. Scan or add products!
-          </p>
+          <p className="text-muted-foreground text-center py-8">Your cart is empty. Scan or add products!</p>
         ) : (
           cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm"
-            >
+            <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
               <Image
                 src={item.image || "/placeholder.svg"}
                 alt={item.name}
@@ -75,9 +73,7 @@ export function CustomerCart({
               />
               <div className="flex-1 grid gap-1">
                 <h3 className="font-medium">{item.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  ${item.price.toFixed(2)} / item
-                </p>
+                <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} / item</p>
                 <p className="text-sm font-semibold text-secondary">
                   Total: ${(item.price * item.quantity).toFixed(2)}
                 </p>
@@ -93,9 +89,7 @@ export function CustomerCart({
                   <Minus className="h-4 w-4" />
                   <span className="sr-only">Subtract quantity</span>
                 </Button>
-                <span className="font-medium w-6 text-center">
-                  {item.quantity}
-                </span>
+                <span className="font-medium w-6 text-center">{item.quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
@@ -130,12 +124,13 @@ export function CustomerCart({
 
       <Button
         size="lg"
-        className="w-full"
+        className="w-full flex items-center gap-2"
         onClick={onCheckout}
         disabled={cartItems.length === 0}
       >
+        <ShoppingCart className="h-5 w-5" />
         Checkout
       </Button>
     </div>
-  );
+  )
 }
