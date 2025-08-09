@@ -1,11 +1,4 @@
-import {
-  Inbox,
-  LayoutDashboard,
-  Package,
-  Search,
-  Settings,
-  Users,
-} from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Users } from "lucide-react";
 
 export const sidebarItems = [
   {
@@ -23,20 +16,25 @@ export const sidebarItems = [
     url: "/dashboard/inventory",
     icon: Package,
   },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
+  // {
+  //   title: "Sales",
+  //   url: "/dashboard/sales",
+  //   icon: ShoppingBag,
+  // },
+  // {
+  //   title: "Inbox",
+  //   url: "#",
+  //   icon: Inbox,
+  // },
 
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
+  // {
+  //   title: "Search",
+  //   url: "#",
+  //   icon: Search,
+  // },
+  // {
+  //   title: "Settings",
+  //   url: "#",
+  //   icon: Settings,
+  // },
 ];

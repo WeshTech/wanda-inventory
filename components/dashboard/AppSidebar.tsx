@@ -4,7 +4,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -26,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { ChevronUp, Plus, Projector, User2 } from "lucide-react";
+import { ChevronUp, Plus, Projector, ShoppingCart, User2 } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -77,10 +76,10 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Projects</SidebarGroupLabel>
-          <SidebarGroupAction title="Add Project">
-            <Plus /> <span className="sr-only">Add Project</span>
+        {/* <SidebarGroup>
+          <SidebarGroupLabel>Sales</SidebarGroupLabel>
+          <SidebarGroupAction title="Make Sale">
+            <Plus /> <span className="sr-only">Make Sale</span>
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -102,14 +101,14 @@ export const AppSidebar = () => {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
 
         {/* collapsible */}
         <Collapsible defaultOpen className="group/collapsible">
           <SidebarGroup>
             <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="flex items-center justify-between">
-                Customers
+              <SidebarGroupLabel className="flex items-center justify-between text-md">
+                Sales
                 <ChevronUp className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
               </SidebarGroupLabel>
             </CollapsibleTrigger>
@@ -118,17 +117,23 @@ export const AppSidebar = () => {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/" className="flex items-center gap-2">
-                        <Projector className="h-4 w-4" />
-                        <span>All Customers</span>
+                      <Link
+                        href="/dashboard/sales/pos"
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Make Sale</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href="/" className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        <span>Add Customers</span>
+                      <Link
+                        href="/dashboard/sales"
+                        className="flex items-center gap-2"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        <span>All Sales</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
