@@ -1,7 +1,7 @@
 import {
-  CalendarHeart,
   Inbox,
   LayoutDashboard,
+  Package,
   Search,
   Settings,
   Users,
@@ -19,15 +19,16 @@ export const sidebarItems = [
     icon: Users,
   },
   {
+    title: "Inventory",
+    url: "/dashboard/inventory",
+    icon: Package,
+  },
+  {
     title: "Inbox",
     url: "#",
     icon: Inbox,
   },
-  {
-    title: "Calender",
-    url: "#",
-    icon: CalendarHeart,
-  },
+
   {
     title: "Search",
     url: "#",
