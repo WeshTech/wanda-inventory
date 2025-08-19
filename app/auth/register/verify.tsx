@@ -110,7 +110,7 @@ export default function VerifyEmail() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <Mail className="w-6 h-6 text-blue-600" />
+            <Mail className="w-6 h-6 text-primary" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">
