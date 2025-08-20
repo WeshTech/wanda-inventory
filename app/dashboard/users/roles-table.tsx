@@ -118,7 +118,7 @@ const permissionActionsSchema = z.object({
   delete: z.boolean(),
 });
 
-const formSchema = z.object({
+const RegisterSchema = z.object({
   title: z
     .string()
     .min(2, {
@@ -147,8 +147,8 @@ export function RolesTable() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddRoleDialogOpen, setIsAddRoleDialogOpen] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof RegisterSchema>>({
+    resolver: zodResolver(RegisterSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -170,7 +170,7 @@ export function RolesTable() {
     form.setValue(`permissions.${moduleKey}.delete`, checked);
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
     const newRole: Role = {
       id: `r${roles.length + 1}`, // Simple ID generation
       activeUsers: 0, // New roles start with 0 active users
@@ -417,7 +417,7 @@ export function RolesTable() {
                                 control={form.control}
                                 name={
                                   `permissions.${module.key}.${action}` as Path<
-                                    z.infer<typeof formSchema>
+                                    z.infer<typeof RegisterSchema>
                                   >
                                 }
                                 render={({ field }) => (

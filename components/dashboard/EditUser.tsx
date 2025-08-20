@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
 
-const formSchema = z.object({
+const RegisterSchema = z.object({
   username: z
     .string()
     .min(2, { message: "Username must be at least 2 characters!" })
@@ -40,8 +40,8 @@ const formSchema = z.object({
 });
 
 const EditUser = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof RegisterSchema>>({
+    resolver: zodResolver(RegisterSchema),
     defaultValues: {
       username: "john.doe",
       email: "john.doe@gmail.com",

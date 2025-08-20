@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cookies } from "next/headers";
 import { Nunito } from "next/font/google";
+import ToastProvider from "@/components/providers/toast-provider";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default async function RootLayout({
             <main className="w-full">
               <div className="px-4">{children}</div>
             </main>
+            <ToastProvider />
           </SidebarProvider>
         </ThemeProvider>
       </body>

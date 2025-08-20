@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const formSchema = z.object({
+export const RegisterSchema = z.object({
   businessName: z
     .string()
     .min(2, "Business name must be at least 2 characters")
@@ -30,10 +30,9 @@ export const formSchema = z.object({
   ward: z.string().min(1, {
     message: "Please select your ward.",
   }),
-  location: z.string().min(1, "Please select a business location"),
   terms: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms and conditions",
   }),
 });
 
-export type FormData = z.infer<typeof formSchema>;
+export type FormData = z.infer<typeof RegisterSchema>;
