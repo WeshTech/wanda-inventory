@@ -26,6 +26,7 @@ export const RegisterUser = async (formData: RegisterData) => {
     county,
     constituency,
     ward,
+    code,
   } = validatedFields.data;
 
   try {
@@ -37,7 +38,10 @@ export const RegisterUser = async (formData: RegisterData) => {
       county,
       constituency,
       ward,
+      code: code || undefined,
     });
+
+    console.log(response.data);
 
     if (response.status === 201) {
       return {
