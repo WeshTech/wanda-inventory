@@ -41,7 +41,15 @@ export const RegisterUser = async (formData: RegisterData) => {
       code: code || undefined,
     });
 
-    console.log(response.data);
+    if (response.data?.verification === true) {
+      return {
+        status: true,
+        message:
+          response.data?.message ||
+          "Registration successful. Please verify your email.",
+        verification: true,
+      };
+    }
 
     if (response.status === 201) {
       return {

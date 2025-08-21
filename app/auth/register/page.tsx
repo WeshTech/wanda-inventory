@@ -46,6 +46,7 @@ import { type FormData, RegisterSchema } from "@/schemas/registrationSchema";
 import LocationSelector from "./location-selector";
 import { RegisterUser } from "@/server/auth/register";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const images = [
   "/images/pharmacy.jpg",
@@ -73,6 +74,7 @@ export default function MergedRegistration() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showVerificationStep, setShowVerificationStep] = useState(false);
+  const router = useRouter();
   const [verificationCode, setVerificationCode] = useState([
     "",
     "",
@@ -165,6 +167,7 @@ export default function MergedRegistration() {
       if (response.status === true) {
         toast.success(response.message);
         // Redirect or handle successful registration
+        router.replace("/auth/login");
       } else {
         toast.error(response.message);
       }
@@ -173,7 +176,7 @@ export default function MergedRegistration() {
       const response = await RegisterUser(data);
       console.log("Registration response:", response);
 
-      if (response.status === true) {
+      if (response.verification === true) {
         toast.success(response.message);
         setShowVerificationStep(true);
       } else {
