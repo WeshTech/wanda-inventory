@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,26 +32,17 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
-
-// Zod schema for form validation
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters long"),
-  rememberMe: z.boolean().optional(),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { LoginFormValues, loginSchema } from "@/schemas/loginSchema";
+import { LoginUser } from "@/server/auth/login";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function Component() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const router = useRouter();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -66,26 +56,20 @@ export default function Component() {
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     setError("");
+    setSuccess("");
 
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Call the server action
+    const result = await LoginUser(values);
 
-      // Simulate login logic
-      if (
-        values.email === "admin@inventory.com" &&
-        values.password === "password"
-      ) {
-        console.log("Login successful", values);
-        // Handle successful login
-      } else {
-        setError("Invalid email or password");
-      }
-    } catch (err) {
-      setError(`An error occurred. Please try again.${err}`);
-    } finally {
-      setIsLoading(false);
+    if (result.success) {
+      setSuccess(result.message);
+      toast.success(result.message);
+      router.replace("/dashboard");
+    } else {
+      setError(result.message);
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -124,10 +108,19 @@ export default function Component() {
 
           <CardContent className="space-y-6 pt-2">
             {error && (
-              <Alert className="border-red-200 bg-red-50">
-                <Shield className="h-4 w-4 text-red-600" />
+              <Alert variant="destructive" className="border-red-200 bg-red-50">
+                <Shield className="h-4 w-4" />
                 <AlertDescription className="text-red-700">
                   {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert className="border-green-200 bg-green-50">
+                <Shield className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
+                  {success}
                 </AlertDescription>
               </Alert>
             )}
@@ -253,7 +246,8 @@ export default function Component() {
                 </Button>
               </form>
             </Form>
-            {/* Add this section */}
+
+            {/* Registration Link */}
             <div className="text-center text-sm text-gray-600">
               Don&apos;t have an account?{" "}
               <Link

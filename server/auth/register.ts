@@ -1,5 +1,3 @@
-"use server";
-
 import { RegisterSchema } from "@/schemas/registrationSchema";
 import { axiosApi } from "@/utils/axios";
 import { z } from "zod";
