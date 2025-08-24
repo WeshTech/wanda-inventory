@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Sidebar,
@@ -31,8 +33,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
+import { useAuthStore } from "@/stores/authStore";
 
 export const AppSidebar = () => {
+  const { user } = useAuthStore();
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="">
@@ -47,7 +51,7 @@ export const AppSidebar = () => {
                   height={2500}
                   className="rounded-full h-8 w-8"
                 />
-                <p>Dev Wesh</p>
+                <p>{user?.name ? user.name : "Wanda Inventory"}</p>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

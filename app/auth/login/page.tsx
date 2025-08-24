@@ -36,6 +36,7 @@ import { LoginFormValues, loginSchema } from "@/schemas/loginSchema";
 import { LoginUser } from "@/server/auth/login";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function Component() {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,7 @@ export default function Component() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
+  const { setUser } = useAuthStore();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -62,6 +64,7 @@ export default function Component() {
     const result = await LoginUser(values);
 
     if (result.success) {
+      setUser(result.data.user);
       setSuccess(result.message);
       toast.success(result.message);
       router.replace("/dashboard");

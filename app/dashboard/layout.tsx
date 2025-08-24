@@ -1,5 +1,8 @@
+"use client";
+
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import Navbar from "@/components/dashboard/Navbar";
+import ClientAuthInitializer from "@/providers/auth-provider";
 
 export default function DashboardLayout({
   children,
@@ -7,14 +10,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen">
-      <AppSidebar />
+    <ClientAuthInitializer>
+      <div className="flex h-screen">
+        <AppSidebar />
 
-      <div className="flex-1 flex flex-col">
-        <Navbar />
+        <div className="flex-1 flex flex-col">
+          <Navbar />
 
-        {children}
+          {children}
+        </div>
       </div>
-    </div>
+    </ClientAuthInitializer>
   );
 }

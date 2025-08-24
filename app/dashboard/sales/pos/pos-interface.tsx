@@ -10,7 +10,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-001",
     image: "/product1.jpg",
-    serialNumber: "SN001",
+    serialNumber: "6967028107538",
     name: "Apple (Red)",
     category: "Fruits",
     stock: 10,
@@ -19,7 +19,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-002",
     image: "/product2.jpg",
-    serialNumber: "SN002",
+    serialNumber: "6974208800359",
     name: "Banana (Yellow)",
     category: "Fruits",
     stock: 15,
@@ -28,7 +28,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-003",
     image: "/product3.jpg",
-    serialNumber: "SN003",
+    serialNumber: "6978209900040",
     name: "Spinach (Fresh)",
     category: "Vegetables",
     stock: 8,
@@ -37,7 +37,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-004",
     image: "/product4.jpg",
-    serialNumber: "SN004",
+    serialNumber: "8557501254613",
     name: "Milk (Whole)",
     category: "Dairy",
     stock: 20,
@@ -46,7 +46,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-005",
     image: "/product5.jpg",
-    serialNumber: "SN005",
+    serialNumber: "6203019040133",
     name: "Bread (Wheat)",
     category: "Bakery",
     stock: 12,
@@ -55,7 +55,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-006",
     image: "/product6.jpg",
-    serialNumber: "SN006",
+    serialNumber: "6971536927533",
     name: "Chicken Breast",
     category: "Meat",
     stock: 7,
@@ -64,7 +64,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-007",
     image: "/product7.jpg",
-    serialNumber: "SN007",
+    serialNumber: "6939020440166",
     name: "Cola (Can)",
     category: "Beverages",
     stock: 30,
@@ -73,7 +73,7 @@ const MOCK_PRODUCTS = [
   {
     id: "prod-008",
     image: "/product8.jpg",
-    serialNumber: "SN008",
+    serialNumber: "6161101536646",
     name: "Cheddar Cheese",
     category: "Dairy",
     stock: 9,
