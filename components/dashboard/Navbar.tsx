@@ -14,9 +14,13 @@ import {
 import { Button } from "../ui/button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "../ui/sidebar";
+import { useAuthStore } from "@/stores/authStore";
+import { getInitials } from "@/utils/getInitials";
+import { logoutUser } from "@/server/auth/logout";
 
 const Navbar = () => {
   const { setTheme } = useTheme();
+  const { user } = useAuthStore();
 
   return (
     <nav className="p-4 flex items-center justify-between sticky top-0 z-50 bg-background border-b">
@@ -60,10 +64,12 @@ const Navbar = () => {
           <DropdownMenuTrigger>
             <Avatar>
               <AvatarImage src="/images/logo.jpg" />
-              <AvatarFallback>DW</AvatarFallback>
+              <AvatarFallback>
+                {getInitials(user?.name || "Wanda Inventory")}
+              </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent sideOffset={5}>
+          <DropdownMenuContent align="end" sideOffset={10} alignOffset={-8}>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
@@ -74,7 +80,10 @@ const Navbar = () => {
               <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive">
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={logoutUser} //
+            >
               <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
               Logout
             </DropdownMenuItem>

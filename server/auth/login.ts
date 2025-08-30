@@ -23,7 +23,10 @@ export const LoginUser = async (formData: LoginFormValues) => {
       password,
     });
 
+    console.log("Login response:", response);
+
     if (response.status === 200 && response.data.user) {
+      console.log("User data:", response.data.user);
       return {
         success: true,
         message: response.data?.message || "Login successful",

@@ -27,13 +27,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { ChevronUp, Plus, Projector, ShoppingCart, User2 } from "lucide-react";
+import {
+  ChevronUp,
+  LogOut,
+  Plus,
+  Projector,
+  Settings,
+  ShoppingCart,
+  User,
+  User2,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
 import { useAuthStore } from "@/stores/authStore";
+import { logoutUser } from "@/server/auth/logout";
 
 export const AppSidebar = () => {
   const { user } = useAuthStore();
@@ -184,9 +194,18 @@ export const AppSidebar = () => {
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Account</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem>
+                  <User className="h-[1.2rem] w-[1.2rem] mr-2" />
+                  Account
+                </DropdownMenuItem>
+
+                <DropdownMenuItem>
+                  <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
+                  Settings
+                </DropdownMenuItem>
+
+                <DropdownMenuItem variant="destructive" onClick={logoutUser}>
+                  <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
                   Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
