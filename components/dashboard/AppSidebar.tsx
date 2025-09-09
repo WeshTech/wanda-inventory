@@ -1,6 +1,4 @@
 "use client";
-
-import React from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -44,9 +42,19 @@ import {
 } from "../ui/collapsible";
 import { useAuthStore } from "@/stores/authStore";
 import { logoutUser } from "@/server/auth/logout";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export const AppSidebar = () => {
   const { user } = useAuthStore();
+  const pathname = usePathname();
+
+  const isActivePath = (path: string) => {
+    if (path === "/dashboard" && pathname === "/dashboard") return true;
+    if (path !== "/dashboard" && pathname.startsWith(path)) return true;
+    return false;
+  };
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="">
@@ -75,14 +83,33 @@ export const AppSidebar = () => {
             <SidebarMenu>
               {sidebarItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton
+                    asChild
+                    className={cn(
+                      "transition-all duration-200",
+                      isActivePath(item.url) &&
+                        "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                    )}
+                  >
                     <Link href={item.url}>
-                      <item.icon />
+                      <item.icon
+                        className={cn(
+                          "transition-colors duration-200",
+                          isActivePath(item.url) && "text-primary"
+                        )}
+                      />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                   {item.title === "Inbox" && (
-                    <SidebarMenuBadge>24</SidebarMenuBadge>
+                    <SidebarMenuBadge
+                      className={cn(
+                        isActivePath(item.url) &&
+                          "bg-primary/20 text-primary border border-primary/30"
+                      )}
+                    >
+                      24
+                    </SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}
@@ -90,38 +117,17 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* <SidebarGroup>
-          <SidebarGroupLabel>Sales</SidebarGroupLabel>
-          <SidebarGroupAction title="Make Sale">
-            <Plus /> <span className="sr-only">Make Sale</span>
-          </SidebarGroupAction>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/">
-                    <Projector />
-                    See All Projects
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/">
-                    <Plus />
-                    Add Project
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup> */}
-
         {/* collapsible */}
         <Collapsible defaultOpen className="group/collapsible">
           <SidebarGroup>
             <CollapsibleTrigger asChild>
-              <SidebarGroupLabel className="flex items-center justify-between text-md">
+              <SidebarGroupLabel
+                className={cn(
+                  "flex items-center justify-between text-md transition-colors duration-200",
+                  pathname.startsWith("/dashboard/sales") &&
+                    "text-primary/80 font-medium"
+                )}
+              >
                 Sales
                 <ChevronUp className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
               </SidebarGroupLabel>
@@ -130,7 +136,14 @@ export const AppSidebar = () => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "transition-all duration-200",
+                        isActivePath("/dashboard/sales/pos") &&
+                          "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                      )}
+                    >
                       <Link
                         href="/dashboard/sales/pos"
                         className="flex items-center gap-2"
@@ -141,7 +154,14 @@ export const AppSidebar = () => {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "transition-all duration-200",
+                        pathname === "/dashboard/sales" &&
+                          "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                      )}
+                    >
                       <Link
                         href="/dashboard/sales"
                         className="flex items-center gap-2"
@@ -163,7 +183,14 @@ export const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    "transition-all duration-200",
+                    pathname.includes("/projects") &&
+                      "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                  )}
+                >
                   <Link href="/">
                     <Projector />
                     See All Projects
@@ -189,22 +216,27 @@ export const AppSidebar = () => {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <User2 /> John Doe <ChevronUp className="ml-auto" />
+                <SidebarMenuButton className="hover:bg-accent hover:text-accent-foreground">
+                  <User2 /> {user?.name || "John Doe"}{" "}
+                  <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
                   <User className="h-[1.2rem] w-[1.2rem] mr-2" />
                   Account
                 </DropdownMenuItem>
 
-                <DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
                   <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
                   Settings
                 </DropdownMenuItem>
 
-                <DropdownMenuItem variant="destructive" onClick={logoutUser}>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={logoutUser}
+                  className="hover:bg-destructive hover:text-destructive-foreground"
+                >
                   <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
                   Sign Out
                 </DropdownMenuItem>

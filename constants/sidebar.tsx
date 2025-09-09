@@ -1,4 +1,4 @@
-import { Boxes, LayoutDashboard, Package, Users } from "lucide-react";
+import { Boxes, LayoutDashboard, Package, Store, Users } from "lucide-react";
 
 export const sidebarItems = [
   {
@@ -7,10 +7,16 @@ export const sidebarItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "users",
+    title: "Stores",
+    url: "/dashboard/stores",
+    icon: Store,
+  },
+  {
+    title: "Users",
     url: "/dashboard/users",
     icon: Users,
   },
+
   {
     title: "Inventory",
     url: "/dashboard/inventory",
