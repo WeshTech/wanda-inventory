@@ -88,14 +88,14 @@ export const AppSidebar = () => {
                     className={cn(
                       "transition-all duration-200",
                       isActivePath(item.url) &&
-                        "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                        "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
                     )}
                   >
                     <Link href={item.url}>
                       <item.icon
                         className={cn(
                           "transition-colors duration-200",
-                          isActivePath(item.url) && "text-primary"
+                          isActivePath(item.url) && "text-primary-foreground"
                         )}
                       />
                       <span>{item.title}</span>
@@ -105,7 +105,7 @@ export const AppSidebar = () => {
                     <SidebarMenuBadge
                       className={cn(
                         isActivePath(item.url) &&
-                          "bg-primary/20 text-primary border border-primary/30"
+                          "bg-secondary text-secondary-foreground"
                       )}
                     >
                       24
@@ -125,7 +125,7 @@ export const AppSidebar = () => {
                 className={cn(
                   "flex items-center justify-between text-md transition-colors duration-200",
                   pathname.startsWith("/dashboard/sales") &&
-                    "text-primary/80 font-medium"
+                    "text-primary font-semibold"
                 )}
               >
                 Sales
@@ -141,7 +141,7 @@ export const AppSidebar = () => {
                       className={cn(
                         "transition-all duration-200",
                         isActivePath("/dashboard/sales/pos") &&
-                          "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                          "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
                       )}
                     >
                       <Link
@@ -159,7 +159,7 @@ export const AppSidebar = () => {
                       className={cn(
                         "transition-all duration-200",
                         pathname === "/dashboard/sales" &&
-                          "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                          "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
                       )}
                     >
                       <Link
@@ -188,7 +188,7 @@ export const AppSidebar = () => {
                   className={cn(
                     "transition-all duration-200",
                     pathname.includes("/projects") &&
-                      "bg-primary/15 text-primary hover:bg-primary/20 font-medium border-l-2 border-l-primary/60"
+                      "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
                   )}
                 >
                   <Link href="/">
