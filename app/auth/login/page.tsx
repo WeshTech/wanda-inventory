@@ -76,7 +76,7 @@ export default function Component() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+    <div className="min-h-screen w-full bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex items-center justify-center">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-10 left-40">

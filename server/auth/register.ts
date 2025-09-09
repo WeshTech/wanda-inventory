@@ -25,6 +25,7 @@ export const RegisterUser = async (formData: RegisterData) => {
     constituency,
     ward,
     code,
+    subscriptionPackage,
   } = validatedFields.data;
 
   try {
@@ -36,16 +37,23 @@ export const RegisterUser = async (formData: RegisterData) => {
       county,
       constituency,
       ward,
-      code: code || undefined,
+      code,
+      package: subscriptionPackage, // Map subscriptionPackage to package
     });
 
     if (response.data?.verification === true) {
       return {
         status: true,
-        message:
-          response.data?.message ||
-          "Registration successful. Please verify your email.",
+        message: response.data?.message || "Please verify your email.",
         verification: true,
+      };
+    }
+
+    if (response.data?.package === true) {
+      return {
+        status: false,
+        message: "Please select a package to complete registration.",
+        package: true,
       };
     }
 
@@ -54,13 +62,6 @@ export const RegisterUser = async (formData: RegisterData) => {
         status: true,
         message: response.data?.message || "Registration successful.",
         data: response.data as registerSuccessData,
-      };
-    }
-
-    if (response.status === 409) {
-      return {
-        status: false,
-        message: response.data?.message || "Email in use or Account Blocked",
       };
     }
 

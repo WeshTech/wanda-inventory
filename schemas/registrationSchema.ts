@@ -28,6 +28,7 @@ export const RegisterSchema = z.object({
     message: "Please select your constituency.",
   }),
   code: z.string().optional(),
+  subscriptionPackage: z.string().optional(),
   ward: z.string().min(1, {
     message: "Please select your ward.",
   }),
