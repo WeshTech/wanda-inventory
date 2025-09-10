@@ -339,7 +339,7 @@ export function UsersTable() {
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 p-2">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Search Input - Full width on mobile, constrained on larger screens */}
         <div className="relative flex-1 min-w-0">

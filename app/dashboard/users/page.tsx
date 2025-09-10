@@ -12,8 +12,8 @@ export default function UsersPage({ params }: { params: { userId?: string } }) {
   const userName = params.userId ? "John Doe" : null;
 
   return (
-    <div className="space-y-4 p-4 sm:p-6 md:p-8">
-      <Breadcrumb>
+    <div className="p-4">
+      <Breadcrumb className="ml-4">
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
