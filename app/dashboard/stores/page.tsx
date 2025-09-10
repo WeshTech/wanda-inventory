@@ -20,8 +20,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { CreateStoreDialog } from "./create-store-dialog";
 import { SimplePagination } from "./simple-pagination";
-import StoresPageSkeleton from "./loading";
+// import { SimplePagination } from "./simple-pagination";
+// import StoresPageSkeleton from "./loading";
 
 // Mock data for stores
 const stores = [
@@ -80,6 +82,7 @@ export default function StoresPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const totalSales = "KES 157,500";
   const totalStores = 4;
@@ -161,7 +164,10 @@ export default function StoresPage() {
                 <Filter className="h-4 w-4" />
                 Filters
               </Button>
-              <Button className="gap-2 bg-primary hover:bg-primary/90">
+              <Button
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={() => setIsCreateDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 Add Store
               </Button>
@@ -273,7 +279,6 @@ export default function StoresPage() {
               </Card>
             ))}
           </div>
-
           <SimplePagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -284,6 +289,11 @@ export default function StoresPage() {
           />
         </CardContent>
       </Card>
+
+      <CreateStoreDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </div>
   );
 }
