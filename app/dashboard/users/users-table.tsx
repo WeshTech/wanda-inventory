@@ -41,22 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +53,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
+import { InviteUserDialog } from "./invite-user-dalog";
+import { InviteUserForm } from "@/schemas/inviteUserSchema";
 
 type User = {
   id: string;
@@ -180,14 +167,19 @@ const getRoleColor = (role: User["role"]) => {
 export function UsersTable() {
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [isConfirmBlockDialogOpen, setIsConfirmBlockDialogOpen] =
     useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<User["role"]>("Member");
+  const handleInviteUser = (data: InviteUserForm) => {
+    console.log("Inviting user:", data);
+    // Here you would typically send the data to your API
+    alert(
+      `User invited successfully!\nEmail: ${data.email}\nUsername: ${data.username}\nRole: ${data.role}\nStore: ${data.store}`
+    );
+  };
 
   const columns: ColumnDef<User>[] = useMemo(
     () => [
@@ -285,16 +277,6 @@ export function UsersTable() {
       },
     },
   });
-
-  const handleInviteUser = () => {
-    console.log("Inviting user:", inviteEmail, "with role:", inviteRole);
-    toast.success("Invitation Sent!", {
-      description: `An invitation has been sent to ${inviteEmail} as a ${inviteRole}.`,
-    });
-    setIsInviteDialogOpen(false);
-    setInviteEmail("");
-    setInviteRole("Member");
-  };
 
   const handleExport = () => {
     console.log("Exporting users...");
@@ -396,7 +378,7 @@ export function UsersTable() {
           <Button
             size="sm"
             className="flex-1 sm:flex-none min-w-[120px]"
-            onClick={() => setIsInviteDialogOpen(true)}
+            onClick={() => setIsDialogOpen(true)}
           >
             <UserPlus className="mr-2 h-4 w-4" />
             <span className="sr-only sm:not-sr-only">Invite Users</span>
@@ -458,60 +440,6 @@ export function UsersTable() {
       </div>
       <DataTablePagination table={table} />
 
-      {/* Invite User Dialog */}
-      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Invite New User</DialogTitle>
-            <DialogDescription>
-              Enter the email address and select the role for the new user.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                className="col-span-3"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
-                Role
-              </Label>
-              <Select
-                value={inviteRole}
-                onValueChange={(value: User["role"]) => setInviteRole(value)}
-              >
-                <SelectTrigger id="role" className="col-span-3">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Member">Member</SelectItem>
-                  <SelectItem value="Viewer">Viewer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsInviteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleInviteUser}>Invite User</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Block User Confirmation Dialog */}
       <AlertDialog
         open={isConfirmBlockDialogOpen}
@@ -561,6 +489,11 @@ export function UsersTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <InviteUserDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onInviteUser={handleInviteUser}
+      />
     </div>
   );
 }
