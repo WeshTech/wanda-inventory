@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   Banknote,
+  BotMessageSquare,
   Boxes,
   FileText,
   FileUser,
@@ -75,6 +76,11 @@ export const sidebarItems = [
     title: "Goods Transfer",
     url: "/dashboard/transfers",
     icon: ArrowLeftRight,
+  },
+  {
+    title: "Virtual Assistant",
+    url: "/dashboard/assistant",
+    icon: BotMessageSquare,
   },
   {
     title: "Settings",
