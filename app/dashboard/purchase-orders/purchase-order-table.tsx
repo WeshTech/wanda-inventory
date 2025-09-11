@@ -36,7 +36,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, MoreHorizontal, Trash2, Search, Eye } from "lucide-react";
+import {
+  ArrowUpDown,
+  MoreHorizontal,
+  Trash2,
+  Search,
+  Eye,
+  PenLine,
+} from "lucide-react";
 import { PurchaseOrder } from "./page";
 import { DataTablePagination } from "./data-table-pagination";
 import Link from "next/link";
@@ -203,6 +210,12 @@ export function PurchaseOrdersTable({
                     View Details
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/purchase-orders/po/${order.id}`}>
+                    <PenLine className="mr-2 h-4 w-4" />
+                    Update details
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(order)}
                   className="text-destructive focus:text-destructive"
@@ -245,7 +258,7 @@ export function PurchaseOrdersTable({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-gradient-to-br from-primary/5 via-background to-secondary/10">
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="relative flex-1 max-w-sm">
