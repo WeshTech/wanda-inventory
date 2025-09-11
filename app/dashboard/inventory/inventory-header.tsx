@@ -1,13 +1,11 @@
 "use client"; // This component needs client-side interactivity
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Upload, Plus } from "lucide-react";
-import { AddProductDialog } from "./add-product-dialog";
+import { useRouter } from "next/navigation";
 
 export default function InventoryHeader() {
-  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
-
+  const router = useRouter();
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -22,16 +20,14 @@ export default function InventoryHeader() {
           <Upload className="w-4 h-4 mr-2" />
           Import
         </Button>
-        <Button size="sm" onClick={() => setIsAddProductDialogOpen(true)}>
+        <Button
+          size="sm"
+          onClick={() => router.push("/dashboard/inventory/products")}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Product
         </Button>
       </div>
-      {/* The AddProductDialog is rendered here, controlled by the state */}
-      <AddProductDialog
-        open={isAddProductDialogOpen}
-        onOpenChange={setIsAddProductDialogOpen}
-      />
     </div>
   );
 }
