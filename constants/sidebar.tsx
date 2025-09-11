@@ -1,9 +1,14 @@
 import {
+  ArrowLeftRight,
   Banknote,
   Boxes,
+  FileText,
   FileUser,
   LayoutDashboard,
   Package,
+  PackageCheck,
+  Settings,
+  ShoppingBag,
   Store,
   Truck,
   Users,
@@ -19,6 +24,11 @@ export const sidebarItems = [
     title: "Stores",
     url: "/dashboard/stores",
     icon: Store,
+  },
+  {
+    title: "Make Sale",
+    url: "/dashboard/sales/pos",
+    icon: ShoppingBag,
   },
   {
     title: "Users",
@@ -51,25 +61,24 @@ export const sidebarItems = [
     url: "/dashboard/customers",
     icon: FileUser,
   },
-  // {
-  //   title: "Sales",
-  //   url: "/dashboard/sales",
-  //   icon: ShoppingBag,
-  // },
-  // {
-  //   title: "Inbox",
-  //   url: "#",
-  //   icon: Inbox,
-  // },
-
-  // {
-  //   title: "Search",
-  //   url: "#",
-  //   icon: Search,
-  // },
-  // {
-  //   title: "Settings",
-  //   url: "#",
-  //   icon: Settings,
-  // },
+  {
+    title: "Purchase Orders",
+    url: "/dashboard/purchase-orders",
+    icon: FileText,
+  },
+  {
+    title: "Purchase Received",
+    url: "/dashboard/purchase-received",
+    icon: PackageCheck,
+  },
+  {
+    title: "Goods Transfer",
+    url: "/dashboard/transfers",
+    icon: ArrowLeftRight,
+  },
+  {
+    title: "Settings",
+    url: "#",
+    icon: Settings,
+  },
 ];

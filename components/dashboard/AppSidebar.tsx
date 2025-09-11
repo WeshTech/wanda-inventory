@@ -28,18 +28,19 @@ import {
 import {
   ChevronUp,
   LogOut,
-  Plus,
-  Projector,
   Settings,
   ShoppingCart,
   User,
+  Store,
+  Users,
+  Package,
+  Box,
+  UserCog,
+  FileText,
+  ArrowLeftRight,
   User2,
 } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../ui/collapsible";
+
 import { useAuthStore } from "@/stores/authStore";
 import { logoutUser } from "@/server/auth/logout";
 import { usePathname } from "next/navigation";
@@ -78,7 +79,9 @@ export const AppSidebar = () => {
       <SidebarSeparator />
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Application
+          </SidebarGroupLabel>{" "}
           <SidebarGroupContent>
             <SidebarMenu>
               {sidebarItems.map((item) => (
@@ -117,91 +120,147 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* collapsible */}
-        <Collapsible defaultOpen className="group/collapsible">
-          <SidebarGroup>
-            <CollapsibleTrigger asChild>
-              <SidebarGroupLabel
-                className={cn(
-                  "flex items-center justify-between text-md transition-colors duration-200",
-                  pathname.startsWith("/dashboard/sales") &&
-                    "text-primary font-semibold"
-                )}
-              >
-                Sales
-                <ChevronUp className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </SidebarGroupLabel>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      className={cn(
-                        "transition-all duration-200",
-                        isActivePath("/dashboard/sales/pos") &&
-                          "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
-                      )}
-                    >
-                      <Link
-                        href="/dashboard/sales/pos"
-                        className="flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Make Sale</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      className={cn(
-                        "transition-all duration-200",
-                        pathname === "/dashboard/sales" &&
-                          "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
-                      )}
-                    >
-                      <Link
-                        href="/dashboard/sales"
-                        className="flex items-center gap-2"
-                      >
-                        <ShoppingCart className="h-4 w-4" />
-                        <span>All Sales</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
-
-        {/* nested */}
+        {/* Reports */}
         <SidebarGroup>
-          <SidebarGroupLabel>Nested Items</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Reports
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  className={cn(
-                    "transition-all duration-200",
-                    pathname.includes("/projects") &&
-                      "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
-                  )}
-                >
-                  <Link href="/">
-                    <Projector />
-                    See All Projects
-                  </Link>
-                </SidebarMenuButton>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild>
-                      <Link href="/">
-                        <Plus />
-                        Add project
+                    <SidebarMenuSubButton asChild id="sidebar-reports-stores">
+                      <Link href="/reports/stores">
+                        <Store className="h-4 w-4" />
+                        Store reports
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-reports-customers"
+                    >
+                      <Link href="/reports/customers">
+                        <Users className="h-4 w-4" />
+                        Customer reports
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild id="sidebar-reports-sales">
+                      <Link href="/reports/sales">
+                        <ShoppingCart className="h-4 w-4" />
+                        Sales report
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-reports-purchases"
+                    >
+                      <Link href="/reports/purchases">
+                        <Package className="h-4 w-4" />
+                        Purchase reports
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-reports-inventory"
+                    >
+                      <Link href="/reports/inventory">
+                        <Box className="h-4 w-4" />
+                        Inventory reports
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild id="sidebar-reports-users">
+                      <Link href="/reports/users">
+                        <UserCog className="h-4 w-4" />
+                        Users report
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-reports-access-logs"
+                    >
+                      <Link href="/reports/access-logs">
+                        <FileText className="h-4 w-4" />
+                        Access Logs report
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-reports-transfer-reports"
+                    >
+                      <Link href="/reports/transfer-reports">
+                        <ArrowLeftRight className="h-4 w-4" />
+                        Transfer Reports
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Anaytics */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Analytics
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild id="sidebar-analytics-sales">
+                      <Link href="/analytics/sales">
+                        <ShoppingCart className="h-4 w-4" />
+                        Sales analysis
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-analytics-purchases"
+                    >
+                      <Link href="/analytics/purchases">
+                        <Package className="h-4 w-4" />
+                        Purchase analysis
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-analytics-inventory"
+                    >
+                      <Link href="/analytics/inventory">
+                        <Box className="h-4 w-4" />
+                        Inventory analysis
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton
+                      asChild
+                      id="sidebar-analytics-transfer-analytics"
+                    >
+                      <Link href="/analytics/transfer-analytics">
+                        <ArrowLeftRight className="h-4 w-4" />
+                        Transfer analytics
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -211,6 +270,8 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* footer */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
