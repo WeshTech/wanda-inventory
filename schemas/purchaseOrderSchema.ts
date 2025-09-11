@@ -15,12 +15,23 @@ export const productSchema = z.object({
 
 export const addProductSchema = z.object({
   barcode: z.string().min(1, "Barcode is required"),
+  scanType: z.enum(["scan", "manual"]).default("scan"),
   name: z.string().min(1, "Product name is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   price: z.number().min(0, "Price must be positive"),
-  scanType: z.enum(["scan", "manual"]), // Add scanType to the schema
+});
+
+export const createPurchaseOrderSchema = z.object({
+  supplier: z.string().min(1, "Supplier is required"),
+  store: z.string().min(1, "Store is required"),
+  status: z.enum(["pending", "approved", "shipped", "delivered", "cancelled"]), // Remove .default("pending")
+  dateExpected: z.string().min(1, "Expected date is required"),
+  createdBy: z.string().min(1, "Created by is required"),
 });
 
 export type PurchaseOrderFormData = z.infer<typeof purchaseOrderSchema>;
 export type ProductFormData = z.infer<typeof productSchema>;
 export type AddProductFormData = z.infer<typeof addProductSchema>;
+export type CreatePurchaseOrderFormData = z.infer<
+  typeof createPurchaseOrderSchema
+>;
