@@ -198,7 +198,7 @@ export function PurchaseOrdersTable({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/purchase-orders/${order.id}`}>
+                  <Link href={`/dashboard/purchase-orders/${order.id}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     View Details
                   </Link>
