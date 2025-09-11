@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Package,
   Store,
+  Truck,
   Users,
 } from "lucide-react";
 
@@ -38,6 +39,11 @@ export const sidebarItems = [
     title: "Expenses",
     url: "/dashboard/expenses",
     icon: Banknote,
+  },
+  {
+    title: "Suppliers",
+    url: "/dashboard/suppliers",
+    icon: Truck,
   },
   // {
   //   title: "Sales",
