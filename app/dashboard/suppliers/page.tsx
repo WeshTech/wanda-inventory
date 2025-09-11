@@ -196,7 +196,7 @@ export default function SuppliersPage() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/5 via-background to-secondary/10">
+      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/5 via-background to-secondary/10 md:mb-6">
         <div className="mx-auto max-w-7xl">
           {/* Header */}
           <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0 justify-between">

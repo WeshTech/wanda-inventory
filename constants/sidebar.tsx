@@ -1,6 +1,7 @@
 import {
   Banknote,
   Boxes,
+  FileUser,
   LayoutDashboard,
   Package,
   Store,
@@ -44,6 +45,11 @@ export const sidebarItems = [
     title: "Suppliers",
     url: "/dashboard/suppliers",
     icon: Truck,
+  },
+  {
+    title: "Customers",
+    url: "/dashboard/customers",
+    icon: FileUser,
   },
   // {
   //   title: "Sales",
