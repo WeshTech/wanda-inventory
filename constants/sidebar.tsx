@@ -1,4 +1,11 @@
-import { Boxes, LayoutDashboard, Package, Store, Users } from "lucide-react";
+import {
+  Banknote,
+  Boxes,
+  LayoutDashboard,
+  Package,
+  Store,
+  Users,
+} from "lucide-react";
 
 export const sidebarItems = [
   {
@@ -26,6 +33,11 @@ export const sidebarItems = [
     title: "Category",
     url: "/dashboard/category",
     icon: Boxes,
+  },
+  {
+    title: "Expenses",
+    url: "/dashboard/expenses",
+    icon: Banknote,
   },
   // {
   //   title: "Sales",

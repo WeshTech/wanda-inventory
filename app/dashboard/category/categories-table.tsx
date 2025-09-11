@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -19,7 +19,6 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +49,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "./data-table-pagination";
+import { AddCategoryDialog } from "./add-category-dialog";
 
 interface Category {
   id: string;
@@ -215,9 +215,8 @@ const columns: ColumnDef<Category>[] = [
 ];
 
 export function CategoriesTable() {
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
 
   const table = useReactTable({
     data: categories,
@@ -230,6 +229,12 @@ export function CategoriesTable() {
       columnFilters,
     },
   });
+
+  const handleAddCategory = (data: { name: string; store: string }) => {
+    console.log("New category added:", data);
+    // Here you would typically send the data to an API or update the categories array
+    setIsAddCategoryDialogOpen(false);
+  };
 
   return (
     <div className="w-full">
@@ -247,12 +252,12 @@ export function CategoriesTable() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" /> Import
+            <Download className="mr-2 h-4 w-4" /> Import
           </Button>
           <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" /> Export
+            <Upload className="mr-2 h-4 w-4" /> Export
           </Button>
-          <Button>
+          <Button onClick={() => setIsAddCategoryDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Add Category
           </Button>
         </div>
@@ -310,6 +315,11 @@ export function CategoriesTable() {
       <div className="py-4">
         <DataTablePagination table={table} />
       </div>
+      <AddCategoryDialog
+        open={isAddCategoryDialogOpen}
+        onOpenChange={setIsAddCategoryDialogOpen}
+        onCategoryAdd={handleAddCategory}
+      />
     </div>
   );
 }

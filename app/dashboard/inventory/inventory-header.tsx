@@ -25,7 +25,7 @@ export default function InventoryHeader() {
           onClick={() => router.push("/dashboard/inventory/products")}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Product
+          Add Products
         </Button>
       </div>
     </div>
