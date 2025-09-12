@@ -314,16 +314,17 @@ export function SalesDataTable() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleRefund(record)}
-                    className="flex items-center gap-2 hover:bg-yellow-200"
+                    className="flex items-center gap-2 data-[highlighted]:bg-yellow-200 data-[highlighted]:text-yellow-700"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="h-4 w-4 text-current" />
                     Refund
                   </DropdownMenuItem>
+
                   <DropdownMenuItem
                     onClick={() => handleDelete(record)}
-                    className="flex items-center gap-2 hover:bg-red-200"
+                    className="flex items-center gap-2 data-[highlighted]:bg-red-200 data-[highlighted]:text-red-700"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 text-current" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
