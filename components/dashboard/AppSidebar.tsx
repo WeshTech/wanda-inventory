@@ -31,8 +31,6 @@ import {
   Settings,
   ShoppingCart,
   User,
-  Store,
-  Users,
   Package,
   Box,
   UserCog,
@@ -130,27 +128,8 @@ export const AppSidebar = () => {
               <SidebarMenuItem>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild id="sidebar-reports-stores">
-                      <Link href="/reports/stores">
-                        <Store className="h-4 w-4" />
-                        Store reports
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      asChild
-                      id="sidebar-reports-customers"
-                    >
-                      <Link href="/reports/customers">
-                        <Users className="h-4 w-4" />
-                        Customer reports
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild id="sidebar-reports-sales">
-                      <Link href="/reports/sales">
+                      <Link href="/dashboard/reports/sales">
                         <ShoppingCart className="h-4 w-4" />
                         Sales report
                       </Link>
@@ -161,7 +140,7 @@ export const AppSidebar = () => {
                       asChild
                       id="sidebar-reports-purchases"
                     >
-                      <Link href="/reports/purchases">
+                      <Link href="/dashboard/reports/purchases">
                         <Package className="h-4 w-4" />
                         Purchase reports
                       </Link>
@@ -172,7 +151,7 @@ export const AppSidebar = () => {
                       asChild
                       id="sidebar-reports-inventory"
                     >
-                      <Link href="/reports/inventory">
+                      <Link href="/dashboard/reports/inventory">
                         <Box className="h-4 w-4" />
                         Inventory reports
                       </Link>
@@ -180,7 +159,7 @@ export const AppSidebar = () => {
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild id="sidebar-reports-users">
-                      <Link href="/reports/users">
+                      <Link href="/dashboard/reports/users">
                         <UserCog className="h-4 w-4" />
                         Users report
                       </Link>
@@ -191,7 +170,7 @@ export const AppSidebar = () => {
                       asChild
                       id="sidebar-reports-access-logs"
                     >
-                      <Link href="/reports/access-logs">
+                      <Link href="/dashboard/reports/access-logs">
                         <FileText className="h-4 w-4" />
                         Access Logs report
                       </Link>
@@ -202,7 +181,7 @@ export const AppSidebar = () => {
                       asChild
                       id="sidebar-reports-transfer-reports"
                     >
-                      <Link href="/reports/transfer-reports">
+                      <Link href="/dashboard/reports/transfer-reports">
                         <ArrowLeftRight className="h-4 w-4" />
                         Transfer Reports
                       </Link>
