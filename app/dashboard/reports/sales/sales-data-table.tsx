@@ -54,6 +54,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 
 interface SalesRecord {
   invoiceNo: string;
@@ -181,6 +182,7 @@ export function SalesDataTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const router = useRouter();
 
   const columns = useMemo(
     () => [
@@ -299,7 +301,11 @@ export function SalesDataTable() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    onClick={() => handleView(record)}
+                    onClick={() =>
+                      router.push(
+                        "/dashboard/reports/sales/receipt/ddddhdhd778ey"
+                      )
+                    }
                     className="flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />
@@ -334,7 +340,7 @@ export function SalesDataTable() {
         },
       }),
     ],
-    []
+    [router]
   );
 
   const table = useReactTable({
@@ -369,11 +375,11 @@ export function SalesDataTable() {
     []
   );
 
-  const handleView = (record: SalesRecord) => {
-    console.log("View record:", record.invoiceNo);
-    console.log("Payment Status:", record.paymentStatus);
-    console.log("Payment Method:", record.paymentMethod);
-  };
+  // const handleView = (record: SalesRecord) => {
+  //   console.log("View record:", record.invoiceNo);
+  //   console.log("Payment Status:", record.paymentStatus);
+  //   console.log("Payment Method:", record.paymentMethod);
+  // };
 
   const handleUpdate = (record: SalesRecord) => {
     console.log("Update record:", record.invoiceNo);
