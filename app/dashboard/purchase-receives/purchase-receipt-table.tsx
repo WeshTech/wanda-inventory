@@ -204,7 +204,9 @@ export function PurchaseReceiptsTable({
                 {/* View */}
                 <DropdownMenuItem
                   onClick={() =>
-                    router.push(`/purchase-receipts/${receipt.receiptNo}`)
+                    router.push(
+                      `/dashboard/purchase-receives/${receipt.receiptNo}`
+                    )
                   }
                   className="group hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-400 cursor-pointer"
                 >
@@ -215,7 +217,7 @@ export function PurchaseReceiptsTable({
                 {/* Update */}
                 <DropdownMenuItem
                   onClick={() =>
-                    router.push(`/purchase-receipts/${receipt.receiptNo}/edit`)
+                    router.push(`/purchase-receives/${receipt.receiptNo}/edit`)
                   }
                   className="group hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400 cursor-pointer"
                 >
