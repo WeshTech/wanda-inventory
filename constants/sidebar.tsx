@@ -69,7 +69,7 @@ export const sidebarItems = [
   },
   {
     title: "Purchase Received",
-    url: "/dashboard/purchase-received",
+    url: "/dashboard/purchase-receives",
     icon: PackageCheck,
   },
   {
