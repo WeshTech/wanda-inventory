@@ -172,7 +172,7 @@ export const AppSidebar = () => {
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton asChild id="sidebar-analytics-sales">
-                      <Link href="/analytics/sales">
+                      <Link href="/dashboard/analytics/sales">
                         <ShoppingCart className="h-4 w-4" />
                         Sales analysis
                       </Link>
