@@ -1,5 +1,6 @@
 "use client";
 
+import { Printer } from "lucide-react";
 import { ReceiptHeader } from "./receipt-header";
 import { ReceiptProducts } from "./receipt-products";
 
@@ -63,8 +64,9 @@ export default function ReceiptPage() {
         <div className="no-print mb-6 flex justify-end">
           <button
             onClick={() => window.print()}
-            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
           >
+            <Printer className="h-4 w-4" />
             Print Receipt
           </button>
         </div>

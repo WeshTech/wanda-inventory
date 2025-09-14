@@ -217,7 +217,9 @@ export function PurchaseReceiptsTable({
                 {/* Update */}
                 <DropdownMenuItem
                   onClick={() =>
-                    router.push(`/purchase-receives/${receipt.receiptNo}/edit`)
+                    router.push(
+                      `/dashboard/purchase-receives/receipt/${receipt.receiptNo}`
+                    )
                   }
                   className="group hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400 cursor-pointer"
                 >
