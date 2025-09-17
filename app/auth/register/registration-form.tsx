@@ -77,6 +77,7 @@ export default function RegistrationForm({
 }: RegistrationFormProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedConstituency, setSelectedConstituency] = useState<string>("");
   const [availableConstituencies, setAvailableConstituencies] = useState<
@@ -227,6 +228,7 @@ export default function RegistrationForm({
                           <Input
                             placeholder="Enter your business name"
                             {...field}
+                            value={field.value ?? ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -245,6 +247,7 @@ export default function RegistrationForm({
                             type="email"
                             placeholder="business@example.com"
                             {...field}
+                            value={field.value ?? ""}
                           />
                         </FormControl>
                         <FormMessage />
@@ -263,6 +266,7 @@ export default function RegistrationForm({
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
+                          value={field.value ?? ""}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
@@ -287,30 +291,17 @@ export default function RegistrationForm({
 
                   <FormField
                     control={form.control}
-                    name="password"
+                    name="phoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <Input
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Enter your password"
-                              {...field}
-                              className="pr-10"
-                            />
-                            <button
-                              type="button"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent focus:outline-none"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-gray-400" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-gray-400" />
-                              )}
-                            </button>
-                          </div>
+                          <Input
+                            type="tel"
+                            placeholder="07... or 01..."
+                            {...field}
+                            value={field.value ?? ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -328,6 +319,7 @@ export default function RegistrationForm({
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
+                          value={field.value ?? ""}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
@@ -361,7 +353,7 @@ export default function RegistrationForm({
                             field.onChange(value);
                             setSelectedCounty(value);
                           }}
-                          value={field.value}
+                          value={field.value ?? ""}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
@@ -394,7 +386,7 @@ export default function RegistrationForm({
                             field.onChange(value);
                             setSelectedConstituency(value);
                           }}
-                          value={field.value}
+                          value={field.value ?? ""}
                           disabled={!selectedCounty}
                         >
                           <FormControl>
@@ -432,7 +424,7 @@ export default function RegistrationForm({
                         <FormLabel>Ward</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value}
+                          value={field.value ?? ""}
                           disabled={!selectedConstituency}
                         >
                           <FormControl>
@@ -454,6 +446,76 @@ export default function RegistrationForm({
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter your password"
+                              {...field}
+                              value={field.value ?? ""}
+                              className="pr-10"
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent focus:outline-none"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showConfirmPassword ? "text" : "password"}
+                              placeholder="Confirm your password"
+                              {...field}
+                              value={field.value ?? ""}
+                              className="pr-10"
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent focus:outline-none"
+                              onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                              }
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
