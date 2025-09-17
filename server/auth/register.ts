@@ -23,6 +23,7 @@ export const RegisterUser = async (formData: RegisterData) => {
     password,
     county,
     constituency,
+    phoneNumber,
     ward,
     code,
     subscriptionPackage,
@@ -38,6 +39,8 @@ export const RegisterUser = async (formData: RegisterData) => {
       constituency,
       ward,
       code,
+      phoneNumber,
+
       package: subscriptionPackage, // Map subscriptionPackage to package
     });
 

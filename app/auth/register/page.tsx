@@ -23,7 +23,9 @@ export default function RegistrationPage() {
       businessName: "",
       businessEmail: "",
       businessType: "",
+      phoneNumber: "",
       password: "",
+      confirmPassword: "",
       country: "",
       county: "",
       constituency: "",
@@ -76,9 +78,10 @@ export default function RegistrationPage() {
   const handlePackageConfirm = async (packageId: string) => {
     try {
       const data = form.getValues();
-      data.subscriptionPackage = packageId;
-
-      const response = await RegisterUser(data);
+      const response = await RegisterUser({
+        ...data,
+        subscriptionPackage: packageId,
+      });
 
       if (response.status === true) {
         toast.success(response.message || "Registration successful!");
