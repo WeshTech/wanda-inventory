@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-import { Package, Check } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,9 +10,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Package, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-interface PackagePlan {
+export interface PackagePlan {
   id: string;
   name: string;
   price: string;
@@ -22,17 +21,17 @@ interface PackagePlan {
   period: string;
   description: string;
   popular: boolean;
-  features: Array<{
+  features: {
     icon: React.ComponentType<{ className?: string }>;
     text: string;
-  }>;
+  }[];
 }
 
-interface PackageDialogProps {
+export interface PackageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPlan: PackagePlan | undefined;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
 }
 
 export default function PackageDialog({

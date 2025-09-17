@@ -1,3 +1,23 @@
+export interface Ward {
+  id: string;
+  name: string;
+}
+
+export interface Constituency {
+  id: string;
+  name: string;
+  wards: Ward[];
+}
+
+export interface County {
+  id: string;
+  name: string;
+  constituencies: Constituency[];
+}
+
+export interface AreaDataType {
+  counties: County[];
+}
 export const AreaData = {
   counties: [
     {

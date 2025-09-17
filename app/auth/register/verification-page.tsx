@@ -23,14 +23,12 @@ const images = [
 
 interface VerificationPageProps {
   onSubmit: (code: string) => Promise<void>;
-  onBack: () => void;
   onResendCode: () => Promise<void>;
   isSubmitting: boolean;
 }
 
 export default function VerificationPage({
   onSubmit,
-  onBack,
   onResendCode,
   isSubmitting,
 }: VerificationPageProps) {
@@ -43,6 +41,8 @@ export default function VerificationPage({
     "",
     "",
   ]);
+  const [countdown, setCountdown] = useState(120); // 2 minutes
+  const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -52,6 +52,15 @@ export default function VerificationPage({
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [countdown]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -104,9 +113,21 @@ export default function VerificationPage({
     await onSubmit(code);
   };
 
+  const handleResend = async () => {
+    await onResendCode();
+    setCountdown(120);
+    setCanResend(false);
+  };
+
   const isVerificationCodeComplete = verificationCode.every(
     (digit) => digit !== ""
   );
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 rounded-xl flex m-2">
@@ -122,9 +143,7 @@ export default function VerificationPage({
               <Image
                 src={
                   image ||
-                  "/placeholder.svg?height=800&width=600&query=modern inventory management" ||
-                  "/placeholder.svg" ||
-                  "/placeholder.svg"
+                  "/placeholder.svg?height=800&width=600&query=modern inventory management"
                 }
                 alt={`Inventory management ${index + 1}`}
                 className="w-full h-full object-cover"
@@ -158,7 +177,7 @@ export default function VerificationPage({
       </div>
 
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <Card className="w-full mx-2 my-2 sm:mx-3 sm:my-3 md:mx-4 md:my-4 lg:mx-5 lg:my-5">
+        <Card className="w-full mx-2 my-2 sm:mx-3 sm:my-3 md:mx-4 md:my-4 lg:mx-5 lg:my-5 bg-white/80 backdrop-blur-sm">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4 lg:hidden">
               <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -205,40 +224,36 @@ export default function VerificationPage({
                   <p className="text-sm text-muted-foreground">
                     {"Didn't receive the code?"}
                   </p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={onResendCode}
-                    disabled={isSubmitting}
-                    className="text-sm"
-                  >
-                    Resend verification code
-                  </Button>
+                  {!canResend ? (
+                    <p className="text-sm text-muted-foreground">
+                      Resend code in {formatTime(countdown)}
+                    </p>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleResend}
+                      disabled={isSubmitting}
+                      className="text-sm"
+                    >
+                      Resend verification code
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className={`w-full ${
-                  isSubmitting
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
-                }`}
-                size="lg"
-                disabled={isSubmitting || !isVerificationCodeComplete}
-              >
-                {isSubmitting ? "Verifying..." : "Verify Email"}
-              </Button>
-
-              <div className="flex items-center justify-center">
+              <div className="flex justify-center">
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-sm text-muted-foreground"
-                  onClick={onBack}
+                  type="submit"
+                  className={`px-8 ${
+                    isSubmitting
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60"
+                      : "bg-blue-500 text-white hover:bg-blue-600"
+                  }`}
+                  size="lg"
+                  disabled={isSubmitting || !isVerificationCodeComplete}
                 >
-                  ← Back to registration
+                  {isSubmitting ? "Verifying..." : "Verify Email"}
                 </Button>
               </div>
             </form>

@@ -1,14 +1,16 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import {
-  ChevronRight,
   Package,
   TrendingUp,
   Users,
   MapPin,
   Eye,
   EyeOff,
+  Loader2,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,8 +39,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import Link from "next/link";
+import { AreaData, Constituency, Ward } from "./areaData";
 import type { FormData } from "@/schemas/registrationSchema";
-import LocationSelector from "./location-selector";
 
 const images = [
   "/images/pharmacy.jpg",
@@ -75,7 +77,42 @@ export default function RegistrationForm({
 }: RegistrationFormProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedCounty, setSelectedCounty] = useState<string>("");
+  const [selectedConstituency, setSelectedConstituency] = useState<string>("");
+  const [availableConstituencies, setAvailableConstituencies] = useState<
+    Constituency[]
+  >([]);
+  const [availableWards, setAvailableWards] = useState<Ward[]>([]);
 
+  // Update constituencies when county changes
+  useEffect(() => {
+    if (selectedCounty) {
+      const county = AreaData.counties.find((c) => c.id === selectedCounty);
+      setAvailableConstituencies(county?.constituencies || []);
+      setSelectedConstituency("");
+      setAvailableWards([]);
+      form.setValue("constituency", "");
+      form.setValue("ward", "");
+    } else {
+      setAvailableConstituencies([]);
+      setAvailableWards([]);
+    }
+  }, [selectedCounty, form]);
+
+  // Update wards when constituency changes
+  useEffect(() => {
+    if (selectedConstituency) {
+      const constituency = availableConstituencies.find(
+        (c) => c.id === selectedConstituency
+      );
+      setAvailableWards(constituency?.wards || []);
+      form.setValue("ward", "");
+    } else {
+      setAvailableWards([]);
+    }
+  }, [selectedConstituency, availableConstituencies, form]);
+
+  // Image carousel effect
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -98,9 +135,7 @@ export default function RegistrationForm({
               <Image
                 src={
                   image ||
-                  "/placeholder.svg?height=800&width=600&query=modern inventory management" ||
-                  "/placeholder.svg" ||
-                  "/placeholder.svg"
+                  "/placeholder.svg?height=800&width=600&query=modern inventory management"
                 }
                 alt={`Inventory management ${index + 1}`}
                 className="w-full h-full object-cover"
@@ -160,8 +195,8 @@ export default function RegistrationForm({
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <Card className="w-full mx-2 my-2 sm:mx-3 sm:my-3 md:mx-4 md:my-4 lg:mx-5 lg:my-5">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-4 md:p-6 bg-transparent/40">
+        <Card className="w-full mx-2 my-2 sm:mx-3 sm:my-3 md:mx-4 md:my-4 lg:mx-5 lg:my-5 bg-white/80 backdrop-blur-sm">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4 lg:hidden">
               <Package className="h-10 w-10 text-primary" />
@@ -181,191 +216,311 @@ export default function RegistrationForm({
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
               >
-                <FormField
-                  control={form.control}
-                  name="businessName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter your business name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="business@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="businessName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Business Name</FormLabel>
                         <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select your business" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {businessTypes.map((bizType) => (
-                            <SelectItem
-                              key={bizType.value}
-                              value={bizType.value}
-                            >
-                              {bizType.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
                           <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
+                            placeholder="Enter your business name"
                             {...field}
-                            className="pr-10"
                           />
-                          <button
-                            type="button"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent focus:outline-none"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4 text-gray-400" />
-                            ) : (
-                              <Eye className="h-4 w-4 text-gray-400" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select your country" />
-                          </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          {eastAfricanCountries.map((country) => (
-                            <SelectItem
-                              key={country.value}
-                              value={country.value}
-                            >
-                              {country.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Business Location</h3>
-                  <p className="text-sm text-gray-600">
-                    Select your business location using the dropdowns below:
-                  </p>
-                  <LocationSelector form={form} />
+                  <FormField
+                    control={form.control}
+                    name="businessEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Business Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="business@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="terms"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col xs:flex-row items-start gap-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="mt-0.5"
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-xs sm:text-sm font-normal">
-                          I agree to the{" "}
-                          <a
-                            href="#"
-                            className="text-primary hover:underline font-medium"
-                          >
-                            Terms and Conditions
-                          </a>{" "}
-                          and{" "}
-                          <a
-                            href="#"
-                            className="text-primary hover:underline font-medium"
-                          >
-                            Privacy Policy
-                          </a>
-                        </FormLabel>
-                        <FormMessage className="text-xs sm:text-sm" />
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="businessType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Business Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select your business" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {businessTypes.map((bizType) => (
+                              <SelectItem
+                                key={bizType.value}
+                                value={bizType.value}
+                              >
+                                {bizType.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button
-                  type="submit"
-                  className={`w-full ${
-                    isSubmitting
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Creating Account..." : "Create Account"}
-                  <ChevronRight className="ml-2 h-4 w-4 transition-all duration-200 group-hover:scale-125" />
-                </Button>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter your password"
+                              {...field}
+                              className="pr-10"
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent focus:outline-none"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select your country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {eastAfricanCountries.map((country) => (
+                              <SelectItem
+                                key={country.value}
+                                value={country.value}
+                              >
+                                {country.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="county"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>County</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setSelectedCounty(value);
+                          }}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select your county" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {AreaData.counties.map((county) => (
+                              <SelectItem key={county.id} value={county.id}>
+                                {county.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="constituency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Constituency</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setSelectedConstituency(value);
+                          }}
+                          value={field.value}
+                          disabled={!selectedCounty}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue
+                                placeholder={
+                                  selectedCounty
+                                    ? "Select your constituency"
+                                    : "Select county first"
+                                }
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableConstituencies.map((constituency) => (
+                              <SelectItem
+                                key={constituency.id}
+                                value={constituency.id}
+                              >
+                                {constituency.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ward"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ward</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={!selectedConstituency}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue
+                                placeholder={
+                                  selectedConstituency
+                                    ? "Select your ward"
+                                    : "Select constituency first"
+                                }
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableWards.map((ward) => (
+                              <SelectItem key={ward.id} value={ward.id}>
+                                {ward.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="terms"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-3 col-span-1 md:col-span-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="mt-0"
+                          />
+                        </FormControl>
+                        <div className="leading-none">
+                          <FormLabel className="text-xs sm:text-sm font-normal">
+                            I agree to the{" "}
+                            <a
+                              href="#"
+                              className="text-primary hover:underline font-medium"
+                            >
+                              Terms and Conditions
+                            </a>{" "}
+                            and{" "}
+                            <a
+                              href="#"
+                              className="text-primary hover:underline font-medium"
+                            >
+                              Privacy Policy
+                            </a>
+                          </FormLabel>
+                          <FormMessage className="text-xs sm:text-sm" />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    className={`group px-8 ${
+                      isSubmitting
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-60"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Create Account
+                      </>
+                    )}
+                  </Button>
+                </div>
 
                 <div className="text-center space-y-2">
                   <p className="text-sm text-gray-600">

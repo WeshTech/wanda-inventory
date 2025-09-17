@@ -14,7 +14,6 @@ import RegistrationForm from "./registration-form";
 export default function RegistrationPage() {
   const [showVerificationStep, setShowVerificationStep] = useState(false);
   const [showPackageStep, setShowPackageStep] = useState(false);
-  const [formData, setFormData] = useState<FormData | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string>("");
   const router = useRouter();
 
@@ -40,7 +39,6 @@ export default function RegistrationPage() {
 
       if (response.verification === true) {
         toast.success(response.message);
-        setFormData(data);
         setShowVerificationStep(true);
       } else {
         toast.error(response.message || "Registration failed");
@@ -99,10 +97,6 @@ export default function RegistrationPage() {
     setShowVerificationStep(true);
   };
 
-  const handleBackToRegistration = () => {
-    setShowVerificationStep(false);
-  };
-
   if (showPackageStep) {
     return (
       <PackageSelection
@@ -119,7 +113,6 @@ export default function RegistrationPage() {
     return (
       <VerificationPage
         onSubmit={handleVerificationSubmit}
-        onBack={handleBackToRegistration}
         onResendCode={() => handleInitialSubmit(form.getValues())}
         isSubmitting={form.formState.isSubmitting}
       />
