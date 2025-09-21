@@ -1,0 +1,43 @@
+// Mock data for stores
+export const stores = [
+  {
+    id: 1,
+    name: "Downtown Store",
+    location: "123 Main St, Downtown",
+    status: "open",
+    products: 245,
+    categories: 12,
+    sales: "KES 45,000",
+    staff: 8,
+  },
+  {
+    id: 2,
+    name: "Mall Branch",
+    location: "Westgate Mall, Level 2",
+    status: "open",
+    products: 189,
+    categories: 8,
+    sales: "KES 32,500",
+    staff: 6,
+  },
+  {
+    id: 3,
+    name: "Airport Store",
+    location: "JKIA Terminal 1A",
+    status: "closed",
+    products: 156,
+    categories: 6,
+    sales: "KES 28,000",
+    staff: 4,
+  },
+  {
+    id: 4,
+    name: "Suburb Branch",
+    location: "Karen Shopping Center",
+    status: "open",
+    products: 298,
+    categories: 15,
+    sales: "KES 52,000",
+    staff: 10,
+  },
+];

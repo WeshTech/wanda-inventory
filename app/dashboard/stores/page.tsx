@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Plus, Store, Eye, Edit, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,52 +22,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SimplePagination } from "./simple-pagination";
 import { CreateStoreDialog } from "./create-store-dialog";
-// import { SimplePagination } from "./simple-pagination";
-// import StoresPageSkeleton from "./loading";
-
-// Mock data for stores
-const stores = [
-  {
-    id: 1,
-    name: "Downtown Store",
-    location: "123 Main St, Downtown",
-    status: "open",
-    products: 245,
-    categories: 12,
-    sales: "KES 45,000",
-    staff: 8,
-  },
-  {
-    id: 2,
-    name: "Mall Branch",
-    location: "Westgate Mall, Level 2",
-    status: "open",
-    products: 189,
-    categories: 8,
-    sales: "KES 32,500",
-    staff: 6,
-  },
-  {
-    id: 3,
-    name: "Airport Store",
-    location: "JKIA Terminal 1A",
-    status: "closed",
-    products: 156,
-    categories: 6,
-    sales: "KES 28,000",
-    staff: 4,
-  },
-  {
-    id: 4,
-    name: "Suburb Branch",
-    location: "Karen Shopping Center",
-    status: "open",
-    products: 298,
-    categories: 15,
-    sales: "KES 52,000",
-    staff: 10,
-  },
-];
+import {
+  GetStoresResult,
+  StoreSummary,
+} from "@/types/stores/getBusinessStores";
+import { getBusinessStores } from "@/server/stores/getBusinessStores";
+import NoStoresFoundPage from "./no-store-found";
 
 const getInitials = (name: string) => {
   return name
@@ -83,16 +43,98 @@ export default function StoresPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [storesData, setStoresData] = useState<GetStoresResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const totalSales = "KES 157,500";
-  const totalStores = 4;
-  const openStores = 3;
-  const closedStores = 1;
-  const topStore = "Suburb Branch";
+  // Fetch stores data
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await getBusinessStores();
+        setStoresData(result);
 
-  const totalPages = Math.ceil(stores.length / itemsPerPage);
+        if (!result.success) {
+          setError(result.message);
+        }
+      } catch (err) {
+        setError("Failed to fetch stores data");
+        console.error("Error fetching stores:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStores();
+  }, []);
+
+  // Filter stores based on search query
+  const filteredStores = storesData?.success
+    ? storesData.data.stores.filter(
+        (store) =>
+          store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          store.ward.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  // Calculate stats from API data
+  const totalSales = storesData?.success
+    ? `KES ${storesData.data.totalSales.toLocaleString()}`
+    : "KES 0";
+  const totalStores = storesData?.success ? storesData.data.totalStores : 0;
+  const openStores = storesData?.success
+    ? storesData.data.stores.filter((store) => store.status === "OPENED").length
+    : 0;
+  const closedStores = storesData?.success
+    ? storesData.data.stores.filter((store) => store.status === "CLOSED").length
+    : 0;
+  const topStore = storesData?.success
+    ? storesData.data.stores.reduce((prev, current) =>
+        (prev?.sales || 0) > (current.sales || 0) ? prev : current
+      )?.name || "No stores"
+    : "No stores";
+
+  const totalPages = Math.ceil(filteredStores.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedStores = stores.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedStores = filteredStores.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error || !storesData?.success) {
+    return (
+      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-8 text-center">
+            <div className="text-destructive mb-4">Error</div>
+            <p className="text-muted-foreground mb-6">
+              {error || storesData?.message || "Failed to load stores data"}
+            </p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle no stores found state
+  if (filteredStores.length === 0) {
+    return <NoStoresFoundPage />;
+  }
 
   return (
     <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
@@ -155,7 +197,10 @@ export default function StoresPage() {
               <Input
                 placeholder="Search stores..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page when searching
+                }}
                 className="pl-10"
               />
             </div>
@@ -178,7 +223,7 @@ export default function StoresPage() {
         <CardContent>
           {/* Store Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {paginatedStores.map((store) => (
+            {paginatedStores.map((store: StoreSummary) => (
               <Card
                 key={store.id}
                 className="border border-border bg-card rounded-lg overflow-hidden"
@@ -197,7 +242,7 @@ export default function StoresPage() {
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="h-3 w-3" />
-                          {store.location}
+                          {store.ward}
                         </div>
                       </div>
                     </div>
@@ -205,22 +250,22 @@ export default function StoresPage() {
                       <Store className="h-4 w-4 text-primary" />
                       <Badge
                         variant={
-                          store.status === "open" ? "default" : "destructive"
+                          store.status === "OPENED" ? "default" : "destructive"
                         }
                         className={
-                          store.status === "open"
+                          store.status === "OPENED"
                             ? "bg-green-100 text-green-800 hover:bg-green-100"
                             : "bg-red-100 text-red-800 hover:bg-red-100"
                         }
                       >
                         <div
                           className={`w-2 h-2 rounded-full mr-1 ${
-                            store.status === "open"
+                            store.status === "OPENED"
                               ? "bg-green-500"
                               : "bg-red-500"
                           }`}
                         />
-                        {store.status === "open" ? "Open" : "Closed"}
+                        {store.status === "OPENED" ? "Open" : "Closed"}
                       </Badge>
                     </div>
                   </div>
@@ -239,7 +284,9 @@ export default function StoresPage() {
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Sales</div>
-                      <div className="text-lg font-semibold">{store.sales}</div>
+                      <div className="text-lg font-semibold">
+                        KES {store.sales.toLocaleString()}
+                      </div>
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">
@@ -283,7 +330,7 @@ export default function StoresPage() {
             currentPage={currentPage}
             totalPages={totalPages}
             itemsPerPage={itemsPerPage}
-            totalItems={stores.length}
+            totalItems={filteredStores.length}
             onPageChange={setCurrentPage}
             onPageSizeChange={setItemsPerPage}
           />
