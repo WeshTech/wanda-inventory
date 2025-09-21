@@ -7,10 +7,10 @@ import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
 export const getBusinessStores = async (): Promise<GetStoresResult> => {
-  const { user } = useAuthStore.getState();
+  const { user, isLoading } = useAuthStore.getState();
 
   const businessId = user?.businessId;
-  if (!businessId) {
+  if (!isLoading && !businessId) {
     return {
       success: false,
       message: "You must be logged in to create a store",

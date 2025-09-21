@@ -5,10 +5,10 @@ import { AxiosError } from "axios";
 
 export const CreateStore = async (formData: CreateStoreFormData) => {
   const { name, county, constituency, ward, storeStatus } = formData;
-  const { user } = useAuthStore.getState();
+  const { user, isLoading } = useAuthStore.getState();
 
   const businessId = user?.businessId;
-  if (!businessId) {
+  if (!isLoading && !businessId) {
     return {
       success: false,
       message: "You must be logged in to create a store",

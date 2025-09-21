@@ -11,8 +11,9 @@ export const getCurrentUser = async () => {
 };
 
 export async function initializeAuth() {
-  const { setUser, clearUser } = useAuthStore.getState();
+  const { setUser, clearUser, setLoading } = useAuthStore.getState();
 
+  setLoading(true);
   try {
     const user = await getCurrentUser();
     if (user) {
@@ -23,5 +24,7 @@ export async function initializeAuth() {
     }
   } catch {
     clearUser();
+  } finally {
+    setLoading(false);
   }
 }

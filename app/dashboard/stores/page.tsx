@@ -28,6 +28,7 @@ import {
 } from "@/types/stores/getBusinessStores";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import NoStoresFoundPage from "./no-store-found";
+import StoresPageSkeleton from "./loading";
 
 const getInitials = (name: string) => {
   return name
@@ -105,13 +106,7 @@ export default function StoresPage() {
 
   // Handle loading state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
+    return <StoresPageSkeleton />;
   }
 
   // Handle error state
