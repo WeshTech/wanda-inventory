@@ -4,7 +4,7 @@ import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
 export const CreateStore = async (formData: CreateStoreFormData) => {
-  const { name, location, storeStatus } = formData;
+  const { name, county, constituency, ward, storeStatus } = formData;
   const { user } = useAuthStore.getState();
 
   const businessId = user?.businessId;
@@ -18,7 +18,9 @@ export const CreateStore = async (formData: CreateStoreFormData) => {
   try {
     const response = await axiosApi.post("/stores", {
       name,
-      location,
+      county,
+      constituency,
+      ward,
       storeStatus,
       businessId,
     });
