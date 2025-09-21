@@ -20,8 +20,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { CreateStoreDialog } from "./create-store-dialog";
 import { SimplePagination } from "./simple-pagination";
+import { CreateStoreDialog } from "./create-store-dialog";
 // import { SimplePagination } from "./simple-pagination";
 // import StoresPageSkeleton from "./loading";
 

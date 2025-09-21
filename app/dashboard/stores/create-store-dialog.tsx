@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
+import { Store, PlusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,149 +21,297 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   CreateStoreFormData,
   createStoreSchema,
 } from "@/schemas/stores/createStoreSchema";
-import { CreateStore } from "@/server/stores/createStore";
-import toast from "react-hot-toast";
+import { AreaData, Constituency, Ward } from "@/app/auth/register/areaData";
 
-interface CreateStoreDialogProps {
+interface StoreDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSubmit?: (data: CreateStoreFormData) => void;
+  initialData?: Partial<CreateStoreFormData>;
 }
 
 export function CreateStoreDialog({
   open,
   onOpenChange,
-}: CreateStoreDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const form = useForm<CreateStoreFormData>({
+  onSubmit,
+  initialData,
+}: StoreDialogProps) {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<CreateStoreFormData>({
     resolver: zodResolver(createStoreSchema),
     defaultValues: {
       name: "",
-      location: "",
+      county: "",
+      constituency: "",
+      ward: "",
+      storeStatus: undefined,
+      ...initialData,
     },
   });
 
-  const onSubmit = async (data: CreateStoreFormData) => {
-    setIsLoading(true);
+  const watchedCounty = watch("county");
+  const watchedConstituency = watch("constituency");
+  const watchedWard = watch("ward");
+  const watchedStoreStatus = watch("storeStatus");
 
-    const result = await CreateStore(data);
+  const [availableConstituencies, setAvailableConstituencies] = React.useState<
+    Constituency[]
+  >([]);
+  const [availableWards, setAvailableWards] = React.useState<Ward[]>([]);
 
-    if (result.success) {
-      toast.success(result.message);
-
-      form.reset();
-      onOpenChange(false);
-    } else {
-      toast.error(result.message);
+  React.useEffect(() => {
+    if (!open) {
+      reset();
+      setAvailableConstituencies([]);
+      setAvailableWards([]);
     }
+  }, [open, reset]);
 
-    setIsLoading(false);
-  };
+  React.useEffect(() => {
+    if (watchedCounty) {
+      const selectedCounty = AreaData.counties.find(
+        (county) => county.id === watchedCounty
+      );
+      if (selectedCounty) {
+        setAvailableConstituencies(selectedCounty.constituencies);
+        setValue("constituency", "");
+        setValue("ward", "");
+        setAvailableWards([]);
+      }
+    } else {
+      setAvailableConstituencies([]);
+      setAvailableWards([]);
+      setValue("constituency", "");
+      setValue("ward", "");
+    }
+  }, [watchedCounty, setValue]);
 
-  const handleCancel = () => {
-    form.reset();
+  React.useEffect(() => {
+    if (watchedConstituency && availableConstituencies.length > 0) {
+      const selectedConstituency = availableConstituencies.find(
+        (constituency) => constituency.id === watchedConstituency
+      );
+      if (selectedConstituency) {
+        setAvailableWards(selectedConstituency.wards);
+        setValue("ward", "");
+      }
+    } else {
+      setAvailableWards([]);
+      setValue("ward", "");
+    }
+  }, [watchedConstituency, availableConstituencies, setValue]);
+
+  const onFormSubmit = (data: CreateStoreFormData) => {
+    onSubmit?.(data);
+    console.log(data);
     onOpenChange(false);
   };
 
+  const getSelectValue = (value: string | undefined) => value || "";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-primary/30 via-background to-secondary/30 bg-muted border border-border">
+      <DialogContent className="sm:max-w-[450px] bg-gradient-to-br from-primary/30 via-background to-secondary/30 bg-muted border border-border">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-foreground">
-            Create a new store
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
+            <Store className="h-5 w-5 text-primary" />{" "}
+            <PlusCircle className="h-4 w-4 text-muted-foreground" /> Create a
+            new store
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Add a new store to your business. Fill in the details below to get
-            started.
+            Add a new store to your business. Select county first, then
+            constituency and ward for precise location.
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground">Store Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter store name"
-                      className="rounded-full border-border bg-background"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+          {/* Store Name */}
+          <div className="space-y-2 w-full">
+            <Label htmlFor="name" className="text-foreground">
+              Store Name
+            </Label>
+            <Input
+              id="name"
+              placeholder="Enter store name"
+              {...register("name")}
+              className={`rounded-full border-border bg-background ${
+                errors.name ? "border-destructive" : ""
+              }`}
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground">Location</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter store location"
-                      className="rounded-full border-border bg-background"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="storeStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground">Status</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="rounded-full w-1/2 border-border bg-background text-black">
-                        <SelectValue placeholder="Select store status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="OPENED">Open</SelectItem>
-                      <SelectItem value="CLOSED">Closed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleCancel}
-                className="flex-1 rounded-full border border-border bg-white dark:bg-transparent hover:bg-muted"
+          {/* Location Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* County */}
+            <div className="space-y-2 w-full">
+              <Label className="text-foreground">County</Label>
+              <Select
+                value={getSelectValue(watchedCounty)}
+                onValueChange={(value) => setValue("county", value || "")}
               >
-                Cancel
-              </Button>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-              >
-                {isLoading ? "Creating..." : "Create"}
-              </Button>
+                <SelectTrigger
+                  className={`rounded-full border-border bg-background w-full ${
+                    errors.county ? "border-destructive" : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Select county..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {AreaData.counties.map((county) => (
+                    <SelectItem key={county.id} value={county.id}>
+                      {county.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.county && (
+                <p className="text-sm text-destructive">
+                  {errors.county.message}
+                </p>
+              )}
             </div>
-          </form>
-        </Form>
+
+            {/* Constituency */}
+            <div className="space-y-2 w-full">
+              <Label className="text-foreground">Constituency</Label>
+              <Select
+                value={getSelectValue(watchedConstituency)}
+                onValueChange={(value) => setValue("constituency", value || "")}
+                disabled={
+                  !watchedCounty || availableConstituencies.length === 0
+                }
+              >
+                <SelectTrigger
+                  className={`rounded-full border-border bg-background w-full ${
+                    errors.constituency ? "border-destructive" : ""
+                  } ${
+                    !watchedCounty || availableConstituencies.length === 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Select constituency..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableConstituencies.map((constituency) => (
+                    <SelectItem key={constituency.id} value={constituency.id}>
+                      {constituency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.constituency && (
+                <p className="text-sm text-destructive">
+                  {errors.constituency.message}
+                </p>
+              )}
+              {!watchedCounty && (
+                <p className="text-sm text-muted-foreground">
+                  Select a county first
+                </p>
+              )}
+            </div>
+
+            {/* Ward */}
+            <div className="space-y-2 w-ful">
+              <Label className="text-foreground">Ward</Label>
+              <Select
+                value={getSelectValue(watchedWard)}
+                onValueChange={(value) => setValue("ward", value || "")}
+                disabled={!watchedConstituency || availableWards.length === 0}
+              >
+                <SelectTrigger
+                  className={`rounded-full border-border bg-background w-full ${
+                    errors.ward ? "border-destructive" : ""
+                  } ${
+                    !watchedConstituency || availableWards.length === 0
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Select ward..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableWards.map((ward) => (
+                    <SelectItem key={ward.id} value={ward.id}>
+                      {ward.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.ward && (
+                <p className="text-sm text-destructive">
+                  {errors.ward.message}
+                </p>
+              )}
+              {!watchedConstituency && (
+                <p className="text-sm text-muted-foreground">
+                  Select a constituency first
+                </p>
+              )}
+            </div>
+
+            {/* Store Status */}
+            <div className="space-y-2 w-full">
+              <Label className="text-foreground">Status</Label>
+              <Select
+                value={watchedStoreStatus || ""}
+                onValueChange={(value: "OPENED" | "CLOSED") =>
+                  setValue("storeStatus", value)
+                }
+              >
+                <SelectTrigger
+                  className={`rounded-full border-border bg-background w-full ${
+                    errors.storeStatus ? "border-destructive" : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Select store status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="OPENED">Open</SelectItem>
+                  <SelectItem value="CLOSED">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.storeStatus && (
+                <p className="text-sm text-destructive">
+                  {errors.storeStatus.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Footer Buttons */}
+          <div className="flex justify-center gap-3 pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="px-8 rounded-full border border-border bg-white dark:bg-transparent hover:bg-muted"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="submit"
+              className="px-8 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            >
+              Create
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
