@@ -12,11 +12,11 @@ export async function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get("secure_refresh_token")?.value;
   const sessionToken = req.cookies.get("secure_token")?.value;
 
-  console.log("Middleware cookies =>", {
-    accessToken: accessToken || "missing",
-    refreshToken: refreshToken || "missing",
-    sessionToken: sessionToken || "missing",
-  });
+  // console.log("Middleware cookies =>", {
+  //   accessToken: accessToken || "missing",
+  //   refreshToken: refreshToken || "missing",
+  //   sessionToken: sessionToken || "missing",
+  // });
 
   const { pathname } = req.nextUrl;
 

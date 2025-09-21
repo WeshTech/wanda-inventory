@@ -9,7 +9,7 @@ export const createStoreSchema = z.object({
     .string()
     .min(1, "Location is required")
     .min(5, "Location must be at least 5 characters"),
-  status: z.enum(["Open", "Closed"]).refine((val) => !!val, {
+  storeStatus: z.enum(["OPENED", "CLOSED"]).refine((val) => !!val, {
     message: "Please select a status",
   }),
 });

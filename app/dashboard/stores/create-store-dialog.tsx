@@ -30,7 +30,9 @@ import { Button } from "@/components/ui/button";
 import {
   CreateStoreFormData,
   createStoreSchema,
-} from "@/schemas/createStoreSchema";
+} from "@/schemas/stores/createStoreSchema";
+import { CreateStore } from "@/server/stores/createStore";
+import toast from "react-hot-toast";
 
 interface CreateStoreDialogProps {
   open: boolean;
@@ -48,27 +50,24 @@ export function CreateStoreDialog({
     defaultValues: {
       name: "",
       location: "",
-      status: undefined,
     },
   });
 
   const onSubmit = async (data: CreateStoreFormData) => {
     setIsLoading(true);
-    try {
-      // TODO: Implement store creation logic
-      console.log("Creating store:", data);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    const result = await CreateStore(data);
 
-      // Reset form and close dialog
+    if (result.success) {
+      toast.success(result.message);
+
       form.reset();
       onOpenChange(false);
-    } catch (error) {
-      console.error("Error creating store:", error);
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast.error(result.message);
     }
+
+    setIsLoading(false);
   };
 
   const handleCancel = () => {
@@ -129,7 +128,7 @@ export function CreateStoreDialog({
 
             <FormField
               control={form.control}
-              name="status"
+              name="storeStatus"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-foreground">Status</FormLabel>
@@ -140,8 +139,8 @@ export function CreateStoreDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Open">Open</SelectItem>
-                      <SelectItem value="Closed">Closed</SelectItem>
+                      <SelectItem value="OPENED">Open</SelectItem>
+                      <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -158,10 +157,11 @@ export function CreateStoreDialog({
               >
                 Cancel
               </Button>
+
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="flex-1 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               >
                 {isLoading ? "Creating..." : "Create"}
               </Button>
