@@ -10,7 +10,14 @@ export const getBusinessStores = async (): Promise<GetStoresResult> => {
   const { user, isLoading } = useAuthStore.getState();
 
   const businessId = user?.businessId;
-  if (!isLoading && !businessId) {
+
+  if (!businessId) {
+    if (isLoading) {
+      return {
+        success: false,
+        message: "Authenticating user, please wait...",
+      };
+    }
     return {
       success: false,
       message: "You must be logged in to create a store",

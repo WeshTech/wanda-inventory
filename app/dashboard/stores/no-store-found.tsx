@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Building2, Plus, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -12,8 +12,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateStoreDialog } from "./create-store-dialog";
-import Image from "next/image";
 
 export default function NoStoresFoundPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -33,55 +33,45 @@ export default function NoStoresFoundPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <Card className="max-w-4xl mx-auto">
-        <CardContent className="p-12 text-center">
-          {/* Empty State Image */}
-          <div className="mb-8 flex justify-center">
-            <div className="relative">
-              <Image
+      <Card className="max-w-md mx-auto bg-transparent border-0 shadow-none">
+        <CardContent className="p-6 text-center space-y-4">
+          {/* Empty State Image - Using shadcn Avatar */}
+          <div className="flex justify-center">
+            <Avatar className="w-[200px] h-[200px]">
+              <AvatarImage
                 src="/images/nostorefound.jpg"
                 alt="No stores found"
-                className="max-w-md h-auto rounded-lg shadow-lg mx-auto"
-                onError={(e) => {
-                  // Fallback if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const fallback = document.createElement("div");
-                  fallback.className =
-                    "w-64 h-64 bg-muted rounded-lg flex items-center justify-center mx-auto";
-                  fallback.innerHTML = `
-                    <Store className="h-16 w-16 text-muted-foreground" />
-                  `;
-                  target.parentNode?.replaceChild(fallback, target);
-                }}
+                className="object-contain"
               />
-            </div>
+              <AvatarFallback className="w-[200px] h-[200px] bg-muted flex items-center justify-center rounded-lg">
+                <Store className="w-16 h-16 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
           </div>
 
           {/* Empty State Content */}
-          <div className="space-y-4">
-            <div className="text-3xl font-bold text-foreground mb-2">
+          <div className="space-y-3">
+            <h2 className="text-xl font-semibold text-foreground">
               No Stores Found
-            </div>
-            <p className="text-lg text-muted-foreground max-w-md mx-auto">
-              Get started by creating your first store. Organize your inventory,
-              track sales, and manage your business from one central location.
+            </h2>
+            <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              Get started by creating your first store to organize inventory,
+              track sales, and manage your business.
             </p>
 
-            <div className="pt-6">
-              <Button
-                size="lg"
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 rounded-full shadow-lg"
-                onClick={() => setIsCreateDialogOpen(true)}
-              >
-                <Plus className="h-5 w-5" />
-                Create Your First Store
-              </Button>
-            </div>
-
+            <Button
+              size="sm"
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl px-4 py-2"
+              onClick={() => setIsCreateDialogOpen(true)}
+            >
+              <span className="flex items-center gap-1">
+                <Building2 className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
+              </span>
+              Add Store
+            </Button>
             <p className="text-sm text-muted-foreground">
-              Once you create a store, you can manage products, track sales, and
-              monitor performance all in one place.
+              Manage products, track sales, and monitor performance.
             </p>
           </div>
         </CardContent>

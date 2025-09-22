@@ -15,7 +15,7 @@ export default function StoresPageSkeleton() {
       </div>
 
       {/* Summary Card Skeleton */}
-      <Card className="mb-2 sm:mb-8 border border-border bg-muted/30 rounded-lg">
+      <Card className="mb-2 sm:mb-8 border border-border bg-card rounded-lg">
         <CardContent className="p-4 sm:p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             <div className="text-center">
@@ -62,7 +62,7 @@ export default function StoresPageSkeleton() {
                 key={index}
                 className="border border-border bg-card rounded-lg overflow-hidden"
               >
-                <CardHeader className="bg-muted/50 p-4 rounded-t-lg m-0">
+                <CardHeader className="p-4 rounded-t-lg m-0">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
@@ -97,7 +97,7 @@ export default function StoresPageSkeleton() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="bg-muted/30 p-4 rounded-b-lg m-0">
+                <CardFooter className="p-4 rounded-b-lg m-0">
                   <div className="flex gap-2 w-full">
                     <Skeleton className="h-8 flex-1" />
                     <Skeleton className="h-8 flex-1" />

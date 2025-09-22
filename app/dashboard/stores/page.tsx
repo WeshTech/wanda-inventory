@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Plus, Store, Eye, Edit, MapPin } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Plus,
+  Store,
+  Eye,
+  Edit,
+  MapPin,
+  Eraser,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +21,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,6 +39,7 @@ import {
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import NoStoresFoundPage from "./no-store-found";
 import StoresPageSkeleton from "./loading";
+import { useAuthStore } from "@/stores/authStore";
 
 const getInitials = (name: string) => {
   return name
@@ -49,27 +60,33 @@ export default function StoresPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch stores data
+  const { isLoading: authLoading, isAuthenticated, user } = useAuthStore();
+
   useEffect(() => {
     const fetchStores = async () => {
+      if (authLoading || !isAuthenticated || !user?.businessId) {
+        return <StoresPageSkeleton />;
+      }
+
       try {
         setLoading(true);
         setError(null);
+
         const result = await getBusinessStores();
         setStoresData(result);
 
         if (!result.success) {
           setError(result.message);
         }
-      } catch (err) {
+      } catch {
         setError("Failed to fetch stores data");
-        console.error("Error fetching stores:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchStores();
-  }, []);
+  }, [authLoading, isAuthenticated, user?.businessId]);
 
   // Filter stores based on search query
   const filteredStores = storesData?.success
@@ -79,6 +96,18 @@ export default function StoresPage() {
           store.ward.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
+
+  // Check if user has no stores at all (empty search and no stores)
+  const hasNoStoresAtAll =
+    storesData?.success &&
+    storesData.data.stores.length === 0 &&
+    searchQuery === "";
+
+  // Check if filters don't match any stores (search applied but no results)
+  const hasFilteredResults =
+    storesData?.success &&
+    storesData.data.stores.length > 0 &&
+    filteredStores.length === 0;
 
   // Calculate stats from API data
   const totalSales = storesData?.success
@@ -91,11 +120,12 @@ export default function StoresPage() {
   const closedStores = storesData?.success
     ? storesData.data.stores.filter((store) => store.status === "CLOSED").length
     : 0;
-  const topStore = storesData?.success
-    ? storesData.data.stores.reduce((prev, current) =>
-        (prev?.sales || 0) > (current.sales || 0) ? prev : current
-      )?.name || "No stores"
-    : "No stores";
+  const topStore =
+    storesData?.success && storesData.data.stores.length > 0
+      ? storesData.data.stores.reduce((prev, current) =>
+          (prev?.sales || 0) > (current.sales || 0) ? prev : current
+        )?.name || "No stores"
+      : "No stores";
 
   const totalPages = Math.ceil(filteredStores.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -112,22 +142,35 @@ export default function StoresPage() {
   // Handle error state
   if (error || !storesData?.success) {
     return (
-      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="p-8 text-center">
-            <div className="text-destructive mb-4">Error</div>
-            <p className="text-muted-foreground mb-6">
-              {error || storesData?.message || "Failed to load stores data"}
+      <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-red-500/10 via-background to-secondary/10 flex items-center justify-center">
+        <Card className="max-w-md w-full shadow-lg border-destructive/20">
+          <CardContent className="p-8 text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-red-500/20 animate-pulse" />
+                <AlertTriangle className="relative w-16 h-16 text-destructive" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold text-destructive">
+              Something went wrong
+            </h2>
+            <p className="text-muted-foreground">
+              {error || "Failed to load stores data. Please try again."}
             </p>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button
+              variant="destructive"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Handle no stores found state
-  if (filteredStores.length === 0) {
+  // Handle no stores created at all - show NoStoresFoundPage
+  if (hasNoStoresAtAll) {
     return <NoStoresFoundPage />;
   }
 
@@ -217,118 +260,165 @@ export default function StoresPage() {
 
         <CardContent>
           {/* Store Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            {paginatedStores.map((store: StoreSummary) => (
-              <Card
-                key={store.id}
-                className="border border-border bg-card rounded-lg overflow-hidden"
-              >
-                <CardHeader className="bg-muted/50 p-4  rounded-t-lg m-0">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 bg-primary/10">
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {getInitials(store.name)}
-                        </AvatarFallback>
-                      </Avatar>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 min-h-[400px]">
+            {hasFilteredResults ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center space-y-6">
+                <div className="flex justify-center">
+                  <Avatar className="w-full h-auto max-w-[180px] max-h-[180px] rounded-lg">
+                    <AvatarImage
+                      src="/images/nostorefound.jpg"
+                      alt="No stores found"
+                      className="object-contain"
+                    />
+                    <AvatarFallback className="bg-muted flex items-center justify-center">
+                      <Store className="w-16 h-16 text-muted-foreground" />
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  No store with the given filters was found
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Try adjusting your search criteria or clear the filters to see
+                  all stores.
+                </p>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
+                >
+                  <Eraser className="h-4 w-4" />
+                  Clear Filters
+                </Button>
+              </div>
+            ) : (
+              paginatedStores.map((store: StoreSummary) => (
+                <Card
+                  key={store.id}
+                  className="border border-border bg-card rounded-lg overflow-hidden"
+                >
+                  <CardHeader className="bg-muted/50 p-4  rounded-t-lg m-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 bg-primary/10">
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            {getInitials(store.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground">
+                            {store.name}
+                          </h3>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {store.ward}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Store className="h-4 w-4 text-primary" />
+                        <Badge
+                          variant={
+                            store.status === "OPENED"
+                              ? "default"
+                              : "destructive"
+                          }
+                          className={
+                            store.status === "OPENED"
+                              ? "bg-green-100 text-green-800 hover:bg-green-100"
+                              : "bg-red-100 text-red-800 hover:bg-red-100"
+                          }
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full mr-1 ${
+                              store.status === "OPENED"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
+                          />
+                          {store.status === "OPENED" ? "Open" : "Closed"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  {/* Body */}
+                  <CardContent className="pt-4 px-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h3 className="text-sm font-semibold text-foreground">
-                          {store.name}
-                        </h3>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {store.ward}
+                        <div className="text-sm text-muted-foreground">
+                          Products
+                        </div>
+                        <div className="text-lg font-semibold">
+                          {store.products}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          Sales
+                        </div>
+                        <div className="text-lg font-semibold">
+                          KES {store.sales.toLocaleString()}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          Categories
+                        </div>
+                        <div className="text-lg font-semibold">
+                          {store.categories}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">
+                          Staff
+                        </div>
+                        <div className="text-lg font-semibold">
+                          {store.staff}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Store className="h-4 w-4 text-primary" />
-                      <Badge
-                        variant={
-                          store.status === "OPENED" ? "default" : "destructive"
-                        }
-                        className={
-                          store.status === "OPENED"
-                            ? "bg-green-100 text-green-800 hover:bg-green-100"
-                            : "bg-red-100 text-red-800 hover:bg-red-100"
-                        }
+                  </CardContent>
+
+                  <CardFooter className="bg-muted/30 p-4 rounded-b-lg m-0">
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 gap-2 bg-background/50"
                       >
-                        <div
-                          className={`w-2 h-2 rounded-full mr-1 ${
-                            store.status === "OPENED"
-                              ? "bg-green-500"
-                              : "bg-red-500"
-                          }`}
-                        />
-                        {store.status === "OPENED" ? "Open" : "Closed"}
-                      </Badge>
+                        <Eye className="h-4 w-4" />
+                        View Store
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit
+                      </Button>
                     </div>
-                  </div>
-                </CardHeader>
-
-                {/* Body */}
-                <CardContent className="pt-4 px-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">
-                        Products
-                      </div>
-                      <div className="text-lg font-semibold">
-                        {store.products}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Sales</div>
-                      <div className="text-lg font-semibold">
-                        KES {store.sales.toLocaleString()}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">
-                        Categories
-                      </div>
-                      <div className="text-lg font-semibold">
-                        {store.categories}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Staff</div>
-                      <div className="text-lg font-semibold">{store.staff}</div>
-                    </div>
-                  </div>
-                </CardContent>
-
-                <CardFooter className="bg-muted/30 p-4 rounded-b-lg m-0">
-                  <div className="flex gap-2 w-full">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1 gap-2 bg-background/50"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Store
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1 gap-2"
-                    >
-                      <Edit className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
+                  </CardFooter>
+                </Card>
+              ))
+            )}
           </div>
-          <SimplePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredStores.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setItemsPerPage}
-          />
+
+          {/* Only show pagination when there are results or no search applied */}
+          {(!hasFilteredResults || searchQuery === "") && (
+            <SimplePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredStores.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setItemsPerPage}
+            />
+          )}
         </CardContent>
       </Card>
 

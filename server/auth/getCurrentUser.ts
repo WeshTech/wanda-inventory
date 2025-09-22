@@ -14,10 +14,12 @@ export async function initializeAuth() {
   const { setUser, clearUser, setLoading } = useAuthStore.getState();
 
   setLoading(true);
+
   try {
+    console.log("Initializing auth - verifying with /me...");
     const user = await getCurrentUser();
+
     if (user) {
-      console.log("Initializing user:", user);
       setUser(user);
     } else {
       clearUser();
