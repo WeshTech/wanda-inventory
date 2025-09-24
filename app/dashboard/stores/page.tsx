@@ -32,11 +32,10 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SimplePagination } from "./simple-pagination";
 import { CreateStoreDialog } from "./create-store-dialog";
-import { GetStoresResult, StoreSummary } from "@/types/stores";
-import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import NoStoresFoundPage from "./no-store-found";
 import StoresPageSkeleton from "./loading";
 import { useAuthStore } from "@/stores/authStore";
+import { useGetBusinessStores } from "@/server-queries/storeQueries";
 
 const getInitials = (name: string) => {
   return name
@@ -52,38 +51,39 @@ export default function StoresPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [storesData, setStoresData] = useState<GetStoresResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch stores data
+  // Fetch stores data using TanStack Query
+  const {
+    data: storesData,
+    isLoading: queryLoading,
+    error: queryError,
+  } = useGetBusinessStores();
+
+  // Handle auth state
   const { isLoading: authLoading, isAuthenticated, user } = useAuthStore();
 
+  // Sync local loading state with query and auth
   useEffect(() => {
-    const fetchStores = async () => {
-      if (authLoading || !isAuthenticated || !user?.businessId) {
-        return <StoresPageSkeleton />;
-      }
+    setLoading(authLoading || queryLoading);
+  }, [authLoading, queryLoading]);
 
-      try {
-        setLoading(true);
-        setError(null);
+  // Sync error state
+  useEffect(() => {
+    if (queryError) {
+      setError(queryError.message);
+    } else if (storesData && !storesData.success) {
+      setError(storesData.message);
+    } else {
+      setError(null);
+    }
+  }, [queryError, storesData]);
 
-        const result = await getBusinessStores();
-        setStoresData(result);
-
-        if (!result.success) {
-          setError(result.message);
-        }
-      } catch {
-        setError("Failed to fetch stores data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStores();
-  }, [authLoading, isAuthenticated, user?.businessId]);
+  // Early return for auth loading or unauthenticated state
+  if (authLoading || !isAuthenticated || !user?.businessId) {
+    return <StoresPageSkeleton />;
+  }
 
   // Filter stores based on search query
   const filteredStores = storesData?.success
@@ -292,7 +292,7 @@ export default function StoresPage() {
                 </Button>
               </div>
             ) : (
-              paginatedStores.map((store: StoreSummary) => (
+              paginatedStores.map((store) => (
                 <Card
                   key={store.id}
                   className="border border-border bg-card rounded-lg overflow-hidden"

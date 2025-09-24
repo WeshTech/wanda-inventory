@@ -1,3 +1,4 @@
+// A single store entity
 export type Store = {
   id: string;
   name: string;
@@ -9,35 +10,36 @@ export type Store = {
   staff: number;
 };
 
+// The business data returned in "data"
 export interface BusinessStoresData {
-  success: boolean;
-  message: string;
-  data: {
-    businessId: string;
-    businessName: string;
-    totalStores: number;
-    totalProducts: number;
-    totalSales: number;
-    totalStaff: number;
-    stores: Store[];
-  };
+  businessId: string;
+  businessName: string;
+  totalStores: number;
+  totalProducts: number;
+  totalSales: number;
+  totalStaff: number;
+  stores: Store[];
 }
 
+// Successful response from backend
 export type GetBusinessStoresResponse = {
   success: true;
   message: string;
   data: BusinessStoresData;
 };
 
+// Error response
 export type GetBusinessStoresError = {
   success: false;
   message: string;
 };
 
+// Union type for queries
 export type GetStoresResult =
   | GetBusinessStoresResponse
   | GetBusinessStoresError;
 
+// Response when creating a new store
 export interface CreateStoreResponse {
   success: boolean;
   message: string;

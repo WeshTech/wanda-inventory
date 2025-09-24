@@ -5,7 +5,6 @@ import { AxiosError } from "axios";
 
 export const getBusinessStores = async (): Promise<GetStoresResult> => {
   const { user, isLoading } = useAuthStore.getState();
-
   const businessId = user?.businessId;
 
   if (!businessId) {
