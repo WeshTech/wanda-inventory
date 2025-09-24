@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { Nunito } from "next/font/google";
 import ToastProvider from "@/components/providers/toast-provider";
 import { Toaster } from "sonner";
+import { TanstackProvider } from "@/providers/tanstack-provider";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -35,13 +36,15 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <main className="w-full">
-              <div className="px-4">{children}</div>
-            </main>
-            <ToastProvider />
-            <Toaster position="top-center" theme="system" />
-          </SidebarProvider>
+          <TanstackProvider>
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <main className="w-full">
+                <div className="px-4">{children}</div>
+              </main>
+              <ToastProvider />
+              <Toaster position="top-center" theme="system" />
+            </SidebarProvider>
+          </TanstackProvider>
         </ThemeProvider>
       </body>
     </html>

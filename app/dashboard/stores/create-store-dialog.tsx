@@ -29,6 +29,7 @@ import { AreaData, Constituency, Ward } from "@/app/auth/register/areaData";
 import { toast } from "sonner";
 import { CreateStore } from "@/server/stores/createStore";
 import { CustomToaster } from "@/components/ui/Toaster";
+import { useRouter } from "next/navigation";
 
 interface StoreDialogProps {
   open: boolean;
@@ -71,6 +72,7 @@ export function CreateStoreDialog({
     Constituency[]
   >([]);
   const [availableWards, setAvailableWards] = React.useState<Ward[]>([]);
+  const router = useRouter();
 
   React.useEffect(() => {
     if (!open) {
@@ -127,6 +129,7 @@ export function CreateStoreDialog({
       CustomToaster.success(result.message ?? "Store created successfully");
       onSubmit?.(data);
       onOpenChange(false);
+      router.refresh();
     } else {
       toast.error(result?.message ?? "Failed to create store");
     }

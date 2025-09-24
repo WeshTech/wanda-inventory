@@ -1,7 +1,7 @@
-import { useAuthStore } from "@/stores/authStore";
+import { UserLoginResponse } from "@/types/auth/user-login-response";
 import { axiosApi } from "@/utils/axios";
 
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (): Promise<UserLoginResponse | null> => {
   try {
     const res = await axiosApi.get("/auth/me");
     return res.data;
@@ -9,24 +9,3 @@ export const getCurrentUser = async () => {
     return null;
   }
 };
-
-export async function initializeAuth() {
-  const { setUser, clearUser, setLoading } = useAuthStore.getState();
-
-  setLoading(true);
-
-  try {
-    console.log("Initializing auth - verifying with /me...");
-    const user = await getCurrentUser();
-
-    if (user) {
-      setUser(user);
-    } else {
-      clearUser();
-    }
-  } catch {
-    clearUser();
-  } finally {
-    setLoading(false);
-  }
-}
