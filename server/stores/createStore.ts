@@ -1,18 +1,18 @@
 import { CreateStoreFormData } from "@/schemas/stores/createStoreSchema";
 import { useAuthStore } from "@/stores/authStore";
+import { CreateStoreResponse } from "@/types/stores";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
-export const CreateStore = async (formData: CreateStoreFormData) => {
+export const createStoreApi = async (
+  formData: CreateStoreFormData
+): Promise<CreateStoreResponse> => {
   const { name, county, constituency, ward, storeStatus } = formData;
   const { user, isLoading } = useAuthStore.getState();
 
   const businessId = user?.businessId;
   if (!isLoading && !businessId) {
-    return {
-      success: false,
-      message: "You must be logged in to create a store",
-    };
+    throw new Error("You must be logged in to create a store");
   }
 
   try {
@@ -28,28 +28,16 @@ export const CreateStore = async (formData: CreateStoreFormData) => {
     if (response.status === 201 && response.data) {
       return {
         success: true,
-        message: response.data?.message || "Store created Successfully",
+        message: response.data?.message || "Store created successfully",
         data: response.data,
       };
     }
-    return {
-      success: false,
-      message: response.data?.message || "Store creation failed.",
-    };
+    throw new Error(response.data?.message || "Store creation failed");
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>;
-    if (axiosError.response) {
-      return {
-        success: false,
-        message:
-          axiosError.response.data?.message ||
-          "Something went wrong. Please check your connection and try again",
-      };
-    }
-    return {
-      success: false,
-      message:
-        "Something went wrong. Please check your connection and try again",
-    };
+    throw new Error(
+      axiosError.response?.data?.message ||
+        "Something went wrong. Please check your connection and try again"
+    );
   }
 };

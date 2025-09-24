@@ -27,9 +27,7 @@ import {
 } from "@/schemas/stores/createStoreSchema";
 import { AreaData, Constituency, Ward } from "@/app/auth/register/areaData";
 import { toast } from "sonner";
-import { CreateStore } from "@/server/stores/createStore";
-import { CustomToaster } from "@/components/ui/Toaster";
-import { useRouter } from "next/navigation";
+import { useCreateStore } from "@/server-queries/storeQueries";
 
 interface StoreDialogProps {
   open: boolean;
@@ -50,7 +48,7 @@ export function CreateStoreDialog({
     watch,
     setValue,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateStoreFormData>({
     resolver: zodResolver(createStoreSchema),
     defaultValues: {
@@ -72,7 +70,7 @@ export function CreateStoreDialog({
     Constituency[]
   >([]);
   const [availableWards, setAvailableWards] = React.useState<Ward[]>([]);
-  const router = useRouter();
+  const { mutate: createStore, isPending } = useCreateStore();
 
   React.useEffect(() => {
     if (!open) {
@@ -117,22 +115,24 @@ export function CreateStoreDialog({
   }, [watchedConstituency, availableConstituencies, setValue]);
 
   const onFormSubmit = async (data: CreateStoreFormData) => {
-    // show loading toast and keep its id
     const loadingId = toast.loading("Creating store...");
 
-    const result = await CreateStore(data);
-
-    // remove loading toast
-    toast.dismiss(loadingId);
-
-    if (result?.success) {
-      CustomToaster.success(result.message ?? "Store created successfully");
-      onSubmit?.(data);
-      onOpenChange(false);
-      router.refresh();
-    } else {
-      toast.error(result?.message ?? "Failed to create store");
-    }
+    createStore(data, {
+      onSuccess: (result) => {
+        toast.dismiss(loadingId);
+        if (result.success) {
+          toast.success(result.message ?? "Store created successfully");
+          onSubmit?.(data);
+          onOpenChange(false);
+        } else {
+          toast.error(result.message ?? "Failed to create store");
+        }
+      },
+      onError: (error) => {
+        toast.dismiss(loadingId);
+        toast.error(error.message ?? "Failed to create store");
+      },
+    });
   };
 
   const getSelectValue = (value: string | undefined) => value || "";
@@ -165,7 +165,7 @@ export function CreateStoreDialog({
               className={`rounded-full border-border bg-background ${
                 errors.name ? "border-destructive" : ""
               }`}
-              disabled={isSubmitting}
+              disabled={isPending}
             />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -180,7 +180,7 @@ export function CreateStoreDialog({
               <Select
                 value={getSelectValue(watchedCounty)}
                 onValueChange={(value) => setValue("county", value || "")}
-                disabled={isSubmitting}
+                disabled={isPending}
               >
                 <SelectTrigger
                   className={`rounded-full border-border bg-background w-full ${
@@ -211,7 +211,7 @@ export function CreateStoreDialog({
                 value={getSelectValue(watchedConstituency)}
                 onValueChange={(value) => setValue("constituency", value || "")}
                 disabled={
-                  isSubmitting || // Disable during submission
+                  isPending || // Disable during submission
                   !watchedCounty ||
                   availableConstituencies.length === 0
                 }
@@ -220,7 +220,7 @@ export function CreateStoreDialog({
                   className={`rounded-full border-border bg-background w-full ${
                     errors.constituency ? "border-destructive" : ""
                   } ${
-                    isSubmitting ||
+                    isPending ||
                     !watchedCounty ||
                     availableConstituencies.length === 0
                       ? "opacity-50 cursor-not-allowed"
@@ -256,7 +256,7 @@ export function CreateStoreDialog({
                 value={getSelectValue(watchedWard)}
                 onValueChange={(value) => setValue("ward", value || "")}
                 disabled={
-                  isSubmitting ||
+                  isPending ||
                   !watchedConstituency ||
                   availableWards.length === 0
                 }
@@ -265,7 +265,7 @@ export function CreateStoreDialog({
                   className={`rounded-full border-border bg-background w-full ${
                     errors.ward ? "border-destructive" : ""
                   } ${
-                    isSubmitting ||
+                    isPending ||
                     !watchedConstituency ||
                     availableWards.length === 0
                       ? "opacity-50 cursor-not-allowed"
@@ -302,7 +302,7 @@ export function CreateStoreDialog({
                 onValueChange={(value: "OPENED" | "CLOSED") =>
                   setValue("storeStatus", value)
                 }
-                disabled={isSubmitting}
+                disabled={isPending}
               >
                 <SelectTrigger
                   className={`rounded-full border-border bg-background w-full ${
@@ -330,7 +330,7 @@ export function CreateStoreDialog({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-8 rounded-full border border-border bg-white dark:bg-transparent hover:bg-muted"
             >
               Cancel
@@ -338,10 +338,10 @@ export function CreateStoreDialog({
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="px-8 rounded-full bg-secondary hover:bg-secondary/90 text-secondary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Creating..." : "Create"}
+              {isPending ? "Creating..." : "Create"}
             </Button>
           </div>
         </form>

@@ -1,8 +1,5 @@
 import { useAuthStore } from "@/stores/authStore";
-import {
-  GetBusinessStoresResponse,
-  GetStoresResult,
-} from "@/types/stores/getBusinessStores";
+import { GetBusinessStoresResponse, GetStoresResult } from "@/types/stores";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 

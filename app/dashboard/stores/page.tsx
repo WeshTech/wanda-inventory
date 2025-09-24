@@ -32,10 +32,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SimplePagination } from "./simple-pagination";
 import { CreateStoreDialog } from "./create-store-dialog";
-import {
-  GetStoresResult,
-  StoreSummary,
-} from "@/types/stores/getBusinessStores";
+import { GetStoresResult, StoreSummary } from "@/types/stores";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import NoStoresFoundPage from "./no-store-found";
 import StoresPageSkeleton from "./loading";
