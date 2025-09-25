@@ -28,3 +28,14 @@ export type Role = {
     [key in PermissionModuleKeys]: PermissionActions;
   };
 };
+
+type CreatedRoleData = {
+  roleName: string;
+  description: string;
+};
+
+export type CreateBusinessRoleResponse = {
+  success: boolean;
+  message: string;
+  data: CreatedRoleData | null;
+};

@@ -27,7 +27,11 @@ import {
   createRoleSchema,
   PERMISSION_MODULES,
 } from "@/schemas/users/createRole.Schema";
-import z from "zod";
+import { z } from "zod";
+import { useAuthStore } from "@/stores/authStore";
+import { useCreateBusinessRole } from "@/server-queries/roleQueries";
+import { toast as sonnerToast } from "sonner"; // shadcn sonner
+import { toast as hotToast } from "react-hot-toast";
 import { CheckedState } from "@radix-ui/react-checkbox";
 
 interface CreateRoleDialogProps {
@@ -39,8 +43,12 @@ interface CreateRoleDialogProps {
 export function CreateRoleDialog({
   open,
   onOpenChange,
-  onRoleCreate,
 }: CreateRoleDialogProps) {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { mutate: createRole, isPending } = useCreateBusinessRole(
+    user?.businessId
+  );
+
   const form = useForm<CreateRoleInput>({
     resolver: zodResolver(createRoleSchema),
     defaultValues: {
@@ -69,40 +77,31 @@ export function CreateRoleDialog({
   };
 
   const onSubmit = (values: CreateRoleInput) => {
-    const flatPermissions: Record<string, boolean> = {};
+    if (authLoading) {
+      hotToast.error("Authentication is still loading");
+      return;
+    }
+    if (!isAuthenticated || !user?.businessId) {
+      hotToast.error(
+        "You must be logged in with a valid business to create a role"
+      );
+      return;
+    }
 
-    Object.entries(values.permissions).forEach(([module, actions]) => {
-      Object.entries(actions).forEach(([action, value]) => {
-        if (value === true) {
-          const moduleKey = module.charAt(0).toUpperCase() + module.slice(1);
-          const backendKey = `${action}${moduleKey}`;
-          flatPermissions[backendKey] = true;
-        }
-      });
+    const toastId = sonnerToast.loading("Creating role...");
+
+    createRole(values, {
+      onSuccess: (response) => {
+        sonnerToast.dismiss(toastId);
+        hotToast.success(response.message || "Role created successfully");
+        onOpenChange(false);
+        form.reset();
+      },
+      onError: (error) => {
+        sonnerToast.dismiss(toastId);
+        hotToast.error(error.message);
+      },
     });
-
-    // Construct payload for backend
-    const payload = {
-      roleName: values.title,
-      description: values.description,
-      businessId: "SOME_BUSINESS_ID", // <-- inject actual businessId here
-      ...flatPermissions,
-    };
-
-    console.log("Backend payload:", payload);
-
-    const newRole: Role = {
-      id: `r${Date.now()}`,
-      activeUsers: 0,
-      dateCreated: new Date().toISOString(),
-      title: values.title,
-      description: values.description,
-      permissions: values.permissions, // keep original nested for FE
-    };
-
-    onRoleCreate(newRole);
-    onOpenChange(false);
-    form.reset();
   };
 
   const handleCancel = () => {
@@ -274,9 +273,10 @@ export function CreateRoleDialog({
               </Button>
               <Button
                 type="submit"
+                disabled={isPending || authLoading}
                 className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8"
               >
-                Create Role
+                {isPending ? "Creating..." : "Create Role"}
               </Button>
             </DialogFooter>
           </form>
