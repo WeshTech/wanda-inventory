@@ -29,142 +29,43 @@ import {
 } from "@/components/ui/tooltip";
 import { CreateRoleDialog } from "./create-role-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
+import { useAuthStore } from "@/stores/authStore";
+import { useGetBusinessRoles } from "@/server-queries/roleQueries";
+import { BusinessRoleItem } from "@/types/roles";
+import { formatToKenyanTime } from "@/utils/time-format";
 
-// Update types to match CreateRoleDialog
-type PermissionActions = {
-  create: boolean;
-  extract: boolean; // Changed from 'read' to 'extract'
-  update: boolean;
-  delete: boolean;
-};
-
-type PermissionModuleKeys =
-  | "store"
-  | "users"
-  | "roles"
-  | "products"
-  | "storeInventory"
-  | "categories"
-  | "transfers"
-  | "sales"
-  | "invoices"
-  | "suppliers"
-  | "purchaseOrders";
-
-type Role = {
-  id: string;
+type RoleRow = {
   title: string;
   description: string;
   activeUsers: number;
-  dateCreated: string; // ISO string
-  permissions: {
-    [key in PermissionModuleKeys]: PermissionActions;
-  };
+  dateCreated: string;
 };
 
-// Update MOCK_ROLES to include all permission modules and use 'extract'
-const MOCK_ROLES: Role[] = [
-  {
-    id: "r1",
-    title: "Administrator",
-    description: "Full access to all features and settings.",
-    activeUsers: 2,
-    dateCreated: "2024-01-15T09:00:00Z",
-    permissions: {
-      store: { create: true, extract: true, update: true, delete: true },
-      users: { create: true, extract: true, update: true, delete: true },
-      roles: { create: true, extract: true, update: true, delete: true },
-      products: { create: true, extract: true, update: true, delete: true },
-      storeInventory: {
-        create: true,
-        extract: true,
-        update: true,
-        delete: true,
-      },
-      categories: { create: true, extract: true, update: true, delete: true },
-      transfers: { create: true, extract: true, update: true, delete: true },
-      sales: { create: true, extract: true, update: true, delete: true },
-      invoices: { create: true, extract: true, update: true, delete: true },
-      suppliers: { create: true, extract: true, update: true, delete: true },
-      purchaseOrders: {
-        create: true,
-        extract: true,
-        update: true,
-        delete: true,
-      },
-    },
-  },
-  {
-    id: "r2",
-    title: "Editor",
-    description: "Can create and update content, but limited deletion.",
-    activeUsers: 5,
-    dateCreated: "2024-02-20T11:30:00Z",
-    permissions: {
-      store: { create: true, extract: true, update: true, delete: false },
-      users: { create: true, extract: true, update: true, delete: false },
-      roles: { create: false, extract: true, update: false, delete: false },
-      products: { create: true, extract: true, update: true, delete: false },
-      storeInventory: {
-        create: true,
-        extract: true,
-        update: true,
-        delete: false,
-      },
-      categories: { create: true, extract: true, update: true, delete: false },
-      transfers: { create: true, extract: true, update: true, delete: false },
-      sales: { create: true, extract: true, update: true, delete: false },
-      invoices: { create: true, extract: true, update: true, delete: false },
-      suppliers: { create: true, extract: true, update: true, delete: false },
-      purchaseOrders: {
-        create: true,
-        extract: true,
-        update: true,
-        delete: false,
-      },
-    },
-  },
-  {
-    id: "r3",
-    title: "Viewer",
-    description: "Read-only access to most data.",
-    activeUsers: 10,
-    dateCreated: "2024-03-01T14:00:00Z",
-    permissions: {
-      store: { create: false, extract: true, update: false, delete: false },
-      users: { create: false, extract: true, update: false, delete: false },
-      roles: { create: false, extract: true, update: false, delete: false },
-      products: { create: false, extract: true, update: false, delete: false },
-      storeInventory: {
-        create: false,
-        extract: true,
-        update: false,
-        delete: false,
-      },
-      categories: {
-        create: false,
-        extract: true,
-        update: false,
-        delete: false,
-      },
-      transfers: { create: false, extract: true, update: false, delete: false },
-      sales: { create: false, extract: true, update: false, delete: false },
-      invoices: { create: false, extract: true, update: false, delete: false },
-      suppliers: { create: false, extract: true, update: false, delete: false },
-      purchaseOrders: {
-        create: false,
-        extract: true,
-        update: false,
-        delete: false,
-      },
-    },
-  },
-];
-
 export function RolesTable() {
-  const [roles, setRoles] = useState<Role[]>(MOCK_ROLES);
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddRoleDialogOpen, setIsAddRoleDialogOpen] = useState(false);
+
+  const user = useAuthStore((state) => state.user);
+  const businessId = user?.businessId;
+
+  const {
+    data: rolesResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useGetBusinessRoles(businessId);
+
+  const roles: RoleRow[] = useMemo(() => {
+    if (!rolesResponse?.success || !rolesResponse.data?.roles) {
+      return [];
+    }
+    return rolesResponse.data.roles.map((role: BusinessRoleItem) => ({
+      title: role.roleName.charAt(0).toUpperCase() + role.roleName.slice(1),
+      description: role.description,
+      activeUsers: role.activeUsers,
+      dateCreated: formatToKenyanTime(new Date(role.createdAt)),
+    }));
+  }, [rolesResponse]);
 
   const handleExportData = () => {
     toast.info("Feature Coming Soon", {
@@ -172,25 +73,22 @@ export function RolesTable() {
     });
   };
 
-  const handleEditRole = (role: Role) => {
+  const handleEditRole = (role: RoleRow) => {
     console.log("Editing role:", role.title);
     toast.info("Edit Role", {
       description: `Opening edit form for ${role.title}. (Not implemented)`,
     });
-    // Implement actual edit logic or open an edit dialog
   };
 
-  // Define onRoleCreate callback for CreateRoleDialog
-  const handleRoleCreate = (newRole: Role) => {
+  const handleRoleCreate = (newRole: RoleRow) => {
     console.log(newRole);
-    setRoles((prev) => [...prev, newRole]);
     toast.success("Role Added!", {
       description: `The role "${newRole.title}" has been successfully added.`,
     });
     setIsAddRoleDialogOpen(false);
   };
 
-  const columns: ColumnDef<Role>[] = useMemo(
+  const columns: ColumnDef<RoleRow>[] = useMemo(
     () => [
       {
         accessorKey: "title",
@@ -315,7 +213,28 @@ export function RolesTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  Loading roles...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-destructive"
+                >
+                  Error: {rolesResponse?.message || "Failed to load roles"}
+                  <Button variant="default" onClick={() => refetch()}>
+                    Retry
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -346,7 +265,6 @@ export function RolesTable() {
       </div>
       <DataTablePagination table={table} />
 
-      {/* Use CreateRoleDialog */}
       <CreateRoleDialog
         open={isAddRoleDialogOpen}
         onOpenChange={setIsAddRoleDialogOpen}
