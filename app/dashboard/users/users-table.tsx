@@ -6,7 +6,6 @@ import {
   Download,
   Upload,
   UserPlus,
-  MoreHorizontal,
   Edit,
   Ban,
   Trash2,
@@ -14,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -34,14 +33,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,102 +50,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { InviteUserDialog } from "./invite-user-dalog";
-import { InviteUserForm } from "@/schemas/inviteUserSchema";
-
-type User = {
-  id: string;
-  profilePhoto: string;
-  name: string;
-  role: "Admin" | "Member" | "Viewer";
-  email: string;
-};
-
-const MOCK_USERS: User[] = [
-  {
-    id: "1",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Alice Smith",
-    role: "Admin",
-    email: "alice.smith@example.com",
-  },
-  {
-    id: "2",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Bob Johnson",
-    role: "Member",
-    email: "bob.johnson@example.com",
-  },
-  {
-    id: "3",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Charlie Brown",
-    role: "Viewer",
-    email: "charlie.brown@example.com",
-  },
-  {
-    id: "4",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Diana Prince",
-    role: "Admin",
-    email: "diana.prince@example.com",
-  },
-  {
-    id: "5",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Eve Adams",
-    role: "Member",
-    email: "eve.adams@example.com",
-  },
-  {
-    id: "6",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Frank White",
-    role: "Viewer",
-    email: "frank.white@example.com",
-  },
-  {
-    id: "7",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Grace Lee",
-    role: "Admin",
-    email: "grace.lee@example.com",
-  },
-  {
-    id: "8",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Henry King",
-    role: "Member",
-    email: "henry.king@example.com",
-  },
-  {
-    id: "9",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Ivy Queen",
-    role: "Viewer",
-    email: "ivy.queen@example.com",
-  },
-  {
-    id: "10",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Jack Black",
-    role: "Admin",
-    email: "jack.black@example.com",
-  },
-  {
-    id: "11",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Karen Green",
-    role: "Member",
-    email: "karen.green@example.com",
-  },
-  {
-    id: "12",
-    profilePhoto: "/placeholder.svg?height=40&width=40",
-    name: "Liam Blue",
-    role: "Viewer",
-    email: "liam.blue@example.com",
-  },
-];
+import { InviteUserForm } from "@/schemas/users/inviteUserSchema";
+import { MOCK_USERS, User } from "./mock";
 
 const getRoleColor = (role: User["role"]) => {
   switch (role) {
@@ -173,12 +75,13 @@ export function UsersTable() {
   const [isConfirmBlockDialogOpen, setIsConfirmBlockDialogOpen] =
     useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
   const handleInviteUser = (data: InviteUserForm) => {
     console.log("Inviting user:", data);
     // Here you would typically send the data to your API
-    alert(
-      `User invited successfully!\nEmail: ${data.email}\nUsername: ${data.username}\nRole: ${data.role}\nStore: ${data.store}`
-    );
+    toast.success("User Invited", {
+      description: `Invitation sent to ${data.email}`,
+    });
   };
 
   const columns: ColumnDef<User>[] = useMemo(
@@ -220,38 +123,71 @@ export function UsersTable() {
         cell: ({ row }) => <div>{row.original.email}</div>,
       },
       {
+        accessorKey: "joinDate",
+        header: "Join Date",
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {new Date(row.original.joinDate).toLocaleString()}
+          </div>
+        ),
+      },
+      {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
           const user = row.original;
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button aria-haspopup="true" size="icon" variant="ghost">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit User
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleBlockUser(user)}>
-                  <Ban className="mr-2 h-4 w-4" />
-                  Block User
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDeleteUser(user)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete User
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TooltipProvider>
+              <div className="flex items-center gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEditUser(user)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                      onClick={() => handleBlockUser(user)}
+                    >
+                      <Ban className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Block</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                      onClick={() => handleDeleteUser(user)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           );
         },
         enableSorting: false,
@@ -358,7 +294,7 @@ export function UsersTable() {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none min-w-[100px]"
+            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
             onClick={handleExport}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -368,7 +304,7 @@ export function UsersTable() {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none min-w-[100px]"
+            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
             onClick={handleImport}
           >
             <Upload className="mr-2 h-4 w-4" />
@@ -386,57 +322,55 @@ export function UsersTable() {
         </div>
       </div>
 
-      <div className="rounded-lg border shadow-sm">
-        <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
+      <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No users found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No users found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
       <DataTablePagination table={table} />
 
@@ -457,7 +391,7 @@ export function UsersTable() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmBlockUser}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-red-100 hover:text-red-700"
             >
               Block
             </AlertDialogAction>
@@ -482,13 +416,14 @@ export function UsersTable() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteUser}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-red-100 hover:text-red-700"
             >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <InviteUserDialog
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}

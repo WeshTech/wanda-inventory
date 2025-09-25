@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MoreHorizontal, Trash2, Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -24,12 +24,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,24 +138,23 @@ export function InvitesTable() {
         cell: ({ row }) => {
           const invite = row.original;
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button aria-haspopup="true" size="icon" variant="ghost">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => handleRevokeInvite(invite)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Revoke Invite
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                    onClick={() => handleRevokeInvite(invite)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Revoke</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           );
         },
         enableSorting: false,
@@ -217,7 +215,7 @@ export function InvitesTable() {
         {/* No export/import/invite buttons for invites table as per previous request, but can be added */}
       </div>
 
-      <div className="rounded-lg border shadow-sm max-w-screen overflow-x-auto">
+      <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -286,7 +284,7 @@ export function InvitesTable() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmRevokeInvite}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-red-100 hover:text-red-700"
             >
               Revoke
             </AlertDialogAction>

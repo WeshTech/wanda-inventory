@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Download, Plus, Search } from "lucide-react";
+import { Download, Plus, Search, Edit } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -21,8 +21,14 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { CreateRoleDialog } from "./create-role-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-import { CreateRoleDialog } from "./create-role-dialog"; // Import the provided CreateRoleDialog
 
 // Update types to match CreateRoleDialog
 type PermissionActions = {
@@ -166,6 +172,14 @@ export function RolesTable() {
     });
   };
 
+  const handleEditRole = (role: Role) => {
+    console.log("Editing role:", role.title);
+    toast.info("Edit Role", {
+      description: `Opening edit form for ${role.title}. (Not implemented)`,
+    });
+    // Implement actual edit logic or open an edit dialog
+  };
+
   // Define onRoleCreate callback for CreateRoleDialog
   const handleRoleCreate = (newRole: Role) => {
     console.log(newRole);
@@ -205,6 +219,34 @@ export function RolesTable() {
         cell: ({ row }) => (
           <div>{new Date(row.original.dateCreated).toLocaleDateString()}</div>
         ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const role = row.original;
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleEditRole(role)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Edit Role</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        },
+        enableSorting: false,
+        enableHiding: false,
       },
     ],
     []
@@ -252,7 +294,7 @@ export function RolesTable() {
         </div>
       </div>
 
-      <div className="rounded-lg border shadow-sm max-w-screen overflow-x-auto">
+      <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

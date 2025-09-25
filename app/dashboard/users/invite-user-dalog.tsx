@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -28,21 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Zod validation schema
-const inviteUserSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  username: z
-    .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be less than 20 characters"),
-  role: z.enum(["Admin", "Member", "Viewer"]).refine((val) => !!val, {
-    message: "Please select a role",
-  }),
-  store: z.string().min(1, "Please select a store"),
-});
-
-type InviteUserForm = z.infer<typeof inviteUserSchema>;
+import {
+  InviteUserForm,
+  inviteUserSchema,
+} from "@/schemas/users/inviteUserSchema";
 
 interface InviteUserDialogProps {
   isOpen: boolean;
@@ -90,7 +78,7 @@ export function InviteUserDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-background border-border fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 grid w-full gap-4 border p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader className="text-center">
           <DialogTitle className="text-foreground">Invite New User</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -118,7 +106,7 @@ export function InviteUserDialog({
                         id="email"
                         type="email"
                         placeholder="user@example.com"
-                        className="h-12 rounded-full border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring dark:border-input dark:bg-background"
+                        className="h-12 rounded-full border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring"
                         {...field}
                       />
                     </FormControl>
@@ -140,7 +128,7 @@ export function InviteUserDialog({
                         id="username"
                         type="text"
                         placeholder="johndoe"
-                        className="h-12 rounded-full border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring dark:border-input dark:bg-background"
+                        className="h-12 rounded-full border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring"
                         {...field}
                       />
                     </FormControl>
@@ -164,7 +152,7 @@ export function InviteUserDialog({
                       <FormControl>
                         <SelectTrigger
                           id="role"
-                          className="h-12 rounded-full w-1/2 border-input bg-background text-foreground dark:border-input dark:bg-background"
+                          className="h-12 rounded-full w-1/2 border-input bg-background text-foreground"
                         >
                           <SelectValue placeholder="Select user role" />
                         </SelectTrigger>
@@ -207,7 +195,7 @@ export function InviteUserDialog({
                       <FormControl>
                         <SelectTrigger
                           id="store"
-                          className="h-12 rounded-full w-1/2 border-input bg-background text-foreground dark:border-input dark:bg-background"
+                          className="h-12 rounded-full w-1/2 border-input bg-background text-foreground"
                         >
                           <SelectValue placeholder="Select store location" />
                         </SelectTrigger>
@@ -257,7 +245,7 @@ export function InviteUserDialog({
                 type="button"
                 variant="outline"
                 onClick={handleCancel}
-                className="h-11 px-8 rounded-full border-input text-foreground hover:bg-accent hover:text-accent-foreground dark:border-input dark:hover:bg-accent bg-transparent"
+                className="h-11 px-8 rounded-full border-input text-foreground hover:bg-accent hover:text-accent-foreground bg-transparent"
                 disabled={isLoading}
               >
                 Cancel

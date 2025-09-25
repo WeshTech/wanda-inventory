@@ -1,8 +1,6 @@
 "use client";
 import { useForm, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import type { CheckedState } from "@radix-ui/react-checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,90 +21,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-type PermissionActions = {
-  create: boolean;
-  extract: boolean;
-  update: boolean;
-  delete: boolean;
-};
-
-type PermissionModuleKeys =
-  | "store"
-  | "users"
-  | "roles"
-  | "products"
-  | "storeInventory"
-  | "categories"
-  | "transfers"
-  | "sales"
-  | "invoices"
-  | "suppliers"
-  | "purchaseOrders";
-
-type Role = {
-  id: string;
-  title: string;
-  description: string;
-  activeUsers: number;
-  dateCreated: string;
-  permissions: {
-    [key in PermissionModuleKeys]: PermissionActions;
-  };
-};
-
-const PERMISSION_MODULES: { key: PermissionModuleKeys; label: string }[] = [
-  { key: "store", label: "Store" },
-  { key: "users", label: "Users" },
-  { key: "roles", label: "Roles" },
-  { key: "products", label: "Products" },
-  { key: "storeInventory", label: "Store Inventory" },
-  { key: "categories", label: "Categories" },
-  { key: "transfers", label: "Transfers" },
-  { key: "sales", label: "Sales" },
-  { key: "invoices", label: "Invoices" },
-  { key: "suppliers", label: "Suppliers" },
-  { key: "purchaseOrders", label: "Purchase Orders" },
-];
-
-const permissionActionsSchema = z.object({
-  create: z.boolean(),
-  extract: z.boolean(),
-  update: z.boolean(),
-  delete: z.boolean(),
-});
-
-const createRoleSchema = z.object({
-  title: z
-    .string()
-    .min(2, {
-      message: "Role title must be at least 2 characters.",
-    })
-    .max(50, {
-      message: "Role title must not exceed 50 characters.",
-    }),
-  description: z
-    .string()
-    .min(5, {
-      message: "Role description must be at least 5 characters.",
-    })
-    .max(200, {
-      message: "Role description must not exceed 200 characters.",
-    }),
-  permissions: z.object({
-    store: permissionActionsSchema,
-    users: permissionActionsSchema,
-    roles: permissionActionsSchema,
-    products: permissionActionsSchema,
-    storeInventory: permissionActionsSchema,
-    categories: permissionActionsSchema,
-    transfers: permissionActionsSchema,
-    sales: permissionActionsSchema,
-    invoices: permissionActionsSchema,
-    suppliers: permissionActionsSchema,
-    purchaseOrders: permissionActionsSchema,
-  }),
-});
+import { PermissionActions, PermissionModuleKeys, Role } from "@/types/roles";
+import {
+  CreateRoleInput,
+  createRoleSchema,
+  PERMISSION_MODULES,
+} from "@/schemas/users/createRole.Schema";
+import z from "zod";
+import { CheckedState } from "@radix-ui/react-checkbox";
 
 interface CreateRoleDialogProps {
   open: boolean;
@@ -119,7 +41,7 @@ export function CreateRoleDialog({
   onOpenChange,
   onRoleCreate,
 }: CreateRoleDialogProps) {
-  const form = useForm<z.infer<typeof createRoleSchema>>({
+  const form = useForm<CreateRoleInput>({
     resolver: zodResolver(createRoleSchema),
     defaultValues: {
       title: "",
@@ -146,13 +68,38 @@ export function CreateRoleDialog({
     form.setValue(`permissions.${moduleKey}.delete`, checked);
   };
 
-  const onSubmit = (values: z.infer<typeof createRoleSchema>) => {
+  const onSubmit = (values: CreateRoleInput) => {
+    const flatPermissions: Record<string, boolean> = {};
+
+    Object.entries(values.permissions).forEach(([module, actions]) => {
+      Object.entries(actions).forEach(([action, value]) => {
+        if (value === true) {
+          const moduleKey = module.charAt(0).toUpperCase() + module.slice(1);
+          const backendKey = `${action}${moduleKey}`;
+          flatPermissions[backendKey] = true;
+        }
+      });
+    });
+
+    // Construct payload for backend
+    const payload = {
+      roleName: values.title,
+      description: values.description,
+      businessId: "SOME_BUSINESS_ID", // <-- inject actual businessId here
+      ...flatPermissions,
+    };
+
+    console.log("Backend payload:", payload);
+
     const newRole: Role = {
       id: `r${Date.now()}`,
       activeUsers: 0,
       dateCreated: new Date().toISOString(),
-      ...values,
+      title: values.title,
+      description: values.description,
+      permissions: values.permissions, // keep original nested for FE
     };
+
     onRoleCreate(newRole);
     onOpenChange(false);
     form.reset();
@@ -226,6 +173,11 @@ export function CreateRoleDialog({
                   <h3 className="text-lg font-semibold mb-4 text-foreground">
                     Module Permissions
                   </h3>
+                  {form.formState.errors.permissions && (
+                    <p className="text-sm text-destructive mb-4">
+                      {form.formState.errors.permissions.message}
+                    </p>
+                  )}
                   <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
                     {PERMISSION_MODULES.map((module) => {
                       const modulePermissions = form.watch(
@@ -311,18 +263,18 @@ export function CreateRoleDialog({
               </div>
             </div>
 
-            <DialogFooter className="p-6 pt-4 flex flex-col sm:flex-row sm:justify-between gap-2 flex-shrink-0 border-t">
+            <DialogFooter className="p-6 pt-4 flex flex-row justify-center gap-4 flex-shrink-0 border-t">
               <Button
                 variant="ghost"
                 onClick={handleCancel}
                 type="button"
-                className="rounded-full border border-input bg-transparent hover:bg-accent hover:text-accent-foreground w-full sm:w-auto"
+                className="rounded-full border border-input bg-transparent hover:bg-accent hover:text-accent-foreground px-8"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-8"
               >
                 Create Role
               </Button>
