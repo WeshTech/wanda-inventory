@@ -28,13 +28,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CreateRoleDialog } from "./create-role-dialog";
+import { UpdateRoleDialog } from "./update-role-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { useAuthStore } from "@/stores/authStore";
 import { useGetBusinessRoles } from "@/server-queries/roleQueries";
 import { BusinessRoleItem } from "@/types/roles";
 import { formatToKenyanTime } from "@/utils/time-format";
+import Loader from "@/components/ui/loading-spiner";
 
 type RoleRow = {
+  id: string;
   title: string;
   description: string;
   activeUsers: number;
@@ -44,6 +47,7 @@ type RoleRow = {
 export function RolesTable() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddRoleDialogOpen, setIsAddRoleDialogOpen] = useState(false);
+  const [updateRoleId, setUpdateRoleId] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
   const businessId = user?.businessId;
@@ -60,6 +64,7 @@ export function RolesTable() {
       return [];
     }
     return rolesResponse.data.roles.map((role: BusinessRoleItem) => ({
+      id: role.roleId,
       title: role.roleName.charAt(0).toUpperCase() + role.roleName.slice(1),
       description: role.description,
       activeUsers: role.activeUsers,
@@ -74,18 +79,13 @@ export function RolesTable() {
   };
 
   const handleEditRole = (role: RoleRow) => {
-    console.log("Editing role:", role.title);
-    toast.info("Edit Role", {
-      description: `Opening edit form for ${role.title}. (Not implemented)`,
-    });
+    setUpdateRoleId(role.id);
   };
 
-  const handleRoleCreate = (newRole: RoleRow) => {
-    console.log(newRole);
-    toast.success("Role Added!", {
-      description: `The role "${newRole.title}" has been successfully added.`,
-    });
+  const handleRoleCreate = () => {
+    refetch();
     setIsAddRoleDialogOpen(false);
+    toast.success("Role created successfully");
   };
 
   const columns: ColumnDef<RoleRow>[] = useMemo(
@@ -114,9 +114,7 @@ export function RolesTable() {
       {
         accessorKey: "dateCreated",
         header: "Date Created",
-        cell: ({ row }) => (
-          <div>{new Date(row.original.dateCreated).toLocaleDateString()}</div>
-        ),
+        cell: ({ row }) => <div>{row.original.dateCreated}</div>,
       },
       {
         id: "actions",
@@ -219,7 +217,7 @@ export function RolesTable() {
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  Loading roles...
+                  <Loader text="Loading roles..." size="md" />
                 </TableCell>
               </TableRow>
             ) : error ? (
@@ -269,6 +267,14 @@ export function RolesTable() {
         open={isAddRoleDialogOpen}
         onOpenChange={setIsAddRoleDialogOpen}
         onRoleCreate={handleRoleCreate}
+      />
+      <UpdateRoleDialog
+        open={!!updateRoleId}
+        onOpenChange={(open) => {
+          if (!open) setUpdateRoleId(null);
+        }}
+        roleId={updateRoleId}
+        onRoleUpdate={refetch}
       />
     </div>
   );

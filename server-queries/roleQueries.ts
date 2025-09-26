@@ -1,11 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  UseMutationOptions,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { CreateRoleInput } from "@/schemas/users/createRole.Schema";
 import { createBusinessRoleApi } from "@/server/roles/create-role";
 import { getBusinessRoles } from "@/server/roles/get-all-roes";
 import {
   BusinessRolesResponse,
   CreateBusinessRoleResponse,
+  SingleRoleResponse,
+  UpdateBusinessRoleResponse,
 } from "@/types/roles";
+import { getBusinessRoleApi } from "@/server/roles/get-role-by-id";
+import { updateBusinessRoleApi } from "@/server/roles/update-role";
 
 export const useCreateBusinessRole = (businessId?: string) => {
   const queryClient = useQueryClient();
@@ -31,5 +40,46 @@ export const useGetBusinessRoles = (businessId?: string) => {
     queryFn: getBusinessRoles,
     enabled: !!businessId,
     staleTime: 1000 * 60 * 5,
+  });
+};
+
+//get a singe role by id
+export const useGetBusinessRole = (roleId: string) => {
+  return useQuery<SingleRoleResponse, Error>({
+    queryKey: ["getRoleById", roleId],
+    queryFn: () => getBusinessRoleApi(roleId),
+    enabled: !!roleId,
+  });
+};
+
+//update role
+export const useUpdateBusinessRole = (
+  businessId?: string,
+  options?: UseMutationOptions<
+    UpdateBusinessRoleResponse,
+    Error,
+    { formData: CreateRoleInput & { businessId: string }; roleId: string }
+  >
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    UpdateBusinessRoleResponse,
+    Error,
+    { formData: CreateRoleInput & { businessId: string }; roleId: string }
+  >({
+    mutationFn: ({ formData, roleId }) =>
+      updateBusinessRoleApi(formData, roleId),
+    onSuccess: (data, variables) => {
+      if (businessId) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessRoles", businessId],
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["getRoleById", variables.roleId],
+      });
+    },
+    ...options,
   });
 };
