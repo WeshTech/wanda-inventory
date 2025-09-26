@@ -46,10 +46,6 @@ export const getBusinessStores = async (): Promise<GetStoresResult> => {
           "Something went wrong. Please check your connection and try again",
       };
     }
-    return {
-      success: false,
-      message:
-        "Something went wrong. Please check your connection and try again",
-    };
+    throw error;
   }
 };

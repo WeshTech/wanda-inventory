@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import {
   Download,
@@ -10,6 +10,7 @@ import {
   Ban,
   Trash2,
   Search,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,7 +21,6 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,9 +51,14 @@ import {
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { InviteUserDialog } from "./invite-user-dalog";
 import { InviteUserForm } from "@/schemas/users/inviteUserSchema";
-import { MOCK_USERS, User } from "./mock";
+import { BusinessUserResponseData } from "@/types/users";
+import { useAuthStore } from "@/stores/authStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useBusinessUsers } from "@/server-queries/userQuery";
+import { formatToKenyanTime } from "@/utils/time-format";
+import Loader from "@/components/ui/loading-spiner";
 
-const getRoleColor = (role: User["role"]) => {
+const getRoleColor = (role: string) => {
   switch (role) {
     case "Admin":
       return "bg-primary/10 text-primary";
@@ -67,53 +72,77 @@ const getRoleColor = (role: User["role"]) => {
 };
 
 export function UsersTable() {
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+
+  const businessId = user?.businessId;
+  const {
+    data,
+    isLoading: queryLoading,
+    isFetching,
+    error,
+  } = useBusinessUsers(businessId);
+
   const [globalFilter, setGlobalFilter] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [isConfirmBlockDialogOpen, setIsConfirmBlockDialogOpen] =
     useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] =
+    useState<BusinessUserResponseData | null>(null);
+
+  useEffect(() => {
+    if (isAuthLoading) {
+      toast("Authenticating", {
+        description: "Verifying user credentials...",
+      });
+    }
+  }, [isAuthLoading]);
+
+  const users = data?.data ?? [];
+
+  // ✅ Merge all loading states together
+  const isLoading = isAuthLoading || queryLoading || isFetching;
 
   const handleInviteUser = (data: InviteUserForm) => {
     console.log("Inviting user:", data);
-    // Here you would typically send the data to your API
     toast.success("User Invited", {
       description: `Invitation sent to ${data.email}`,
     });
   };
 
-  const columns: ColumnDef<User>[] = useMemo(
+  const columns: ColumnDef<BusinessUserResponseData>[] = useMemo(
     () => [
       {
         accessorKey: "profilePhoto",
         header: "Photo",
         cell: ({ row }) => (
-          <Image
-            src={row.original.profilePhoto || "/placeholder.svg"}
-            alt={`${row.original.name}'s profile photo`}
-            width={40}
-            height={40}
-            className="rounded-full object-cover"
-          />
+          <div className="flex justify-center">
+            <Image
+              src={"/images/placeholder.jpg"}
+              alt={`${row.original.userName}'s profile photo`}
+              width={40}
+              height={40}
+              className="rounded-full object-cover"
+            />
+          </div>
         ),
         enableSorting: false,
         enableHiding: false,
       },
       {
-        accessorKey: "name",
+        accessorKey: "userName",
         header: "Name",
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.name}</div>
+          <div className="font-medium">{row.original.userName}</div>
         ),
       },
       {
-        accessorKey: "role",
+        accessorKey: "roleName",
         header: "Role",
         cell: ({ row }) => (
-          <Badge className={getRoleColor(row.original.role)}>
-            {row.original.role}
+          <Badge className={getRoleColor(row.original.roleName)}>
+            {row.original.roleName}
           </Badge>
         ),
       },
@@ -123,11 +152,35 @@ export function UsersTable() {
         cell: ({ row }) => <div>{row.original.email}</div>,
       },
       {
-        accessorKey: "joinDate",
+        accessorKey: "storeName",
+        header: "Store",
+        cell: ({ row }) => (
+          <div
+            className={
+              row.original.storeName
+                ? "text-foreground"
+                : "text-red-600 bg-red-50 px-2 py-1 rounded"
+            }
+          >
+            {row.original.storeName ?? "Unassigned"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
         header: "Join Date",
         cell: ({ row }) => (
           <div className="text-sm">
-            {new Date(row.original.joinDate).toLocaleString()}
+            {formatToKenyanTime(new Date(row.original.createdAt))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "updatedAt",
+        header: "Last Updated",
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {formatToKenyanTime(new Date(row.original.updatedAt))}
           </div>
         ),
       },
@@ -154,7 +207,6 @@ export function UsersTable() {
                     <p>Edit</p>
                   </TooltipContent>
                 </Tooltip>
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -170,7 +222,6 @@ export function UsersTable() {
                     <p>Block</p>
                   </TooltipContent>
                 </Tooltip>
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -209,75 +260,67 @@ export function UsersTable() {
     },
     initialState: {
       pagination: {
-        pageSize: 10, // Default page size
+        pageSize: 10,
       },
     },
   });
 
   const handleExport = () => {
-    console.log("Exporting users...");
     toast.info("Export Initiated", {
       description: "User data is being prepared for download.",
     });
-    // In a real app, trigger a download or API call
   };
 
   const handleImport = () => {
-    console.log("Importing users...");
     toast.info("Import Initiated", {
       description: "Please select a file to import user data.",
     });
-    // In a real app, open file input dialog
   };
 
-  const handleEditUser = (user: User) => {
-    console.log("Editing user:", user.name);
+  const handleEditUser = (user: BusinessUserResponseData) => {
     toast.info("Edit User", {
-      description: `Opening edit form for ${user.name}. (Not implemented)`,
+      description: `Opening edit form for ${user.userName}. (Not implemented)`,
     });
-    // Implement actual edit logic or open an edit dialog
   };
 
-  const handleBlockUser = (user: User) => {
+  const handleBlockUser = (user: BusinessUserResponseData) => {
     setSelectedUser(user);
     setIsConfirmBlockDialogOpen(true);
   };
 
   const confirmBlockUser = () => {
     if (selectedUser) {
-      console.log("Blocking user:", selectedUser.name);
-      setUsers(users.filter((u) => u.id !== selectedUser.id)); // Remove from local state for demo
       toast.warning("User Blocked", {
-        description: `${selectedUser.name} has been blocked.`,
+        description: `${selectedUser.userName} has been blocked.`,
       });
-      // In a real app, update user status in backend
       setIsConfirmBlockDialogOpen(false);
       setSelectedUser(null);
     }
   };
 
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = (user: BusinessUserResponseData) => {
     setSelectedUser(user);
     setIsConfirmDeleteDialogOpen(true);
   };
 
   const confirmDeleteUser = () => {
     if (selectedUser) {
-      console.log("Deleting user:", selectedUser.name);
-      setUsers(users.filter((u) => u.id !== selectedUser.id)); // Remove from local state for demo
       toast.error("User Deleted", {
-        description: `${selectedUser.name} has been permanently deleted.`,
+        description: `${selectedUser.userName} has been permanently deleted.`,
       });
-      // In a real app, delete user from backend
       setIsConfirmDeleteDialogOpen(false);
       setSelectedUser(null);
     }
   };
 
+  const handleClearSearch = () => {
+    setGlobalFilter("");
+  };
+
   return (
     <div className="grid gap-4 p-2">
+      {/* Search + Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        {/* Search Input - Full width on mobile, constrained on larger screens */}
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -288,8 +331,6 @@ export function UsersTable() {
             onChange={(event) => table.setGlobalFilter(event.target.value)}
           />
         </div>
-
-        {/* Action Buttons - Wrap on small screens, stay in row on larger */}
         <div className="flex flex-wrap gap-2 justify-end">
           <Button
             variant="outline"
@@ -300,7 +341,6 @@ export function UsersTable() {
             <Download className="mr-2 h-4 w-4" />
             <span className="hidden lg:flex">Export</span>
           </Button>
-
           <Button
             variant="outline"
             size="sm"
@@ -310,7 +350,6 @@ export function UsersTable() {
             <Upload className="mr-2 h-4 w-4" />
             <span className="hidden lg:flex">Import</span>
           </Button>
-
           <Button
             size="sm"
             className="flex-1 sm:flex-none min-w-[120px]"
@@ -322,28 +361,71 @@ export function UsersTable() {
         </div>
       </div>
 
+      {/* Table */}
       <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              //  Loader state
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  <Loader text="Loading users..." size="md" />
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              //  Error state
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-red-600"
+                >
+                  Error: {error.message || "Failed to fetch users."}
+                </TableCell>
+              </TableRow>
+            ) : users.length === 0 ? (
+              // Empty state (after fetch is done)
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-lg font-medium">No user found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create your first role
+                    </p>
+                    <Button onClick={() => setIsDialogOpen(true)}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Create User
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              //  Data rows
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -360,21 +442,35 @@ export function UsersTable() {
                 </TableRow>
               ))
             ) : (
+              // 🔍 Filtered out state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-64 text-center text-muted-foreground"
                 >
-                  No users found.
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-base font-medium">
+                      No business users match the applied filters
+                    </p>
+                    <Button onClick={handleClearSearch} variant="outline">
+                      <X className="mr-2 h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
+
       <DataTablePagination table={table} />
 
-      {/* Block User Confirmation Dialog */}
+      {/* Block dialog */}
       <AlertDialog
         open={isConfirmBlockDialogOpen}
         onOpenChange={setIsConfirmBlockDialogOpen}
@@ -383,8 +479,9 @@ export function UsersTable() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will block {selectedUser?.name}. They will no longer
-              be able to access the application. You can unblock them later.
+              This action will block {selectedUser?.userName}. They will no
+              longer be able to access the application. You can unblock them
+              later.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -399,7 +496,7 @@ export function UsersTable() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete User Confirmation Dialog */}
+      {/* Delete dialog */}
       <AlertDialog
         open={isConfirmDeleteDialogOpen}
         onOpenChange={setIsConfirmDeleteDialogOpen}
@@ -409,7 +506,7 @@ export function UsersTable() {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete{" "}
-              {selectedUser?.name} and remove their data from our servers.
+              {selectedUser?.userName} and remove their data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
