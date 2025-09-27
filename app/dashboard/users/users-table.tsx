@@ -356,7 +356,7 @@ export function UsersTable() {
             onClick={() => setIsDialogOpen(true)}
           >
             <UserPlus className="mr-2 h-4 w-4" />
-            <span className="sr-only sm:not-sr-only">Invite Users</span>
+            <span className="sr-only sm:not-sr-only">Add Users</span>
           </Button>
         </div>
       </div>

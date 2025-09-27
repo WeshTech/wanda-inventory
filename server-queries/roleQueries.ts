@@ -39,7 +39,7 @@ export const useGetBusinessRoles = (businessId?: string) => {
     queryKey: ["getBusinessRoles", businessId],
     queryFn: getBusinessRoles,
     enabled: !!businessId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 60 * 60 * 1000 * 10,
   });
 };
 
@@ -49,6 +49,7 @@ export const useGetBusinessRole = (roleId: string) => {
     queryKey: ["getRoleById", roleId],
     queryFn: () => getBusinessRoleApi(roleId),
     enabled: !!roleId,
+    staleTime: 60 * 60 * 1000 * 10,
   });
 };
 

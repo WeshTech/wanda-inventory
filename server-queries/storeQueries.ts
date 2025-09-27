@@ -19,6 +19,7 @@ export const useGetBusinessStores = () => {
     queryKey: ["getbusinessStores", user?.businessId],
     queryFn: getBusinessStores,
     enabled: !authLoading && isAuthenticated && !!user?.businessId,
+    staleTime: 60 * 60 * 1000 * 10,
   });
 };
 
