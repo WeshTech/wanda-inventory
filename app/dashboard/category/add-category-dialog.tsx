@@ -1,7 +1,7 @@
 "use client";
+
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import {
   Dialog,
   DialogContent,
@@ -11,50 +11,89 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ComboBox } from "@/components/ui/combobox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  CategoryFormData,
+  categorySchema,
+} from "@/schemas/storeCategorySchema";
+import toast from "react-hot-toast";
+import { toast as sonner } from "sonner";
+import { useCreateStoreCategory } from "@/server-queries/storeCategoryQueries";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGetBusinessStores } from "@/server-queries/storeQueries";
+import { useAuthStore } from "@/stores/authStore";
+import Loader from "@/components/ui/loading-spiner";
 
-const categorySchema = z.object({
-  name: z.string().min(1, "Category name is required"),
-  store: z.string().min(1, "Store is required"),
-});
-
-type CategoryFormData = z.infer<typeof categorySchema>;
-
-// Mock stores data - replace with actual API call
-const mockStores = [
-  { value: "store1", label: "Main Store" },
-  { value: "store2", label: "Warehouse A" },
-  { value: "store3", label: "Branch Store" },
-];
+// types
+import type { CreateCategoryDataResponse } from "@/types/storeCategory";
 
 interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCategoryAdd: (data: CategoryFormData) => void;
 }
 
 export function AddCategoryDialog({
   open,
   onOpenChange,
-  onCategoryAdd,
 }: AddCategoryDialogProps) {
+  const { isLoading: authLoading } = useAuthStore();
+  const { data: storesData, isLoading: storesLoading } = useGetBusinessStores();
+
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: "",
       store: "",
+      description: "",
     },
   });
 
-  const onSubmit: SubmitHandler<CategoryFormData> = (data) => {
-    onCategoryAdd(data);
-    form.reset();
-    onOpenChange(false);
+  const createCategory = useCreateStoreCategory();
+
+  const onSubmit: SubmitHandler<CategoryFormData> = async (data) => {
+    sonner.loading("Creating category...");
+    try {
+      const res: CreateCategoryDataResponse = await createCategory.mutateAsync(
+        data
+      );
+      sonner.dismiss();
+      toast.success(res.message || "Category created successfully");
+
+      form.reset();
+      onOpenChange(false);
+    } catch (error: unknown) {
+      sonner.dismiss();
+
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to create category");
+      }
+    }
   };
+
+  // Show loader when auth is loading
+  if (authLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-lg md:max-w-xl">
+          <div className="flex justify-center items-center h-40">
+            <Loader text="preparing store data..." />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-lg md:max-w-xl bg-gray-100">
         <DialogHeader>
           <DialogTitle>Add Category</DialogTitle>
         </DialogHeader>
@@ -65,6 +104,7 @@ export function AddCategoryDialog({
               id="categoryName"
               {...form.register("name")}
               placeholder="Enter category name"
+              className="w-full"
             />
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">
@@ -74,23 +114,59 @@ export function AddCategoryDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="categoryStore">Store</Label>
-            <ComboBox
-              options={mockStores}
-              placeholder="Select store..."
-              onSelect={(value) => form.setValue("store", value)}
+            <Label htmlFor="categoryDescription">Description</Label>
+            <Textarea
+              id="categoryDescription"
+              {...form.register("description")}
+              placeholder="Enter category description"
+              className="w-full"
             />
+            {form.formState.errors.description && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.description.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 w-full md:w-3/4">
+            <Label htmlFor="categoryStore">Store</Label>
+            <Select
+              onValueChange={(value) => {
+                form.setValue("store", value);
+              }}
+              value={form.watch("store")}
+              disabled={storesLoading || !storesData?.data?.stores?.length}
+            >
+              <SelectTrigger id="categoryStore" className="w-full sm:w-3/4">
+                <SelectValue placeholder="Select store..." />
+              </SelectTrigger>
+              <SelectContent>
+                {storesData?.data?.stores?.map((store) => (
+                  <SelectItem key={store.id} value={store.id}>
+                    {store.name}{" "}
+                    <span className="text-sm text-muted-foreground">
+                      ({store.ward})
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {form.formState.errors.store && (
               <p className="text-sm text-destructive">
                 {form.formState.errors.store.message}
               </p>
             )}
+            {storesData?.data?.stores?.length === 0 && (
+              <p className="text-sm text-destructive">No stores available</p>
+            )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-center gap-2 sm:gap-4 md:gap-6 pt-4">
             <Button
               type="button"
               variant="ghost"
+              size="lg"
+              className=""
               onClick={() => {
                 form.reset();
                 onOpenChange(false);
@@ -98,8 +174,13 @@ export function AddCategoryDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full">
-              Add
+            <Button
+              type="submit"
+              size="lg"
+              className="rounded-lg"
+              disabled={createCategory.isPending || storesLoading}
+            >
+              {createCategory.isPending ? "Adding..." : "Add"}
             </Button>
           </div>
         </form>
