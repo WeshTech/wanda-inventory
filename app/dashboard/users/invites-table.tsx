@@ -26,7 +26,7 @@ import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { BusinessUserResponseData } from "@/types/users";
 import { useAuthStore } from "@/stores/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useBusinessUsers } from "@/server-queries/userQuery";
+import { useInvitedBusinessUsers } from "@/server-queries/userQuery";
 import { formatToKenyanTime } from "@/utils/time-format";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/ui/loading-spiner";
@@ -46,14 +46,14 @@ const getRoleColor = (role: string) => {
 
 export function InvitesTable() {
   const { user, isLoading: isAuthLoading } = useAuthStore();
-
   const businessId = user?.businessId;
+
   const {
     data,
     isLoading: queryLoading,
     isFetching,
     error,
-  } = useBusinessUsers(businessId);
+  } = useInvitedBusinessUsers(businessId ?? "");
 
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -65,8 +65,8 @@ export function InvitesTable() {
     }
   }, [isAuthLoading]);
 
-  const allUsers = data?.data ?? [];
-  const invites = allUsers.filter((user) => !user.isActive && !user.isBlocked);
+  // ✅ Now the API already returns invited users only
+  const invites = data?.data ?? [];
 
   // ✅ Merge all loading states together
   const isLoading = isAuthLoading || queryLoading || isFetching;

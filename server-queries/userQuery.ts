@@ -4,6 +4,7 @@ import { blockBusinessUserApi } from "@/server/users/block-user";
 import { createBusinessUserApi } from "@/server/users/create-user";
 import { getAllBusinessUsersApi } from "@/server/users/get-all-users";
 import { getBlockedBusinessUsersApi } from "@/server/users/get-blocked-users";
+import { getInvitedBusinessUsersApi } from "@/server/users/get-invited-users";
 import { unblockBusinessUserApi } from "@/server/users/unblock-user";
 import { updateBusinessUserApi } from "@/server/users/update-user";
 import { useAuthStore } from "@/stores/authStore";
@@ -37,21 +38,29 @@ export const useCreateBusinessUser = () => {
   const businessId = user?.businessId;
 
   return useMutation<CreateBusinessUserResponse, Error, InviteUserForm>({
-    mutationKey: ["createBusinessUser"],
+    mutationKey: ["createBusinessUser", businessId],
+
     mutationFn: (formData) => {
       if (!businessId || authLoading || !isAuthenticated) {
         throw new Error("Authentication required to create user");
       }
       return createBusinessUserApi(formData, businessId);
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["getbusinessUsers", businessId],
-      });
 
-      await queryClient.invalidateQueries({
-        queryKey: ["getbusinessStores", businessId],
-      });
+    onSuccess: async () => {
+      if (!businessId) return;
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessUsers", businessId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["getInvitedBusinessUsers", businessId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessStores", businessId],
+        }),
+      ]);
     },
   });
 };
@@ -148,6 +157,16 @@ export const useBlockedBusinessUsers = (businessId: string) => {
   return useQuery<BusinessUsersResponse, Error>({
     queryKey: ["getBlockedBusinessUsers", businessId],
     queryFn: () => getBlockedBusinessUsersApi(businessId),
+    enabled: !!businessId,
+    staleTime: 60 * 60 * 1000 * 10,
+  });
+};
+
+//get invited users
+export const useInvitedBusinessUsers = (businessId: string) => {
+  return useQuery<BusinessUsersResponse, Error>({
+    queryKey: ["getInvitedBusinessUsers", businessId],
+    queryFn: () => getInvitedBusinessUsersApi(businessId),
     enabled: !!businessId,
     staleTime: 60 * 60 * 1000 * 10,
   });

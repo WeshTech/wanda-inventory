@@ -226,8 +226,11 @@ export function BlockedUsersTable() {
 
   const confirmUnblockUser = () => {
     if (selectedUser && businessId) {
+      const loadingId = toast.loading("Unblocking user...");
+
       unblockMutation.mutate(selectedUser.id, {
         onSuccess: () => {
+          toast.dismiss(loadingId);
           toast.success("User Unblocked", {
             description: `${selectedUser.userName} has been unblocked.`,
           });
@@ -235,6 +238,7 @@ export function BlockedUsersTable() {
           setSelectedUser(null);
         },
         onError: () => {
+          toast.dismiss(loadingId);
           toast.error("Failed to unblock user", {
             description: `${selectedUser.userName} could not be unblocked.`,
           });

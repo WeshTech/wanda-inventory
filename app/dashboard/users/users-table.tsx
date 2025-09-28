@@ -293,8 +293,11 @@ export function UsersTable() {
 
   const confirmBlockUser = () => {
     if (selectedUser) {
+      const loadingId = toast.loading("Blocking user...");
+
       blockMutation.mutate(selectedUser.id, {
         onSuccess: () => {
+          toast.dismiss(loadingId);
           toast.success("User Blocked", {
             description: `${selectedUser.userName} has been blocked.`,
           });
@@ -302,6 +305,7 @@ export function UsersTable() {
           setSelectedUser(null);
         },
         onError: () => {
+          toast.dismiss(loadingId);
           toast.error("Failed to block user", {
             description: `${selectedUser.userName} could not be blocked.`,
           });
@@ -309,7 +313,6 @@ export function UsersTable() {
       });
     }
   };
-
   const handleDeleteUser = (user: BusinessUserResponseData) => {
     setSelectedUser(user);
     setIsConfirmDeleteDialogOpen(true);
@@ -366,6 +369,7 @@ export function UsersTable() {
             size="sm"
             className="flex-1 sm:flex-none min-w-[120px]"
             onClick={() => setIsDialogOpen(true)}
+            disabled={isLoading}
           >
             <UserPlus className="mr-2 h-4 w-4" />
             <span className="sr-only sm:not-sr-only">Add Users</span>
@@ -429,7 +433,10 @@ export function UsersTable() {
                     <p className="text-sm text-muted-foreground">
                       Create your first user
                     </p>
-                    <Button onClick={() => setIsDialogOpen(true)}>
+                    <Button
+                      onClick={() => setIsDialogOpen(true)}
+                      disabled={isLoading}
+                    >
                       <UserPlus className="mr-2 h-4 w-4" />
                       Create User
                     </Button>
