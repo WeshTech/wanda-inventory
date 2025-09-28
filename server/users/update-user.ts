@@ -1,36 +1,36 @@
-import { InviteUserForm } from "@/schemas/users/inviteUserSchema";
+import { UpdateUserForm } from "@/schemas/users/updateUserSchema";
 import { CreateBusinessUserResponse } from "@/types/users";
 import { axiosApi } from "@/utils/axios";
-import { generatePassword } from "@/utils/password-generator";
 import { AxiosError } from "axios";
 
-export const createBusinessUserApi = async (
-  formData: InviteUserForm,
-  businessId: string
+export const updateBusinessUserApi = async (
+  formData: UpdateUserForm,
+  businessId: string,
+  userId: string
 ): Promise<CreateBusinessUserResponse> => {
   try {
     const { email, username, role, store } = formData;
-    const password = generatePassword();
-    const response = await axiosApi.post<CreateBusinessUserResponse>(
-      `/businessusers`,
+    console.log({ formData });
+    const response = await axiosApi.patch<CreateBusinessUserResponse>(
+      `/businessusers/${userId}`,
       {
+        userId,
         userName: username,
         email,
         roleId: role,
         storeId: store,
         businessId,
-        password,
       }
     );
 
     if (response.data?.success) {
       return {
         success: true,
-        message: response.data?.message || "User created successfully",
+        message: response.data?.message || "User updated successfully",
         data: response.data?.data,
       };
     } else {
-      throw new Error(response.data?.message || "Users creation failed");
+      throw new Error(response.data?.message || "Users update failed");
     }
   } catch (error) {
     if (error instanceof AxiosError) {

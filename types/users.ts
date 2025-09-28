@@ -1,3 +1,20 @@
+//single user update data
+export type UpdateBusinessUserData = {
+  userId: string;
+  userName: string;
+  roleName: string;
+  email: string;
+  storeName: string;
+  updatedAt: string;
+};
+
+//update user response type
+export type UpdateBusinessUserResponse = {
+  success: boolean;
+  message: string;
+  data: UpdateBusinessUserData | null;
+};
+
 export type BusinessUserData = {
   userId: string;
   userName: string;

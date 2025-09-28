@@ -28,16 +28,8 @@ export type GetBusinessStoresResponse = {
   data: BusinessStoresData;
 };
 
-// Error response
-export type GetBusinessStoresError = {
-  success: false;
-  message: string;
-};
-
 // Union type for queries
-export type GetStoresResult =
-  | GetBusinessStoresResponse
-  | GetBusinessStoresError;
+export type GetStoresResult = GetBusinessStoresResponse;
 
 // Response when creating a new store
 export interface CreateStoreResponse {

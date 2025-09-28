@@ -49,14 +49,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-import { InviteUserDialog } from "./invite-user-dalog";
-import { InviteUserForm } from "@/schemas/users/inviteUserSchema";
+import { UpdateUserDialog } from "./update-user-dialog";
 import { BusinessUserResponseData } from "@/types/users";
 import { useAuthStore } from "@/stores/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useBusinessUsers } from "@/server-queries/userQuery";
 import { formatToKenyanTime } from "@/utils/time-format";
 import Loader from "@/components/ui/loading-spiner";
+import { InviteUserDialog } from "./invite-user-dalog";
 
 const getRoleColor = (role: string) => {
   switch (role) {
@@ -84,6 +84,9 @@ export function UsersTable() {
 
   const [globalFilter, setGlobalFilter] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [updateSelectedUser, setUpdateSelectedUser] =
+    useState<BusinessUserResponseData | null>(null);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [isConfirmBlockDialogOpen, setIsConfirmBlockDialogOpen] =
@@ -103,13 +106,6 @@ export function UsersTable() {
 
   // ✅ Merge all loading states together
   const isLoading = isAuthLoading || queryLoading || isFetching;
-
-  const handleInviteUser = (data: InviteUserForm) => {
-    console.log("Inviting user:", data);
-    toast.success("User Invited", {
-      description: `Invitation sent to ${data.email}`,
-    });
-  };
 
   const columns: ColumnDef<BusinessUserResponseData>[] = useMemo(
     () => [
@@ -278,9 +274,8 @@ export function UsersTable() {
   };
 
   const handleEditUser = (user: BusinessUserResponseData) => {
-    toast.info("Edit User", {
-      description: `Opening edit form for ${user.userName}. (Not implemented)`,
-    });
+    setUpdateSelectedUser(user);
+    setIsUpdateDialogOpen(true);
   };
 
   const handleBlockUser = (user: BusinessUserResponseData) => {
@@ -415,7 +410,7 @@ export function UsersTable() {
                     </Avatar>
                     <p className="text-lg font-medium">No user found</p>
                     <p className="text-sm text-muted-foreground">
-                      Create your first role
+                      Create your first user
                     </p>
                     <Button onClick={() => setIsDialogOpen(true)}>
                       <UserPlus className="mr-2 h-4 w-4" />
@@ -521,10 +516,12 @@ export function UsersTable() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <InviteUserDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onInviteUser={handleInviteUser}
+      <InviteUserDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
+
+      <UpdateUserDialog
+        isOpen={isUpdateDialogOpen}
+        onOpenChange={setIsUpdateDialogOpen}
+        selectedUser={updateSelectedUser ?? undefined}
       />
     </div>
   );

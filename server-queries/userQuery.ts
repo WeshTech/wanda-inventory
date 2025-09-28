@@ -1,6 +1,8 @@
 import { InviteUserForm } from "@/schemas/users/inviteUserSchema";
+import { UpdateUserForm } from "@/schemas/users/updateUserSchema";
 import { createBusinessUserApi } from "@/server/users/create-user";
 import { getAllBusinessUsersApi } from "@/server/users/get-all-users";
+import { updateBusinessUserApi } from "@/server/users/update-user";
 import { useAuthStore } from "@/stores/authStore";
 import {
   BusinessUsersResponse,
@@ -39,10 +41,38 @@ export const useCreateBusinessUser = () => {
       }
       return createBusinessUserApi(formData, businessId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["getbusinessUsers", businessId],
       });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["getbusinessStores", businessId],
+      });
+    },
+  });
+};
+
+//update business user
+export const useUpdateBusinessUser = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const businessId = user?.businessId;
+
+  return useMutation({
+    mutationFn: ({
+      formData,
+      userId,
+    }: {
+      formData: Partial<UpdateUserForm>;
+      userId: string;
+    }) => updateBusinessUserApi(formData, businessId!, userId),
+    onSuccess: () => {
+      if (businessId) {
+        queryClient.invalidateQueries({
+          queryKey: ["getbusinessUsers", businessId],
+        });
+      }
     },
   });
 };
