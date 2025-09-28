@@ -1,7 +1,10 @@
 import { InviteUserForm } from "@/schemas/users/inviteUserSchema";
 import { UpdateUserForm } from "@/schemas/users/updateUserSchema";
+import { blockBusinessUserApi } from "@/server/users/block-user";
 import { createBusinessUserApi } from "@/server/users/create-user";
 import { getAllBusinessUsersApi } from "@/server/users/get-all-users";
+import { getBlockedBusinessUsersApi } from "@/server/users/get-blocked-users";
+import { unblockBusinessUserApi } from "@/server/users/unblock-user";
 import { updateBusinessUserApi } from "@/server/users/update-user";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -67,12 +70,85 @@ export const useUpdateBusinessUser = () => {
       formData: Partial<UpdateUserForm>;
       userId: string;
     }) => updateBusinessUserApi(formData, businessId!, userId),
-    onSuccess: () => {
+    onSuccess: async () => {
       if (businessId) {
-        queryClient.invalidateQueries({
-          queryKey: ["getbusinessUsers", businessId],
-        });
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["getbusinessUsers", businessId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getbusinessStores", businessId],
+          }),
+        ]);
       }
     },
+  });
+};
+
+//block business user
+export const useBlockBusinessUser = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const businessId = user?.businessId;
+
+  return useMutation({
+    mutationKey: ["blockBusinessUser"],
+    mutationFn: async (userId: string) => {
+      if (!businessId) {
+        throw new Error("Business ID is required");
+      }
+      return blockBusinessUserApi(businessId, userId);
+    },
+    onSuccess: async () => {
+      if (businessId) {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["getbusinessUsers", businessId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getBlockedBusinessUsers", businessId],
+          }),
+        ]);
+      }
+    },
+  });
+};
+
+//unblock business user
+export const useUnblockBusinessUser = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const businessId = user?.businessId;
+
+  return useMutation({
+    mutationKey: ["unblockBusinessUser"],
+    mutationFn: async (userId: string) => {
+      if (!businessId) {
+        throw new Error("Business ID is required");
+      }
+      return unblockBusinessUserApi(businessId, userId);
+    },
+    onSuccess: async () => {
+      if (businessId) {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["getBlockedBusinessUsers", businessId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getbusinessUsers", businessId],
+          }),
+        ]);
+      }
+    },
+  });
+};
+
+//get blocked users
+export const useBlockedBusinessUsers = (businessId: string) => {
+  return useQuery<BusinessUsersResponse, Error>({
+    queryKey: ["getBlockedBusinessUsers", businessId],
+    queryFn: () => getBlockedBusinessUsersApi(businessId),
+    enabled: !!businessId,
+    staleTime: 60 * 60 * 1000 * 10,
   });
 };

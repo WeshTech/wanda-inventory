@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import Image from "next/image";
 import { Search, X } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -11,8 +12,6 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -23,71 +22,16 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
+import { BusinessUserResponseData } from "@/types/users";
+import { useAuthStore } from "@/stores/authStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useBusinessUsers } from "@/server-queries/userQuery";
+import { formatToKenyanTime } from "@/utils/time-format";
+import { Button } from "@/components/ui/button";
+import Loader from "@/components/ui/loading-spiner";
 
-type Invite = {
-  id: string;
-  email: string;
-  role: "Admin" | "Member" | "Viewer";
-  invitedAt: string; // ISO string or similar for date/time
-};
-
-const MOCK_INVITES: Invite[] = [
-  {
-    id: "inv1",
-    email: "new.user1@example.com",
-    role: "Member",
-    invitedAt: "2025-08-01T10:00:00Z",
-  },
-  {
-    id: "inv2",
-    email: "admin.candidate@example.com",
-    role: "Admin",
-    invitedAt: "2025-07-28T14:30:00Z",
-  },
-  {
-    id: "inv3",
-    email: "viewer.request@example.com",
-    role: "Viewer",
-    invitedAt: "2025-07-25T09:15:00Z",
-  },
-  {
-    id: "inv4",
-    email: "another.invite@example.com",
-    role: "Member",
-    invitedAt: "2025-08-02T11:00:00Z",
-  },
-  {
-    id: "inv5",
-    email: "test.admin@example.com",
-    role: "Admin",
-    invitedAt: "2025-07-30T16:00:00Z",
-  },
-  {
-    id: "inv6",
-    email: "guest.viewer@example.com",
-    role: "Viewer",
-    invitedAt: "2025-07-29T08:00:00Z",
-  },
-];
-
-const getRoleColor = (role: Invite["role"]) => {
+const getRoleColor = (role: string) => {
   switch (role) {
     case "Admin":
       return "bg-primary/10 text-primary";
@@ -101,64 +45,104 @@ const getRoleColor = (role: Invite["role"]) => {
 };
 
 export function InvitesTable() {
-  const [invites, setInvites] = useState<Invite[]>(MOCK_INVITES);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [isConfirmRevokeDialogOpen, setIsConfirmRevokeDialogOpen] =
-    useState(false);
-  const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
+  const { user, isLoading: isAuthLoading } = useAuthStore();
 
-  const columns: ColumnDef<Invite>[] = useMemo(
+  const businessId = user?.businessId;
+  const {
+    data,
+    isLoading: queryLoading,
+    isFetching,
+    error,
+  } = useBusinessUsers(businessId);
+
+  const [globalFilter, setGlobalFilter] = useState("");
+
+  useEffect(() => {
+    if (isAuthLoading) {
+      toast("Authenticating", {
+        description: "Verifying user credentials...",
+      });
+    }
+  }, [isAuthLoading]);
+
+  const allUsers = data?.data ?? [];
+  const invites = allUsers.filter((user) => !user.isActive && !user.isBlocked);
+
+  // ✅ Merge all loading states together
+  const isLoading = isAuthLoading || queryLoading || isFetching;
+
+  const columns: ColumnDef<BusinessUserResponseData>[] = useMemo(
     () => [
       {
-        accessorKey: "email",
-        header: "Email",
+        accessorKey: "profilePhoto",
+        header: "Photo",
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.email}</div>
+          <div className="flex justify-center">
+            <Image
+              src={"/images/placeholder.jpg"}
+              alt={`${row.original.userName}'s profile photo`}
+              width={40}
+              height={40}
+              className="rounded-full object-cover"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: "userName",
+        header: "Name",
+        cell: ({ row }) => (
+          <div className="font-medium">{row.original.userName}</div>
         ),
       },
       {
-        accessorKey: "role",
+        accessorKey: "roleName",
         header: "Role",
         cell: ({ row }) => (
-          <Badge className={getRoleColor(row.original.role)}>
-            {row.original.role}
+          <Badge className={getRoleColor(row.original.roleName)}>
+            {row.original.roleName}
           </Badge>
         ),
       },
       {
-        accessorKey: "invitedAt",
-        header: "Invited At",
+        accessorKey: "email",
+        header: "Email",
+        cell: ({ row }) => <div>{row.original.email}</div>,
+      },
+      {
+        accessorKey: "storeName",
+        header: "Store",
         cell: ({ row }) => (
-          <div>{new Date(row.original.invitedAt).toLocaleString()}</div>
+          <div
+            className={
+              row.original.storeName
+                ? "text-foreground"
+                : "text-red-600 bg-red-50 px-2 py-1 rounded"
+            }
+          >
+            {row.original.storeName ?? "Unassigned"}
+          </div>
         ),
       },
       {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const invite = row.original;
-          return (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                    onClick={() => handleRevokeInvite(invite)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Revoke</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          );
-        },
-        enableSorting: false,
-        enableHiding: false,
+        accessorKey: "createdAt",
+        header: "Join Date",
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {formatToKenyanTime(new Date(row.original.createdAt))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "updatedAt",
+        header: "Last Updated",
+        cell: ({ row }) => (
+          <div className="text-sm">
+            {formatToKenyanTime(new Date(row.original.updatedAt))}
+          </div>
+        ),
       },
     ],
     []
@@ -176,67 +160,92 @@ export function InvitesTable() {
     },
     initialState: {
       pagination: {
-        pageSize: 10, // Default page size
+        pageSize: 10,
       },
     },
   });
 
-  const handleRevokeInvite = (invite: Invite) => {
-    setSelectedInvite(invite);
-    setIsConfirmRevokeDialogOpen(true);
-  };
-
-  const confirmRevokeInvite = () => {
-    if (selectedInvite) {
-      console.log("Revoking invite for:", selectedInvite.email);
-      setInvites(invites.filter((i) => i.id !== selectedInvite.id));
-      toast.error("Invite Revoked", {
-        description: `The invitation for ${selectedInvite.email} has been revoked.`,
-      });
-      // In a real app, send API call to revoke invite
-      setIsConfirmRevokeDialogOpen(false);
-      setSelectedInvite(null);
-    }
+  const handleClearSearch = () => {
+    setGlobalFilter("");
   };
 
   return (
-    <div className="grid gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    <div className="grid gap-4 p-2">
+      {/* Search */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by email..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+            placeholder="Search by name or email..."
+            className="w-full rounded-lg bg-background pl-10 pr-3 h-10"
             value={globalFilter ?? ""}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
           />
         </div>
-        {/* No export/import/invite buttons for invites table as per previous request, but can be added */}
       </div>
 
+      {/* Table */}
       <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              //  Loader state
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  <Loader text="Loading invites..." size="md" />
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              //  Error state
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-red-600"
+                >
+                  Error: {error.message || "Failed to fetch invites."}
+                </TableCell>
+              </TableRow>
+            ) : invites.length === 0 ? (
+              // Empty state (after fetch is done)
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-lg font-medium">No pending invites</p>
+                    <p className="text-sm text-muted-foreground">
+                      There are no pending user invites.
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              //  Data rows
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -253,44 +262,33 @@ export function InvitesTable() {
                 </TableRow>
               ))
             ) : (
+              // 🔍 Filtered out state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-64 text-center text-muted-foreground"
                 >
-                  No pending invites.
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-base font-medium">
+                      No invites match the applied filters
+                    </p>
+                    <Button onClick={handleClearSearch} variant="outline">
+                      <X className="mr-2 h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
 
-      {/* Revoke Invite Confirmation Dialog */}
-      <AlertDialog
-        open={isConfirmRevokeDialogOpen}
-        onOpenChange={setIsConfirmRevokeDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action will revoke the invitation for {selectedInvite?.email}
-              . They will no longer be able to join using this invite.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmRevokeInvite}
-              className="bg-destructive text-destructive-foreground hover:bg-red-100 hover:text-red-700"
-            >
-              Revoke
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DataTablePagination table={table} />
     </div>
   );
 }

@@ -37,6 +37,8 @@ export interface BusinessUserResponseData {
   userName: string;
   roleName: string;
   email: string;
+  isActive: boolean;
+  isBlocked: boolean;
   createdAt: string;
   updatedAt: string;
   storeName: string | null;

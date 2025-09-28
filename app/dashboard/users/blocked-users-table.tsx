@@ -2,16 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
-import {
-  Download,
-  Upload,
-  UserPlus,
-  Edit,
-  Ban,
-  Trash2,
-  Search,
-  X,
-} from "lucide-react";
+import { Search, X, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import {
   type ColumnDef,
@@ -49,17 +40,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-import { UpdateUserDialog } from "./update-user-dialog";
 import { BusinessUserResponseData } from "@/types/users";
 import { useAuthStore } from "@/stores/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  useBlockBusinessUser,
-  useBusinessUsers,
+  useBlockedBusinessUsers,
+  useUnblockBusinessUser,
 } from "@/server-queries/userQuery";
 import { formatToKenyanTime } from "@/utils/time-format";
 import Loader from "@/components/ui/loading-spiner";
-import { InviteUserDialog } from "./invite-user-dalog";
 
 const getRoleColor = (role: string) => {
   switch (role) {
@@ -74,25 +63,22 @@ const getRoleColor = (role: string) => {
   }
 };
 
-export function UsersTable() {
+export function BlockedUsersTable() {
   const { user, isLoading: isAuthLoading } = useAuthStore();
-
   const businessId = user?.businessId;
+
+  // ✅ use the new blocked users hook
   const {
     data,
     isLoading: queryLoading,
     isFetching,
     error,
-  } = useBusinessUsers(businessId);
+  } = useBlockedBusinessUsers(businessId || "");
+
+  const blockedUsers = data?.data ?? [];
 
   const [globalFilter, setGlobalFilter] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [updateSelectedUser, setUpdateSelectedUser] =
-    useState<BusinessUserResponseData | null>(null);
-  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
-    useState(false);
-  const [isConfirmBlockDialogOpen, setIsConfirmBlockDialogOpen] =
+  const [isConfirmUnblockDialogOpen, setIsConfirmUnblockDialogOpen] =
     useState(false);
   const [selectedUser, setSelectedUser] =
     useState<BusinessUserResponseData | null>(null);
@@ -105,12 +91,6 @@ export function UsersTable() {
     }
   }, [isAuthLoading]);
 
-  const allUsers = data?.data ?? [];
-  // const allUsers = allUsers.filter(
-  //   (user) => user.isActive && !user.isBlocked
-  // );
-
-  // ✅ Merge all loading states together
   const isLoading = isAuthLoading || queryLoading || isFetching;
 
   const columns: ColumnDef<BusinessUserResponseData>[] = useMemo(
@@ -199,44 +179,14 @@ export function UsersTable() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEditUser(user)}
+                      className="h-8 w-8 hover:bg-green-50 hover:text-green-600"
+                      onClick={() => handleUnblockUser(user)}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Unlock className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Edit</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                      onClick={() => handleBlockUser(user)}
-                    >
-                      <Ban className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Block</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                      onClick={() => handleDeleteUser(user)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete</p>
+                    <p>Unblock</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -251,7 +201,7 @@ export function UsersTable() {
   );
 
   const table = useReactTable({
-    data: allUsers,
+    data: blockedUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -267,61 +217,29 @@ export function UsersTable() {
     },
   });
 
-  const handleExport = () => {
-    toast.info("Export Initiated", {
-      description: "User data is being prepared for download.",
-    });
-  };
-
-  const handleImport = () => {
-    toast.info("Import Initiated", {
-      description: "Please select a file to import user data.",
-    });
-  };
-
-  const handleEditUser = (user: BusinessUserResponseData) => {
-    setUpdateSelectedUser(user);
-    setIsUpdateDialogOpen(true);
-  };
-
-  const handleBlockUser = (user: BusinessUserResponseData) => {
+  const handleUnblockUser = (user: BusinessUserResponseData) => {
     setSelectedUser(user);
-    setIsConfirmBlockDialogOpen(true);
+    setIsConfirmUnblockDialogOpen(true);
   };
 
-  const blockMutation = useBlockBusinessUser();
+  const unblockMutation = useUnblockBusinessUser();
 
-  const confirmBlockUser = () => {
-    if (selectedUser) {
-      blockMutation.mutate(selectedUser.id, {
+  const confirmUnblockUser = () => {
+    if (selectedUser && businessId) {
+      unblockMutation.mutate(selectedUser.id, {
         onSuccess: () => {
-          toast.success("User Blocked", {
-            description: `${selectedUser.userName} has been blocked.`,
+          toast.success("User Unblocked", {
+            description: `${selectedUser.userName} has been unblocked.`,
           });
-          setIsConfirmBlockDialogOpen(false);
+          setIsConfirmUnblockDialogOpen(false);
           setSelectedUser(null);
         },
         onError: () => {
-          toast.error("Failed to block user", {
-            description: `${selectedUser.userName} could not be blocked.`,
+          toast.error("Failed to unblock user", {
+            description: `${selectedUser.userName} could not be unblocked.`,
           });
         },
       });
-    }
-  };
-
-  const handleDeleteUser = (user: BusinessUserResponseData) => {
-    setSelectedUser(user);
-    setIsConfirmDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteUser = () => {
-    if (selectedUser) {
-      toast.error("User Deleted", {
-        description: `${selectedUser.userName} has been permanently deleted.`,
-      });
-      setIsConfirmDeleteDialogOpen(false);
-      setSelectedUser(null);
     }
   };
 
@@ -331,7 +249,7 @@ export function UsersTable() {
 
   return (
     <div className="grid gap-4 p-2">
-      {/* Search + Actions */}
+      {/* Search */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -342,34 +260,6 @@ export function UsersTable() {
             value={globalFilter ?? ""}
             onChange={(event) => table.setGlobalFilter(event.target.value)}
           />
-        </div>
-        <div className="flex flex-wrap gap-2 justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
-            onClick={handleExport}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            <span className="hidden lg:flex">Export</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
-            onClick={handleImport}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            <span className="hidden lg:flex">Import</span>
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 sm:flex-none min-w-[120px]"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            <span className="sr-only sm:not-sr-only">Add Users</span>
-          </Button>
         </div>
       </div>
 
@@ -394,27 +284,24 @@ export function UsersTable() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              //  Loader state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  <Loader text="Loading users..." size="md" />
+                  <Loader text="Loading blocked users..." size="md" />
                 </TableCell>
               </TableRow>
             ) : error ? (
-              //  Error state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center text-red-600"
                 >
-                  Error: {error.message || "Failed to fetch users."}
+                  Error: {error.message || "Failed to fetch blocked users."}
                 </TableCell>
               </TableRow>
-            ) : allUsers.length === 0 ? (
-              // Empty state (after fetch is done)
+            ) : blockedUsers.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -425,19 +312,14 @@ export function UsersTable() {
                       <AvatarImage src="/images/nostorefound.jpg" />
                       <AvatarFallback>NF</AvatarFallback>
                     </Avatar>
-                    <p className="text-lg font-medium">No user found</p>
+                    <p className="text-lg font-medium">No blocked users</p>
                     <p className="text-sm text-muted-foreground">
-                      Create your first user
+                      There are no blocked users.
                     </p>
-                    <Button onClick={() => setIsDialogOpen(true)}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Create User
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              //  Data rows
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -454,7 +336,6 @@ export function UsersTable() {
                 </TableRow>
               ))
             ) : (
-              // 🔍 Filtered out state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -466,7 +347,7 @@ export function UsersTable() {
                       <AvatarFallback>NF</AvatarFallback>
                     </Avatar>
                     <p className="text-base font-medium">
-                      No business users match the applied filters
+                      No blocked users match the applied filters
                     </p>
                     <Button onClick={handleClearSearch} variant="outline">
                       <X className="mr-2 h-4 w-4" />
@@ -482,64 +363,30 @@ export function UsersTable() {
 
       <DataTablePagination table={table} />
 
-      {/* Block dialog */}
+      {/* Unblock dialog */}
       <AlertDialog
-        open={isConfirmBlockDialogOpen}
-        onOpenChange={setIsConfirmBlockDialogOpen}
+        open={isConfirmUnblockDialogOpen}
+        onOpenChange={setIsConfirmUnblockDialogOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will block {selectedUser?.userName}. They will no
-              longer be able to access the application. You can unblock them
-              later.
+              This action will unblock <b>{selectedUser?.userName}</b>. They
+              will be able to access the application again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmBlockUser}
-              className="bg-destructive text-destructive-foreground hover:bg-red-100 hover:text-red-700"
+              onClick={confirmUnblockUser}
+              className="bg-green-600 text-white hover:bg-green-100 hover:text-green-700"
             >
-              Block
+              {unblockMutation.isPending ? "Unblocking..." : "Unblock"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Delete dialog */}
-      <AlertDialog
-        open={isConfirmDeleteDialogOpen}
-        onOpenChange={setIsConfirmDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete{" "}
-              {selectedUser?.userName} and remove their data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteUser}
-              className="bg-destructive text-destructive-foreground hover:bg-red-100 hover:text-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <InviteUserDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
-
-      <UpdateUserDialog
-        isOpen={isUpdateDialogOpen}
-        onOpenChange={setIsUpdateDialogOpen}
-        selectedUser={updateSelectedUser ?? undefined}
-      />
     </div>
   );
 }

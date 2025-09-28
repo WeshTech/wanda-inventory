@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UsersTable } from "./users-table";
 import { InvitesTable } from "./invites-table";
 import { RolesTable } from "./roles-table";
+import { BlockedUsersTable } from "./blocked-users-table";
+// import { BlockedUsersTable } from "./blocked-users-table";
 
 export default function UsersPageContent() {
   // Mock user count for display
@@ -20,12 +22,14 @@ export default function UsersPageContent() {
         </div>
       </header>
       <div className="grid flex-1 items-start gap-4 p-2 sm:p-4 sm:px-4 sm:py-0 md:gap-8">
-        <Tabs defaultValue="users">
-          <TabsList className="grid lg:w-1/2 w-full grid-cols-3">
+        <Tabs defaultValue="users" className="w-full">
+          <TabsList className="flex flex-wrap sm:flex-nowrap justify-start gap-2 sm:gap-4 w-full sm:w-1/2">
             <TabsTrigger value="users">Users ({userCount})</TabsTrigger>
             <TabsTrigger value="roles">Roles</TabsTrigger>
             <TabsTrigger value="invites">Invites</TabsTrigger>
+            <TabsTrigger value="blocked">Blocked Users</TabsTrigger>
           </TabsList>
+
           <TabsContent value="users">
             <UsersTable />
           </TabsContent>
@@ -34,6 +38,9 @@ export default function UsersPageContent() {
           </TabsContent>
           <TabsContent value="roles">
             <RolesTable />
+          </TabsContent>
+          <TabsContent value="blocked">
+            <BlockedUsersTable />
           </TabsContent>
         </Tabs>
       </div>
