@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -50,95 +49,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "./data-table-pagination";
 import { AddCategoryDialog } from "./add-category-dialog";
+import { useAuthStore } from "@/stores/authStore";
+import Loader from "@/components/ui/loading-spiner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { X } from "lucide-react";
+import { useStoreCategories } from "@/server-queries/storeCategoryQueries";
+import { GetCategoryData } from "@/types/storeCategory";
 
-interface Category {
-  id: string;
-  name: string;
-  quantity: number;
-  description: string;
-}
-
-const categories: Category[] = [
+const columns: ColumnDef<GetCategoryData>[] = [
   {
-    id: "CAT001",
-    name: "Electronics",
-    quantity: 120,
-    description: "Gadgets, devices, and electronic components.",
-  },
-  {
-    id: "CAT002",
-    name: "Apparel",
-    quantity: 350,
-    description: "Clothing, footwear, and accessories for all ages.",
-  },
-  {
-    id: "CAT003",
-    name: "Home Goods",
-    quantity: 80,
-    description: "Furniture, decor, kitchenware, and home essentials.",
-  },
-  {
-    id: "CAT004",
-    name: "Books",
-    quantity: 210,
-    description: "Fiction, non-fiction, educational, and children's books.",
-  },
-  {
-    id: "CAT005",
-    name: "Sports & Outdoors",
-    quantity: 95,
-    description:
-      "Equipment, apparel, and gear for sports and outdoor activities.",
-  },
-  {
-    id: "CAT006",
-    name: "Beauty & Personal Care",
-    quantity: 180,
-    description: "Skincare, makeup, haircare, and personal hygiene products.",
-  },
-  {
-    id: "CAT007",
-    name: "Toys & Games",
-    quantity: 150,
-    description: "Toys, board games, video games, and puzzles.",
-  },
-  {
-    id: "CAT008",
-    name: "Automotive",
-    quantity: 60,
-    description: "Car parts, accessories, and maintenance products.",
-  },
-  {
-    id: "CAT009",
-    name: "Food & Beverages",
-    quantity: 200,
-    description: "Packaged foods, snacks, drinks, and gourmet items.",
-  },
-  {
-    id: "CAT010",
-    name: "Pet Supplies",
-    quantity: 75,
-    description: "Food, toys, and accessories for pets.",
-  },
-  {
-    id: "CAT011",
-    name: "Jewelry",
-    quantity: 40,
-    description: "Rings, necklaces, bracelets, and earrings.",
-  },
-  {
-    id: "CAT012",
-    name: "Art Supplies",
-    quantity: 55,
-    description: "Paints, brushes, canvases, and craft materials.",
-  },
-];
-
-const columns: ColumnDef<Category>[] = [
-  {
-    accessorKey: "id",
+    accessorKey: "categoryId",
     header: "Category ID",
-    cell: ({ row }) => <div className="font-medium">{row.getValue("id")}</div>,
+    cell: ({ row }) => (
+      <div className="font-medium">{row.original.categoryId.slice(-6)}</div>
+    ),
   },
   {
     accessorKey: "name",
@@ -149,6 +73,11 @@ const columns: ColumnDef<Category>[] = [
     accessorKey: "quantity",
     header: "Quantity",
     cell: ({ row }) => <div>{row.getValue("quantity")}</div>,
+  },
+  {
+    accessorKey: "storeName",
+    header: "Store Name",
+    cell: ({ row }) => <div>{row.getValue("storeName") ?? "Unassigned"}</div>,
   },
   {
     accessorKey: "description",
@@ -174,7 +103,9 @@ const columns: ColumnDef<Category>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(category.id)}
+                onClick={() =>
+                  navigator.clipboard.writeText(category.categoryId)
+                }
               >
                 Copy Category ID
               </DropdownMenuItem>
@@ -201,7 +132,9 @@ const columns: ColumnDef<Category>[] = [
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => console.log(`Deleting category: ${category.id}`)}
+                onClick={() =>
+                  console.log(`Deleting category: ${category.categoryId}`)
+                }
                 className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
               >
                 Delete
@@ -215,75 +148,152 @@ const columns: ColumnDef<Category>[] = [
 ];
 
 export function CategoriesTable() {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+  const businessId = user?.businessId;
+  const {
+    data,
+    isLoading: queryLoading,
+    isFetching,
+    error,
+  } = useStoreCategories(businessId ?? "");
+
+  const [globalFilter, setGlobalFilter] = useState("");
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
 
+  const isLoading = isAuthLoading || queryLoading || isFetching;
+  const allCategories = data?.data ?? [];
+
   const table = useReactTable({
-    data: categories,
+    data: allCategories,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
     state: {
-      columnFilters,
+      globalFilter,
     },
   });
 
-  const handleAddCategory = (data: { name: string; store: string }) => {
-    console.log("New category added:", data);
-    // Here you would typically send the data to an API or update the categories array
-    setIsAddCategoryDialogOpen(false);
+  const handleExport = () => {
+    // Implement export logic
+  };
+
+  const handleImport = () => {
+    // Implement import logic
+  };
+
+  const handleClearSearch = () => {
+    setGlobalFilter("");
   };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between py-4 gap-4">
-        <div className="relative flex-1 max-w-sm">
+    <div className="grid gap-4 p-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search categories..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="pl-9"
+            type="search"
+            placeholder="Search by name, description or store..."
+            className="w-full rounded-lg bg-background pl-10 pr-3 h-10"
+            value={globalFilter ?? ""}
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" /> Import
+        <div className="flex flex-wrap gap-2 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
+            onClick={handleImport}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            <span className="hidden lg:flex">Import</span>
           </Button>
-          <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" /> Export
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
+            onClick={handleExport}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            <span className="hidden lg:flex">Export</span>
           </Button>
-          <Button onClick={() => setIsAddCategoryDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add Category
+          <Button
+            size="sm"
+            className="flex-1 sm:flex-none min-w-[120px]"
+            onClick={() => setIsAddCategoryDialogOpen(true)}
+            disabled={isLoading}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            <span className="sr-only sm:not-sr-only">Add Category</span>
           </Button>
         </div>
       </div>
-      <div className="rounded-md border">
+
+      <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  <Loader text="Loading categories..." size="md" />
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-red-600"
+                >
+                  Error: {error.message || "Failed to fetch categories."}
+                </TableCell>
+              </TableRow>
+            ) : allCategories.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-lg font-medium">No categories found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create your first category
+                    </p>
+                    <Button
+                      onClick={() => setIsAddCategoryDialogOpen(true)}
+                      disabled={isLoading}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Category
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -303,22 +313,33 @@ export function CategoriesTable() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-64 text-center text-muted-foreground"
                 >
-                  No results.
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-base font-medium">
+                      No categories match the applied filters
+                    </p>
+                    <Button onClick={handleClearSearch} variant="outline">
+                      <X className="mr-2 h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="py-4">
-        <DataTablePagination table={table} />
-      </div>
+
+      <DataTablePagination table={table} />
+
       <AddCategoryDialog
         open={isAddCategoryDialogOpen}
         onOpenChange={setIsAddCategoryDialogOpen}
-        onCategoryAdd={handleAddCategory}
       />
     </div>
   );
