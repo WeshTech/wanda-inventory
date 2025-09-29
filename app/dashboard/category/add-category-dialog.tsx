@@ -16,8 +16,7 @@ import {
   CategoryFormData,
   categorySchema,
 } from "@/schemas/storeCategorySchema";
-import toast from "react-hot-toast";
-import { toast as sonner } from "sonner";
+import { toast } from "sonner"; // Standardized to use Sonner
 import { useCreateStoreCategory } from "@/server-queries/storeCategoryQueries";
 import {
   Select,
@@ -30,9 +29,6 @@ import { useGetBusinessStores } from "@/server-queries/storeQueries";
 import { useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
 
-// types
-import type { CreateCategoryDataResponse } from "@/types/storeCategory";
-
 interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,7 +38,8 @@ export function AddCategoryDialog({
   open,
   onOpenChange,
 }: AddCategoryDialogProps) {
-  const { isLoading: authLoading } = useAuthStore();
+  const { isLoading: authLoading, user } = useAuthStore();
+  const businessId = user?.businessId ?? "";
   const { data: storesData, isLoading: storesLoading } = useGetBusinessStores();
 
   const form = useForm<CategoryFormData>({
@@ -54,37 +51,30 @@ export function AddCategoryDialog({
     },
   });
 
-  const createCategory = useCreateStoreCategory();
+  const createCategory = useCreateStoreCategory(businessId);
 
-  const onSubmit: SubmitHandler<CategoryFormData> = async (data) => {
-    sonner.loading("Creating category...");
-    try {
-      const res: CreateCategoryDataResponse = await createCategory.mutateAsync(
-        data
-      );
-      sonner.dismiss();
-      toast.success(res.message || "Category created successfully");
-
-      form.reset();
-      onOpenChange(false);
-    } catch (error: unknown) {
-      sonner.dismiss();
-
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to create category");
-      }
-    }
+  const onSubmit: SubmitHandler<CategoryFormData> = (data) => {
+    const loadingId = toast.loading("Creating category...");
+    createCategory.mutate(data, {
+      onSuccess: (res) => {
+        toast.dismiss(loadingId);
+        toast.success(res.message || "Category created successfully");
+        form.reset();
+        onOpenChange(false);
+      },
+      onError: (error) => {
+        toast.dismiss(loadingId);
+        toast.error(error.message || "Failed to create category");
+      },
+    });
   };
 
-  // Show loader when auth is loading
   if (authLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-full max-w-[90vw] sm:max-w-lg md:max-w-xl">
           <div className="flex justify-center items-center h-40">
-            <Loader text="preparing store data..." />
+            <Loader text="Preparing store data..." />
           </div>
         </DialogContent>
       </Dialog>
@@ -135,7 +125,11 @@ export function AddCategoryDialog({
                 form.setValue("store", value);
               }}
               value={form.watch("store")}
-              disabled={storesLoading || !storesData?.data?.stores?.length}
+              disabled={
+                storesLoading ||
+                !storesData?.data?.stores?.length ||
+                !businessId
+              }
             >
               <SelectTrigger id="categoryStore" className="w-full sm:w-3/4">
                 <SelectValue placeholder="Select store..." />
@@ -166,7 +160,6 @@ export function AddCategoryDialog({
               type="button"
               variant="ghost"
               size="lg"
-              className=""
               onClick={() => {
                 form.reset();
                 onOpenChange(false);
@@ -178,7 +171,9 @@ export function AddCategoryDialog({
               type="submit"
               size="lg"
               className="rounded-lg"
-              disabled={createCategory.isPending || storesLoading}
+              disabled={
+                createCategory.isPending || storesLoading || !businessId
+              }
             >
               {createCategory.isPending ? "Adding..." : "Add"}
             </Button>
