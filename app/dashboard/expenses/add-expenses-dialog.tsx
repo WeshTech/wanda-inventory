@@ -1,7 +1,6 @@
 "use client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import {
   Dialog,
   DialogContent,
@@ -18,12 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Form,
   FormControl,
@@ -32,27 +25,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-
-const expenseSchema = z.object({
-  purpose: z.string().min(1, "Purpose is required"),
-  description: z.string().min(1, "Description is required"),
-  category: z.enum(["recurrent", "random"]).refine((val) => !!val, {
-    message: "Please select a category",
-  }),
-
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Amount must be a positive number",
-    }),
-  date: z.date(),
-});
-
-type ExpenseFormData = z.infer<typeof expenseSchema>;
+import {
+  ExpenseFormData,
+  expenseSchema,
+} from "@/schemas/expenses/createExpenseSchema";
+import toast from "react-hot-toast";
+import { toast as sonnerToast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
+import { useCreateExpense } from "@/server-queries/expensesQueries";
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -69,15 +50,41 @@ export function AddExpenseDialog({
       purpose: "",
       description: "",
       amount: "",
-      date: new Date(),
+      date: new Date().toISOString(),
     },
   });
 
+  const businessId = useAuthStore((state) => state.user?.businessId);
+  const { mutate: createExpense, isPending } = useCreateExpense();
+
   const onSubmit = (data: ExpenseFormData) => {
-    console.log("Expense data:", data);
-    // Handle form submission here
-    onOpenChange(false);
-    form.reset();
+    if (!businessId) {
+      toast.error("No business ID found. Please log in again.");
+      return;
+    }
+
+    const transformedData = {
+      ...data,
+      category: data.category as "RECURRET" | "RANDOM",
+    };
+
+    sonnerToast.loading("Creating expense...", { id: "create-expense" });
+
+    createExpense(
+      { formData: transformedData, businessId },
+      {
+        onSuccess: (res) => {
+          sonnerToast.dismiss("create-expense");
+          toast.success(res.message || "Expense created successfully");
+          onOpenChange(false);
+          form.reset();
+        },
+        onError: (err) => {
+          sonnerToast.dismiss("create-expense");
+          toast.error(err.message || "Failed to create expense");
+        },
+      }
+    );
   };
 
   const handleCancel = () => {
@@ -142,8 +149,8 @@ export function AddExpenseDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="recurrent">Recurrent</SelectItem>
-                      <SelectItem value="random">Random</SelectItem>
+                      <SelectItem value="RECURRET">Recurrent</SelectItem>
+                      <SelectItem value="RANDOM">Random</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -176,37 +183,24 @@ export function AddExpenseDialog({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={(date) => field.onChange(date)}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
+                  <FormControl>
+                    <Input
+                      type="date"
+                      max={format(new Date(), "yyyy-MM-dd")}
+                      value={
+                        field.value
+                          ? format(new Date(field.value), "yyyy-MM-dd")
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const date = new Date(e.target.value);
+                        if (!isNaN(date.getTime())) {
+                          field.onChange(date.toISOString());
                         }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                      }}
+                      className="w-full"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -218,14 +212,16 @@ export function AddExpenseDialog({
                 variant="ghost"
                 onClick={handleCancel}
                 className="rounded-full"
+                disabled={isPending}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="rounded-full bg-primary text-primary-foreground"
+                disabled={isPending}
               >
-                Create
+                {isPending ? "Creating..." : "Create"}
               </Button>
             </div>
           </form>
