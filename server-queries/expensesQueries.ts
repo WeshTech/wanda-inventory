@@ -1,10 +1,16 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  UseMutationResult,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { ExpenseFormData } from "@/schemas/expenses/createExpenseSchema";
 import {
   AllExpensesResponse,
   CreateExpenseResponse,
+  DeleteExpenseResponse,
   ExpesnseSummaryResponse,
   UpdateExpenseResponse,
 } from "@/types/expenses";
@@ -13,6 +19,7 @@ import { getBusinessExpensesApi } from "@/server/expenses/get-all-expenses";
 import { getBusinessExpensesSummaryApi } from "@/server/expenses/get-expense-summary";
 import { UpdateExpenseFormData } from "@/schemas/expenses/updateExpenseSchema";
 import { updateBusinessExpenseApi } from "@/server/expenses/update-expense";
+import { deleteBusinessExpenseApi } from "@/server/expenses/delete-espense";
 
 type Variables = {
   formData: ExpenseFormData;
@@ -24,6 +31,11 @@ type updateVariables = {
   businessId: string;
   expenseId: string;
 };
+
+export interface DeleteExpenseVariables {
+  businessId: string;
+  expenseId: string;
+}
 
 //create expense query
 export function useCreateExpense() {
@@ -78,3 +90,14 @@ export function useUpdateExpense() {
     },
   });
 }
+
+export const useDeleteBusinessExpense = (): UseMutationResult<
+  DeleteExpenseResponse,
+  Error,
+  DeleteExpenseVariables
+> => {
+  return useMutation<DeleteExpenseResponse, Error, DeleteExpenseVariables>({
+    mutationFn: ({ businessId, expenseId }) =>
+      deleteBusinessExpenseApi(businessId, expenseId),
+  });
+};

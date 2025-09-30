@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   useReactTable,
   getCoreRowModel,
@@ -45,18 +46,23 @@ import { ExpenseCards } from "./expense-cards";
 import { useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useBusinessExpensesQuery } from "@/server-queries/expensesQueries";
+import {
+  useBusinessExpensesQuery,
+  useDeleteBusinessExpense,
+} from "@/server-queries/expensesQueries";
 import { AllExpenseResponseData } from "@/types/expenses";
 import { formatToKenyanTime } from "@/utils/time-format";
 
 export default function ExpensesPage() {
   const { user, isLoading: isAuthLoading } = useAuthStore();
   const businessId = user?.businessId || "";
+
   const {
     data,
     isLoading: queryLoading,
     isFetching,
     error,
+    refetch,
   } = useBusinessExpensesQuery(businessId);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,6 +72,32 @@ export default function ExpensesPage() {
     useState<AllExpenseResponseData | null>(null);
 
   const isLoading = isAuthLoading || queryLoading || isFetching || !businessId;
+
+  // 👇 mutation hook
+  const { mutate: deleteExpense, isPending: isDeleting } =
+    useDeleteBusinessExpense();
+
+  // 👇 wrapped in useCallback so it's stable and can be used in useMemo deps
+  const handleDeleteExpense = useCallback(
+    (expenseId: string) => {
+      const toastId = toast.loading("Deleting expense...");
+      deleteExpense(
+        { businessId, expenseId },
+        {
+          onSuccess: () => {
+            toast.success("Expense deleted successfully!", { id: toastId });
+            refetch(); // refresh table data
+          },
+          onError: (err) => {
+            toast.error(err.message || "Failed to delete expense", {
+              id: toastId,
+            });
+          },
+        }
+      );
+    },
+    [businessId, deleteExpense, refetch]
+  );
 
   const formatCurrency = (amount: number) => {
     return `Kes ${amount.toLocaleString("en-KE", {
@@ -212,12 +244,11 @@ export default function ExpensesPage() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() =>
-                      console.log("Deleting expense:", expense.expenseId)
-                    }
+                    onClick={() => handleDeleteExpense(expense.expenseId)}
                     className="bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/80 border border-red-200 dark:border-red-800"
+                    disabled={isDeleting}
                   >
-                    Delete
+                    {isDeleting ? "Deleting..." : "Delete"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -226,7 +257,7 @@ export default function ExpensesPage() {
         },
       },
     ],
-    []
+    [handleDeleteExpense, isDeleting]
   );
 
   const allExpenses = data?.data ?? [];
@@ -262,7 +293,7 @@ export default function ExpensesPage() {
     <div className="grid gap-4 p-2">
       <h1 className="text-xl font-bold text-balance md:text-3xl lg:text-4xl">
         Expenses
-      </h1>{" "}
+      </h1>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -63,3 +63,10 @@ export type UpdateExpenseResponse = {
   message: string;
   data: UpdateExpenseResponseData | null;
 };
+
+//delete expense response
+export type DeleteExpenseResponse = {
+  success: boolean;
+  message: string;
+  data: null;
+};
