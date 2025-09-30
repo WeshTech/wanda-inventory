@@ -11,7 +11,6 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -36,111 +35,33 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Search, MoreHorizontal, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, MoreHorizontal, Plus, Edit, Trash2, X } from "lucide-react";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { AddExpenseDialog } from "./add-expenses-dialog";
 import { ExpenseCards } from "./expense-cards";
-
-type Expense = {
-  id: string;
-  purpose: string;
-  description: string;
-  category: "recurrent" | "random";
-  amount: number;
-  date: string;
-  createdBy: string;
-  createdAt: string;
-};
-
-// Mock data for expenses
-const mockExpenses: Expense[] = [
-  {
-    id: "EXP001",
-    purpose: "Office Rent",
-    description: "Monthly office space rental",
-    category: "recurrent",
-    amount: 2500.0,
-    date: "2024-01-01",
-    createdBy: "John Doe",
-    createdAt: "2024-01-01T10:00:00Z",
-  },
-  {
-    id: "EXP002",
-    purpose: "Marketing Campaign",
-    description: "Social media advertising spend",
-    category: "random",
-    amount: 850.0,
-    date: "2024-01-15",
-    createdBy: "Jane Smith",
-    createdAt: "2024-01-15T14:30:00Z",
-  },
-  {
-    id: "EXP003",
-    purpose: "Utilities",
-    description: "Electricity and internet bills",
-    category: "recurrent",
-    amount: 450.0,
-    date: "2024-01-05",
-    createdBy: "Mike Johnson",
-    createdAt: "2024-01-05T09:15:00Z",
-  },
-  {
-    id: "EXP004",
-    purpose: "Equipment Purchase",
-    description: "New laptop for development team",
-    category: "random",
-    amount: 1200.0,
-    date: "2024-01-20",
-    createdBy: "Sarah Wilson",
-    createdAt: "2024-01-20T16:45:00Z",
-  },
-  {
-    id: "EXP005",
-    purpose: "Software Licenses",
-    description: "Annual software subscription renewals",
-    category: "recurrent",
-    amount: 1800.0,
-    date: "2024-01-25",
-    createdBy: "Alex Brown",
-    createdAt: "2024-01-25T11:30:00Z",
-  },
-  {
-    id: "EXP006",
-    purpose: "Team Building Event",
-    description: "Quarterly team outing and activities",
-    category: "random",
-    amount: 650.0,
-    date: "2024-01-28",
-    createdBy: "Lisa Davis",
-    createdAt: "2024-01-28T15:20:00Z",
-  },
-  {
-    id: "EXP007",
-    purpose: "Insurance Premium",
-    description: "Monthly business insurance payment",
-    category: "recurrent",
-    amount: 320.0,
-    date: "2024-02-01",
-    createdBy: "Tom Wilson",
-    createdAt: "2024-02-01T08:45:00Z",
-  },
-  {
-    id: "EXP008",
-    purpose: "Emergency Repairs",
-    description: "HVAC system maintenance and repair",
-    category: "random",
-    amount: 890.0,
-    date: "2024-02-05",
-    createdBy: "Emma Johnson",
-    createdAt: "2024-02-05T13:15:00Z",
-  },
-];
+import { useAuthStore } from "@/stores/authStore";
+import Loader from "@/components/ui/loading-spiner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useBusinessExpensesQuery } from "@/server-queries/expensesQueries";
+import { AllExpenseResponseData } from "@/types/expenses";
+import { formatToKenyanTime } from "@/utils/time-format";
 
 export default function ExpensesPage() {
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+  const businessId = user?.businessId || "";
+  const {
+    data,
+    isLoading: queryLoading,
+    isFetching,
+    error,
+  } = useBusinessExpensesQuery(businessId);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [deleteExpenseId, setDeleteExpenseId] = useState<string | null>(null);
+
+  const isLoading = isAuthLoading || queryLoading || isFetching || !businessId;
 
   const formatCurrency = (amount: number) => {
     return `Kes ${amount.toLocaleString("en-KE", {
@@ -157,19 +78,14 @@ export default function ExpensesPage() {
     });
   };
 
-  const handleDeleteExpense = (expenseId: string) => {
-    setDeleteExpenseId(expenseId);
+  const handleClearSearch = () => {
+    setSearchTerm("");
   };
 
-  const confirmDelete = () => {
-    console.log("Deleting expense:", deleteExpenseId);
-    setDeleteExpenseId(null);
-  };
-
-  const columns = useMemo<ColumnDef<Expense>[]>(
+  const columns = useMemo<ColumnDef<AllExpenseResponseData>[]>(
     () => [
       {
-        accessorKey: "id",
+        accessorKey: "expenseId",
         header: "Expense ID",
         cell: ({ row }) => {
           const expense = row.original;
@@ -182,7 +98,9 @@ export default function ExpensesPage() {
                     : "bg-yellow-500"
                 }`}
               />
-              <span className="font-medium">{expense.id}</span>
+              <span className="font-medium">
+                EXP{expense.expenseId.slice(-6)}
+              </span>
             </div>
           );
         },
@@ -194,12 +112,15 @@ export default function ExpensesPage() {
       {
         accessorKey: "description",
         header: "Description",
+        cell: ({ row }) => (
+          <div>{row.getValue("description") ?? "No description"}</div>
+        ),
       },
       {
         accessorKey: "category",
         header: "Category",
         cell: ({ row }) => {
-          const category = row.getValue("category") as string;
+          const category = (row.getValue("category") as string).toLowerCase();
           return (
             <span
               className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -222,35 +143,32 @@ export default function ExpensesPage() {
         },
       },
       {
-        accessorKey: "date",
-        header: "Date",
+        accessorKey: "expenseDate",
+        header: "Expense Date",
         cell: ({ row }) => {
-          const date = row.getValue("date") as string;
+          const date = row.getValue("expenseDate") as string;
           return formatDate(date);
         },
       },
       {
-        accessorKey: "createdBy",
-        header: "Created By",
-      },
-      {
         accessorKey: "createdAt",
-        header: "Created At",
+        header: "Date Created",
         cell: ({ row }) => {
           const createdAt = row.getValue("createdAt") as string;
-          return formatDate(createdAt);
+          return formatToKenyanTime(new Date(createdAt));
         },
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: "Actions",
         cell: ({ row }) => {
           const expense = row.original;
           return (
-            <div className="text-right">
+            <AlertDialog>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -259,25 +177,46 @@ export default function ExpensesPage() {
                     <Edit className="h-4 w-4 mr-2" />
                     Update Expense
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleDeleteExpense(expense.id)}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Expense
-                  </DropdownMenuItem>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className="text-destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Expense
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the expense record and remove the data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      console.log("Deleting expense:", expense.expenseId)
+                    }
+                    className="bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/80 border border-red-200 dark:border-red-800"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           );
         },
       },
     ],
-    [] // Removed formatCurrency and formatDate from dependencies
+    []
   );
 
+  const allExpenses = data?.data ?? [];
+
   const table = useReactTable({
-    data: mockExpenses,
+    data: allExpenses,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -288,8 +227,8 @@ export default function ExpensesPage() {
       const searchValue = filterValue.toLowerCase();
       return (
         expense.purpose.toLowerCase().includes(searchValue) ||
-        expense.description.toLowerCase().includes(searchValue) ||
-        expense.id.toLowerCase().includes(searchValue)
+        (expense.description?.toLowerCase().includes(searchValue) ?? false) ||
+        expense.expenseId.toLowerCase().includes(searchValue)
       );
     },
     state: {
@@ -304,131 +243,137 @@ export default function ExpensesPage() {
   });
 
   return (
-    <div className="container mx-auto p-6 space-y-6 bg-gradient-to-br from-primary/5 via-background to-secondary/10">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-balance">Expenses</h1>
+    <div className="grid gap-4 p-2">
+      <h1 className="text-xl font-bold text-balance md:text-3xl lg:text-4xl">
+        Expenses
+      </h1>{" "}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search expenses..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          className="rounded-full"
+          className="flex-1 sm:flex-none min-w-[120px]"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Expense
+          <span className="sr-only sm:not-sr-only">Add Expense</span>
         </Button>
       </div>
-
-      {/* Summary Cards */}
       <ExpenseCards />
-
-      {/* Expenses Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Expense Records</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search expenses..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className="whitespace-nowrap">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+      <h4 className="text-lg font-semibold text-balance mt-2">
+        Expenses records
+      </h4>
+      <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="whitespace-nowrap">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row, index) => {
-                    return (
-                      <TableRow
-                        key={row.id}
-                        className={`${
-                          index % 2 === 0
-                            ? "bg-background hover:bg-muted/50"
-                            : "bg-muted/20 hover:bg-muted/40"
-                        }`}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="whitespace-nowrap"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  <Loader text="loading expenses" />
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-red-600"
+                >
+                  Error: {error.message || "Failed to fetch expenses."}
+                </TableCell>
+              </TableRow>
+            ) : allExpenses.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-lg font-medium">No expenses found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create your first expense
+                    </p>
+                    <Button onClick={() => setIsAddDialogOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Expense
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="whitespace-nowrap">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
-        </CardContent>
-      </Card>
-
-      {/* Add Expense Dialog */}
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-base font-medium">
+                      No expenses match the applied filters
+                    </p>
+                    <Button onClick={handleClearSearch} variant="outline">
+                      <X className="mr-2 h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <DataTablePagination table={table} />
       <AddExpenseDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteExpenseId}
-        onOpenChange={() => setDeleteExpenseId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              expense record and remove the data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-400 dark:hover:bg-red-950/80 border border-red-200 dark:border-red-800"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
