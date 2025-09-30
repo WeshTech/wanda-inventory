@@ -1,7 +1,7 @@
 "use client";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import {
   Dialog,
   DialogContent,
@@ -12,28 +12,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-const supplierSchema = z.object({
-  name: z.string().min(1, "Supplier name is required"),
-  description: z.string().optional(),
-  contact: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional(),
-});
-
-type SupplierFormData = z.infer<typeof supplierSchema>;
+import {
+  SupplierFormData,
+  supplierSchema,
+} from "@/schemas/suppliers/createSupplierSchema";
+import { toast } from "react-hot-toast";
+import { toast as sonnerToast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
+import { useCreateSupplier } from "@/server-queries/supplierQueries";
 
 interface AddSupplierDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: SupplierFormData) => void;
 }
 
 export function AddSupplierDialog({
   open,
   onOpenChange,
-  onSubmit,
 }: AddSupplierDialogProps) {
+  const { user } = useAuthStore();
+  const businessId = user?.businessId;
+
   const form = useForm<SupplierFormData>({
     resolver: zodResolver(supplierSchema),
     defaultValues: {
@@ -45,14 +44,31 @@ export function AddSupplierDialog({
     },
   });
 
+  const { mutate: createSupplier, isPending } = useCreateSupplier();
+
   const handleSubmit = (data: SupplierFormData) => {
-    if (onSubmit) {
-      onSubmit(data);
-    } else {
-      console.log("Supplier data:", data);
+    if (!businessId) {
+      toast.error("No business found for this user.");
+      return;
     }
-    form.reset();
-    onOpenChange(false);
+
+    const toastId = sonnerToast.loading("Creating supplier...");
+
+    createSupplier(
+      { formData: data, businessId },
+      {
+        onSuccess: (res) => {
+          sonnerToast.dismiss(toastId);
+          toast.success(res.message || "Supplier created successfully!");
+          form.reset();
+          onOpenChange(false);
+        },
+        onError: (err) => {
+          sonnerToast.dismiss(toastId);
+          toast.error(err.message || "Failed to create supplier");
+        },
+      }
+    );
   };
 
   return (
@@ -68,6 +84,7 @@ export function AddSupplierDialog({
               id="supplierName"
               {...form.register("name")}
               placeholder="Enter supplier name"
+              disabled={isPending}
             />
             {form.formState.errors.name && (
               <p className="text-sm text-destructive">
@@ -86,6 +103,7 @@ export function AddSupplierDialog({
               {...form.register("description")}
               placeholder="What supplies does this company provide?"
               rows={3}
+              disabled={isPending}
             />
           </div>
 
@@ -98,6 +116,7 @@ export function AddSupplierDialog({
               id="contact"
               {...form.register("contact")}
               placeholder="Enter contact person"
+              disabled={isPending}
             />
           </div>
 
@@ -111,6 +130,7 @@ export function AddSupplierDialog({
               type="email"
               {...form.register("email")}
               placeholder="Enter email address"
+              disabled={isPending}
             />
             {form.formState.errors.email && (
               <p className="text-sm text-destructive">
@@ -128,6 +148,7 @@ export function AddSupplierDialog({
               id="phone"
               {...form.register("phone")}
               placeholder="Enter phone number"
+              disabled={isPending}
             />
           </div>
 
@@ -139,11 +160,12 @@ export function AddSupplierDialog({
                 form.reset();
                 onOpenChange(false);
               }}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full">
-              Add
+            <Button type="submit" className="rounded-full" disabled={isPending}>
+              {isPending ? "Adding..." : "Add"}
             </Button>
           </div>
         </form>
