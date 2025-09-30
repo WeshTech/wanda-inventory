@@ -32,3 +32,17 @@ export type AllExpensesResponse = {
   message: string;
   data: AllExpenseResponseData[] | null;
 };
+
+//expense summary
+export type ExpesnseSummaryData = {
+  totalExpenses: number;
+  totalRecurrentExpenditure: number;
+  totalRandomExpenditure: number;
+};
+
+//expense summary response
+export type ExpesnseSummaryResponse = {
+  success: boolean;
+  message: string;
+  data: ExpesnseSummaryData | null;
+};
