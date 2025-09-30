@@ -47,7 +47,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DataTablePagination } from "./data-table-pagination";
 import { AddCategoryDialog } from "./add-category-dialog";
 import { useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
@@ -55,6 +54,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { X } from "lucide-react";
 import { useStoreCategories } from "@/server-queries/storeCategoryQueries";
 import { GetCategoryData } from "@/types/storeCategory";
+import { DataTablePagination } from "@/components/dashboard/TablePagination";
 
 const columns: ColumnDef<GetCategoryData>[] = [
   {
