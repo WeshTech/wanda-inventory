@@ -40,6 +40,7 @@ import {
 import { Search, MoreHorizontal, Plus, Edit, Trash2, X } from "lucide-react";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { AddExpenseDialog } from "./add-expenses-dialog";
+import { UpdateExpenseDialog } from "./update-expense-dialog";
 import { ExpenseCards } from "./expense-cards";
 import { useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
@@ -60,6 +61,9 @@ export default function ExpensesPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] =
+    useState<AllExpenseResponseData | null>(null);
 
   const isLoading = isAuthLoading || queryLoading || isFetching || !businessId;
 
@@ -173,7 +177,19 @@ export default function ExpensesPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (!expense.expenseId) {
+                        console.error(
+                          "No expenseId found for expense:",
+                          expense
+                        );
+                        return;
+                      }
+                      setSelectedExpense(expense);
+                      setIsUpdateDialogOpen(true);
+                    }}
+                  >
                     <Edit className="h-4 w-4 mr-2" />
                     Update Expense
                   </DropdownMenuItem>
@@ -228,7 +244,7 @@ export default function ExpensesPage() {
       return (
         expense.purpose.toLowerCase().includes(searchValue) ||
         (expense.description?.toLowerCase().includes(searchValue) ?? false) ||
-        expense.expenseId.toLowerCase().includes(searchValue)
+        (expense.expenseId?.toLowerCase().includes(searchValue) ?? false)
       );
     },
     state: {
@@ -373,6 +389,11 @@ export default function ExpensesPage() {
       <AddExpenseDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
+      />
+      <UpdateExpenseDialog
+        open={isUpdateDialogOpen}
+        onOpenChange={setIsUpdateDialogOpen}
+        expense={selectedExpense}
       />
     </div>
   );

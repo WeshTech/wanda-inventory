@@ -46,3 +46,20 @@ export type ExpesnseSummaryResponse = {
   message: string;
   data: ExpesnseSummaryData | null;
 };
+
+//single expense type
+export type UpdateExpenseResponseData = {
+  expenseId: string;
+  purpose: string;
+  description: string | null;
+  category: string;
+  amount: number;
+  dateCreated: Date;
+};
+
+//create expense response
+export type UpdateExpenseResponse = {
+  success: boolean;
+  message: string;
+  data: UpdateExpenseResponseData | null;
+};

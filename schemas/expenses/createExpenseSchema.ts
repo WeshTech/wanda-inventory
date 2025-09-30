@@ -3,7 +3,7 @@ import * as z from "zod";
 export const expenseSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
   description: z.string().min(1, "Description is required"),
-  category: z.enum(["RECURRET", "RANDOM"]).refine((val) => !!val, {
+  category: z.enum(["RECURRENT", "RANDOM"]).refine((val) => !!val, {
     message: "Please select a category",
   }),
   amount: z

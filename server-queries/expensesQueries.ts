@@ -6,26 +6,35 @@ import {
   AllExpensesResponse,
   CreateExpenseResponse,
   ExpesnseSummaryResponse,
+  UpdateExpenseResponse,
 } from "@/types/expenses";
 import { createBusinessExpenseApi } from "@/server/expenses/create-expense";
 import { getBusinessExpensesApi } from "@/server/expenses/get-all-expenses";
 import { getBusinessExpensesSummaryApi } from "@/server/expenses/get-expense-summary";
+import { UpdateExpenseFormData } from "@/schemas/expenses/updateExpenseSchema";
+import { updateBusinessExpenseApi } from "@/server/expenses/update-expense";
 
 type Variables = {
   formData: ExpenseFormData;
   businessId: string;
 };
 
+type updateVariables = {
+  formData: UpdateExpenseFormData;
+  businessId: string;
+  expenseId: string;
+};
+
+//create expense query
 export function useCreateExpense() {
   const queryClient = useQueryClient();
 
-  //create expense query
   return useMutation<CreateExpenseResponse, Error, Variables>({
     mutationFn: ({ formData, businessId }) =>
       createBusinessExpenseApi(formData, businessId),
     onSuccess: (_data, { businessId }) => {
       queryClient.invalidateQueries({
-        queryKey: ["getbusinessExpenses", businessId],
+        queryKey: ["getBusinessExpenses", businessId],
       });
     },
   });
@@ -54,3 +63,18 @@ export const useBusinessExpensesSummaryQuery = (businessId: string) => {
     enabled: !!businessId,
   });
 };
+
+//update expense query
+export function useUpdateExpense() {
+  const queryClient = useQueryClient();
+
+  return useMutation<UpdateExpenseResponse, Error, updateVariables>({
+    mutationFn: ({ formData, businessId, expenseId }) =>
+      updateBusinessExpenseApi(formData, businessId, expenseId),
+    onSuccess: (_data, { businessId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getBusinessExpenses", businessId],
+      });
+    },
+  });
+}

@@ -65,7 +65,7 @@ export function AddExpenseDialog({
 
     const transformedData = {
       ...data,
-      category: data.category as "RECURRET" | "RANDOM",
+      category: data.category as "RECURRENT" | "RANDOM",
     };
 
     sonnerToast.loading("Creating expense...", { id: "create-expense" });
@@ -149,7 +149,7 @@ export function AddExpenseDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="RECURRET">Recurrent</SelectItem>
+                      <SelectItem value="RECURRENT">Recurrent</SelectItem>
                       <SelectItem value="RANDOM">Random</SelectItem>
                     </SelectContent>
                   </Select>
