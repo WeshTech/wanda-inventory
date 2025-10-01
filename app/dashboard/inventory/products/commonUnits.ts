@@ -1,0 +1,17 @@
+export const commonUnits = [
+  "Piece",
+  "Kilogram",
+  "Gram",
+  "Liter",
+  "Milliliter",
+  "Meter",
+  "Centimeter",
+  "Box",
+  "Pack",
+  "Dozen",
+  "Carton",
+  "Bottle",
+  "Can",
+  "Bag",
+  "Roll",
+];
