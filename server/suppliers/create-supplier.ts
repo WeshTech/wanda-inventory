@@ -14,7 +14,7 @@ export const createSupplierApi = async (
       contact,
       email,
       phone,
-      description,
+      supplies: description,
       businessId,
     });
 

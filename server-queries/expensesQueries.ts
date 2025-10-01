@@ -61,6 +61,7 @@ export const useBusinessExpensesQuery = (businessId: string) => {
       return await getBusinessExpensesApi(businessId);
     },
     enabled: !!businessId,
+    staleTime: 10 * 60 * 60 * 1000,
   });
 };
 
@@ -73,6 +74,7 @@ export const useBusinessExpensesSummaryQuery = (businessId: string) => {
       return await getBusinessExpensesSummaryApi(businessId);
     },
     enabled: !!businessId,
+    staleTime: 10 * 60 * 60 * 1000,
   });
 };
 

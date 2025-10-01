@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect } from "react";
+import { SupplierData } from "@/types/suppliers";
 
 // Define the form schema
 const supplierSchema = z.object({
@@ -38,7 +39,7 @@ export interface Supplier {
 interface EditSupplierDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  supplier: Supplier | null;
+  supplier: SupplierData | null;
   onSubmit: (data: Supplier) => void; // Updated to use Supplier type directly
 }
 

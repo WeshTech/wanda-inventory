@@ -95,7 +95,7 @@ export function AddSupplierDialog({
 
           <div className="space-y-2">
             <Label htmlFor="description">
-              Description{" "}
+              Supplies Description{" "}
               <span className="text-sm text-muted-foreground">(optional)</span>
             </Label>
             <Textarea
