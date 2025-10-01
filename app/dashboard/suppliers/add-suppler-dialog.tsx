@@ -101,7 +101,7 @@ export function AddSupplierDialog({
             <Textarea
               id="description"
               {...form.register("description")}
-              placeholder="What supplies does this company provide?"
+              placeholder="What suppllies does this company provide?"
               rows={3}
               disabled={isPending}
             />

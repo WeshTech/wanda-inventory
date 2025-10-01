@@ -40,11 +40,15 @@ import { SuppliersSkeletonPage } from "./supplier-skeleton";
 import Image from "next/image";
 
 export default function SuppliersPage() {
-  const { user } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuthStore();
   const businessId = user?.businessId || "";
 
-  const { data, isLoading, isError, error } =
-    useBusinessSuppliersQuery(businessId);
+  const {
+    data,
+    isLoading: queryLoading,
+    isError,
+    error,
+  } = useBusinessSuppliersQuery(businessId);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
@@ -70,8 +74,8 @@ export default function SuppliersPage() {
           supplier.contact.toLowerCase().includes(lowerSearch)) ||
         (supplier.email &&
           supplier.email.toLowerCase().includes(lowerSearch)) ||
-        (supplier.supplies &&
-          supplier.supplies.toLowerCase().includes(lowerSearch))
+        (supplier.suppllies &&
+          supplier.suppllies.toLowerCase().includes(lowerSearch))
     );
   }, [suppliers, searchTerm]);
 
@@ -109,7 +113,10 @@ export default function SuppliersPage() {
     setCurrentPage(1);
   };
 
-  if (isLoading) {
+  /** ------------------
+   * Conditional rendering
+   * ------------------ */
+  if (authLoading || queryLoading) {
     return <SuppliersSkeletonPage />;
   }
 
@@ -129,9 +136,7 @@ export default function SuppliersPage() {
           <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0 justify-between">
             <h1 className="text-3xl font-bold text-foreground">Suppliers</h1>
             <div className="flex-1 max-w-md mx-0 sm:mx-8">
-              {filteredSuppliers.length === 0 ? (
-                <div></div>
-              ) : (
+              {filteredSuppliers.length > 0 && (
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -150,7 +155,7 @@ export default function SuppliersPage() {
             </Button>
           </div>
 
-          {searchTerm && (
+          {searchTerm && filteredSuppliers.length > 0 && (
             <div className="mb-4 text-sm text-muted-foreground">
               Found {filteredSuppliers.length} supplier
               {filteredSuppliers.length !== 1 ? "s" : ""} matching `{searchTerm}
@@ -159,7 +164,7 @@ export default function SuppliersPage() {
           )}
 
           {/* Empty State */}
-          {filteredSuppliers.length === 0 ? (
+          {suppliers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Avatar className="relative h-40 w-40 mb-6">
                 <Image
@@ -224,7 +229,7 @@ export default function SuppliersPage() {
                             Supplies:
                           </span>
                           <p className="font-medium text-foreground mt-1 leading-relaxed">
-                            {supplier.supplies || "No supplies provided"}
+                            {supplier.suppllies || "No supplies provided"}
                           </p>
                         </div>
                       </div>
@@ -333,7 +338,6 @@ export default function SuppliersPage() {
             open={editDialogOpen}
             onOpenChange={setEditDialogOpen}
             supplier={selectedSupplier}
-            onSubmit={() => setEditDialogOpen(false)}
           />
 
           <DeleteConfirmationDialog

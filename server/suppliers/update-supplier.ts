@@ -1,31 +1,36 @@
 import { SupplierFormData } from "@/schemas/suppliers/createSupplierSchema";
-import { CreateSupplierResponse } from "@/types/suppliers";
+import { UpdateSupplierResponse } from "@/types/suppliers";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
-export const createSupplierApi = async (
+export const updateSupplierApi = async (
   formData: SupplierFormData,
-  businessId: string
-): Promise<CreateSupplierResponse> => {
+  businessId: string,
+  supplierId: string
+): Promise<UpdateSupplierResponse> => {
   try {
     const { name, contact, email, phone, description } = formData;
-    const response = await axiosApi.post<CreateSupplierResponse>(`/supplier`, {
-      name,
-      contact,
-      email,
-      phone,
-      suppllies: description,
-      businessId,
-    });
+    console.log(formData);
+    const response = await axiosApi.patch<UpdateSupplierResponse>(
+      `/supplier/${supplierId}`,
+      {
+        name,
+        contact,
+        email,
+        phone,
+        suppllies: description,
+        businessId,
+      }
+    );
 
     if (response.data?.success) {
       return {
         success: true,
-        message: response.data?.message || "Supplier created successfully",
+        message: response.data?.message || "Supplier updated successfully",
         data: response.data?.data,
       };
     } else {
-      throw new Error(response.data?.message || "Supplier creation failed");
+      throw new Error(response.data?.message || "Supplier update failed");
     }
   } catch (error) {
     if (error instanceof AxiosError) {

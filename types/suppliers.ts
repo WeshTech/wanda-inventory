@@ -12,12 +12,11 @@ export type CreateSupplierResponse = {
   data: CreateSupplierResponseData | null;
 };
 
-
 //single supplier
 export type SupplierData = {
   supplierId: string;
   name: string;
-  supplies: string | null;
+  suppllies: string | null;
   contact?: string | null;
   email?: string | null;
   phone?: string | null;
@@ -28,4 +27,18 @@ export type GetSuppliersResponse = {
   success: boolean;
   message: string;
   data: SupplierData[] | null;
+};
+
+//singe update supplier
+export type UpdateSupplierResponseData = {
+  supplierId: string;
+  name: string;
+  updatedAt: string;
+};
+
+//update supplier response
+export type UpdateSupplierResponse = {
+  success: boolean;
+  message: string;
+  data: UpdateSupplierResponseData | null;
 };

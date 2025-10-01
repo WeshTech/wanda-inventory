@@ -8,14 +8,22 @@ import { SupplierFormData } from "@/schemas/suppliers/createSupplierSchema";
 import {
   CreateSupplierResponse,
   GetSuppliersResponse,
+  UpdateSupplierResponse,
 } from "@/types/suppliers";
 import { createSupplierApi } from "@/server/suppliers/create-supplier";
 import { getBusinessSuppliersApi } from "@/server/suppliers/get-all-suppliers";
+import { updateSupplierApi } from "@/server/suppliers/update-supplier";
 
 export interface CreateSupplierVariables {
   formData: SupplierFormData;
   businessId: string;
 }
+
+export type UpdateSupplierVariables = {
+  formData: SupplierFormData;
+  businessId: string;
+  supplierId: string;
+};
 
 // create supplier
 export const useCreateSupplier = (): UseMutationResult<
@@ -47,5 +55,27 @@ export const useBusinessSuppliersQuery = (businessId: string) => {
     },
     enabled: !!businessId,
     staleTime: 10 * 60 * 60 * 1000,
+  });
+};
+
+export const useUpdateSupplier = (): UseMutationResult<
+  UpdateSupplierResponse,
+  Error,
+  UpdateSupplierVariables
+> => {
+  const queryClient = useQueryClient();
+
+  return useMutation<UpdateSupplierResponse, Error, UpdateSupplierVariables>({
+    mutationFn: ({ formData, businessId, supplierId }) =>
+      updateSupplierApi(formData, businessId, supplierId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getBusinessSuppliers", variables.businessId],
+      });
+
+      // queryClient.invalidateQueries({
+      //   queryKey: ["getSupplier", variables.supplierId],
+      // });
+    },
   });
 };
