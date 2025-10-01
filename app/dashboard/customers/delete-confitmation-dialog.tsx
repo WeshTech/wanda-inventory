@@ -10,26 +10,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
-interface DeleteConfirmationDialogProps {
+interface DeleteNotAllowedDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   supplierName?: string;
   customerName?: string;
-  onConfirm: () => void;
 }
 
-export function DeleteConfirmationDialog({
+export function DeleteNotAllowedDialog({
   open,
   onOpenChange,
   supplierName,
   customerName,
-  onConfirm,
-}: DeleteConfirmationDialogProps) {
-  const handleConfirm = () => {
-    onConfirm();
-    onOpenChange(false);
-  };
-
+}: DeleteNotAllowedDialogProps) {
   const entityName = supplierName || customerName || "";
   const entityType = supplierName ? "Supplier" : "Customer";
 
@@ -42,20 +35,18 @@ export function DeleteConfirmationDialog({
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <DialogTitle>Delete {entityType}</DialogTitle>
+              <DialogTitle>Cannot Delete {entityType}</DialogTitle>
               <DialogDescription className="mt-1">
-                Are you sure you want to delete `${entityName}`? This action
-                cannot be undone.
+                The system does not allow deleting {entityType.toLowerCase()}{" "}
+                <strong>{entityName}</strong>. Please update the details of the{" "}
+                {entityType.toLowerCase()} as needed instead.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleConfirm}>
-            Delete {entityType}
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>

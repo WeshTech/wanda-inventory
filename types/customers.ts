@@ -27,3 +27,15 @@ export type GetBusinessCustomersResponse = {
   message: string;
   data: BusinessCustomerData[] | null;
 };
+
+//stats
+export interface BusinessCustomerStatsData {
+  totalCustomers: number;
+}
+
+// stats response
+export interface GetBusinessCustomerStatsResponse {
+  success: boolean;
+  message: string;
+  data: BusinessCustomerStatsData | null;
+}

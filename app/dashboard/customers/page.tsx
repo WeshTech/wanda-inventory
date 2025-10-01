@@ -29,30 +29,42 @@ import {
   Filter,
   XCircle,
 } from "lucide-react";
+
 import { AddCustomerDialog } from "./add-customer-dialog";
 import { EditCustomerDialog } from "./edit-customer-dialog";
-import { DeleteConfirmationDialog } from "./delete-confitmation-dialog";
 import { SimplePagination } from "./simple-pagination";
 
 import { useAuthStore } from "@/stores/authStore";
 import { BusinessCustomerData } from "@/types/customers";
-import { useGetBusinessCustomers } from "@/server-queries/customerQueries";
+import {
+  useGetBusinessCustomers,
+  useGetBusinessCustomerStats,
+} from "@/server-queries/customerQueries";
+import { CustomerStatsSkeleton } from "./customer-stats-skeleton";
+import { CustomersListSkeleton } from "./customer-list-skeleton";
+import { DeleteNotAllowedDialog } from "./delete-confitmation-dialog";
 
 export default function CustomersPage() {
   const { user, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = user?.businessId ?? "";
 
-  // Fetch customers from backend
   const {
     data: customersResponse,
     isLoading: customersLoading,
-    error,
-  } = useGetBusinessCustomers(businessId ?? "");
+    error: customersError,
+  } = useGetBusinessCustomers(businessId);
 
   const customers = useMemo(
     () => customersResponse?.data || [],
     [customersResponse]
   );
+
+  // Stats query
+  const {
+    data: statsResponse,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useGetBusinessCustomerStats(businessId);
 
   // Local UI states
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,8 +76,7 @@ export default function CustomersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
 
-  const loading = authLoading || customersLoading;
-
+  // Search + pagination
   const filteredCustomers = useMemo(() => {
     if (!searchTerm) return customers;
     return customers.filter(
@@ -86,14 +97,6 @@ export default function CustomersPage() {
     return filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredCustomers, currentPage, itemsPerPage]);
 
-  const stats = useMemo(() => {
-    const total = customers.length;
-    const active = total; // Placeholder, you can later add active/inactive logic
-    const inactive = 0;
-    const loggedInToday = 0;
-    return { total, active, inactive, loggedInToday };
-  }, [customers]);
-
   const getInitials = (name: string) =>
     name
       .split(" ")
@@ -113,26 +116,7 @@ export default function CustomersPage() {
     setDeleteDialogOpen(true);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg font-medium text-muted-foreground">
-          Loading customers...
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-red-500 font-medium">
-          {error.message || "Failed to load customers"}
-        </p>
-      </div>
-    );
-  }
-
+  // Empty state renderer
   const renderEmptyState = (type: "no-customers" | "no-results") => (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
       <Avatar className="h-32 w-32">
@@ -164,6 +148,8 @@ export default function CustomersPage() {
     </div>
   );
 
+  const isCustomersLoading = authLoading || customersLoading;
+
   return (
     <TooltipProvider>
       <div className="min-h-screen p-6 bg-gradient-to-br from-primary/5 via-background to-secondary/10">
@@ -182,56 +168,68 @@ export default function CustomersPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
+          {statsLoading ? (
+            <CustomerStatsSkeleton />
+          ) : statsError ? (
+            <div className="text-red-500 font-medium mb-6">
+              {statsError.message || "Failed to load stats"}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="rounded-xl border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total Customers
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {statsResponse?.data?.totalCustomers ?? 0}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Total Customers
-                  </p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+              </div>
+              <div className="rounded-xl border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <UserCheck className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Active</p>
+                    <p className="text-2xl font-bold">
+                      {statsResponse?.data?.totalCustomers ?? 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-red-100 rounded-lg">
+                    <UserX className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inactive</p>
+                    <p className="text-2xl font-bold">0</p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-card p-4 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <Activity className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Contacts Log In Today
+                    </p>
+                    <p className="text-2xl font-bold">0</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <UserCheck className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Active</p>
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <UserX className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Inactive</p>
-                  <p className="text-2xl font-bold">{stats.inactive}</p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-xl border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Activity className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Contacts Log In Today
-                  </p>
-                  <p className="text-2xl font-bold">{stats.loggedInToday}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Toolbar */}
           <div className="mb-6 flex items-center justify-between gap-4">
@@ -256,16 +254,18 @@ export default function CustomersPage() {
             </div>
           </div>
 
-          {/* No customers at all */}
-          {customers.length === 0 && renderEmptyState("no-customers")}
-
-          {/* No search results */}
-          {customers.length > 0 &&
-            filteredCustomers.length === 0 &&
-            renderEmptyState("no-results")}
-
-          {/* Customer Grid */}
-          {filteredCustomers.length > 0 && (
+          {/* Customers */}
+          {isCustomersLoading ? (
+            <CustomersListSkeleton />
+          ) : customersError ? (
+            <div className="text-red-500 font-medium">
+              {customersError.message || "Failed to load customers"}
+            </div>
+          ) : customers.length === 0 ? (
+            renderEmptyState("no-customers")
+          ) : filteredCustomers.length === 0 ? (
+            renderEmptyState("no-results")
+          ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {paginatedCustomers.map((customer) => (
@@ -368,11 +368,10 @@ export default function CustomersPage() {
             customer={selectedCustomer}
             onSubmit={() => {}}
           />
-          <DeleteConfirmationDialog
+          <DeleteNotAllowedDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
             customerName={selectedCustomer?.customerName || ""}
-            onConfirm={() => {}}
           />
         </div>
       </div>
