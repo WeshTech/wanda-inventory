@@ -120,9 +120,9 @@ export default function CustomersPage() {
 
   const stats = useMemo(() => {
     const total = customers.length;
-    const active = total; // Assume all customers are active for stats
-    const inactive = 0; // No inactive customers since status is not tracked
-    const loggedInToday = 4; // Mock data
+    const active = total;
+    const inactive = 0;
+    const loggedInToday = 4;
 
     return { total, active, inactive, loggedInToday };
   }, [customers]);

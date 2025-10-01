@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -19,42 +19,51 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-const customerSchema = z.object({
-  name: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name must be less than 50 characters"),
-  phone: z
-    .string()
-    .min(10, "Phone number must be at least 10 characters")
-    .regex(/^[\d\s\-$$$$+]+$/, "Invalid phone number format"),
-});
-
-type CustomerFormData = z.infer<typeof customerSchema>;
+import {
+  CustomerFormData,
+  customerSchema,
+} from "@/schemas/customers/createCustomerSchema";
+import { useAuthStore } from "@/stores/authStore";
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
+import { useCreateCustomer } from "@/server-queries/customerQueries";
 
 interface AddCustomerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: CustomerFormData) => void;
 }
 
 export function AddCustomerDialog({
   open,
   onOpenChange,
-  onSubmit,
 }: AddCustomerDialogProps) {
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       name: "",
       phone: "",
+      email: "",
     },
   });
 
+  const businessId = useAuthStore((state) => state.user?.businessId || "");
+  const createCustomerMutation = useCreateCustomer(businessId);
+
   const handleSubmit = (data: CustomerFormData) => {
-    onSubmit(data);
-    form.reset();
+    const promise = createCustomerMutation.mutateAsync(data);
+
+    toast.promise(promise, {
+      loading: "Creating customer...",
+      success: (res) => {
+        if (res.success) {
+          form.reset();
+          onOpenChange(false);
+          return "Customer created successfully!";
+        }
+        throw new Error(res.message);
+      },
+      error: (err) => err.message || "Failed to create customer",
+    });
   };
 
   const handleClose = () => {
@@ -74,6 +83,7 @@ export function AddCustomerDialog({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
+            {/* Customer Name */}
             <FormField
               control={form.control}
               name="name"
@@ -81,13 +91,18 @@ export function AddCustomerDialog({
                 <FormItem>
                   <FormLabel>Customer Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter customer name" {...field} />
+                    <Input
+                      placeholder="Enter customer name"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Phone */}
             <FormField
               control={form.control}
               name="phone"
@@ -95,7 +110,30 @@ export function AddCustomerDialog({
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter phone number" {...field} />
+                    <Input
+                      placeholder="Enter phone number (optional)"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Email */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter email (optional)"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -106,7 +144,10 @@ export function AddCustomerDialog({
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button type="submit" disabled={createCustomerMutation.isPending}>
+                {createCustomerMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Add Customer
               </Button>
             </DialogFooter>
