@@ -17,8 +17,11 @@ export const inventorySchema = z
     buyingPrice: z.number().min(0, "Buying price must be 0 or greater"),
     sellingPrice: z.number().min(0, "Selling price must be 0 or greater"),
     minStockLevel: z.number().min(0, "Min stock level must be 0 or greater"),
+    quantity: z.number().min(1, "Quantity must be at least 1"),
     image: z.string().optional(),
     description: z.string().trim().max(500, "Description too long").optional(),
+    id: z.string().optional(),
+    foundAt: z.string().optional(),
   })
   .refine((data) => data.sellingPrice >= data.buyingPrice, {
     message: "Selling price cannot be lower than buying price",
