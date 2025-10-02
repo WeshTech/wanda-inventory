@@ -58,6 +58,7 @@ export const useBusinessSuppliersQuery = (businessId: string) => {
   });
 };
 
+//update supplier
 export const useUpdateSupplier = (): UseMutationResult<
   UpdateSupplierResponse,
   Error,

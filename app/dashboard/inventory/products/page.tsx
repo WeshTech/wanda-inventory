@@ -45,7 +45,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useFindProductByBarcode } from "@/server-queries/inventoryQueries";
+import {
+  useCreateBusinessProduct,
+  useFindProductByBarcode,
+} from "@/server-queries/inventoryQueries";
+import { CreateBusinessProductResponse } from "@/types/inventory";
 
 // Define types
 export type FoundAtType = "catalogue" | "business";
@@ -128,6 +132,9 @@ export default function AddInventoryPage() {
     queryEnabled
   );
 
+  // Initialize the mutation hook
+  const { mutate, isPending } = useCreateBusinessProduct();
+
   // Handle query results with useEffect
   useEffect(() => {
     if (isLoading) {
@@ -145,7 +152,9 @@ export default function AddInventoryPage() {
     if (data?.success && data.data) {
       // Populate form fields with product data
       setProductData(data);
-      form.setValue("name", data.data.description || "");
+      form.setValue("foundAt", data.foundAt || undefined);
+      form.setValue("id", data.data.id || "");
+      form.setValue("name", data.data.name || "");
       form.setValue("brand", data.data.brand || "");
       form.setValue("unit", data.data.unit || "");
       form.setValue("description", data.data.description || "");
@@ -175,15 +184,28 @@ export default function AddInventoryPage() {
   const onSubmit: SubmitHandler<InventoryFormData> = (data) => {
     console.log({ productData });
     console.log("Form submitted:", data);
+    toast.loading("Adding product...", { id: "addProduct" });
 
-    const submittedData = {
-      ...data,
-      id: productData?.data?.id,
-      foundAt: productData?.foundAt,
-    };
-
-    toast.success("Product submitted!!!");
-    console.log("Submitted data:", submittedData);
+    mutate(
+      { formData: data, businessId },
+      {
+        onSuccess: (response: CreateBusinessProductResponse) => {
+          if (response.success) {
+            toast.dismiss("addProduct");
+            toast.success("Product added successfully!");
+            setProductData(null);
+            form.reset();
+            setProductImage("/imagenotset.jpg");
+          } else {
+            toast.dismiss("addProduct");
+            toast.error(response.message || "Failed to add product");
+          }
+        },
+        onError: (error) => {
+          toast.error(`${error.message}` || `Failed to add product`);
+        },
+      }
+    );
   };
 
   return (
@@ -207,6 +229,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="barcode"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Barcode</FormLabel>
@@ -290,6 +313,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="name"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Product Name</FormLabel>
@@ -309,6 +333,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="brand"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Brand</FormLabel>
@@ -328,6 +353,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="unit"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Unit</FormLabel>
@@ -357,6 +383,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="supplier"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Supplier</FormLabel>
@@ -388,6 +415,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="store"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Store</FormLabel>
@@ -419,6 +447,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="category"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Category</FormLabel>
@@ -451,6 +480,7 @@ export default function AddInventoryPage() {
                       <FormField
                         control={form.control}
                         name="buyingPrice"
+                        disabled={isPending}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Buying Price</FormLabel>
@@ -475,6 +505,7 @@ export default function AddInventoryPage() {
                       <FormField
                         control={form.control}
                         name="sellingPrice"
+                        disabled={isPending}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Selling Price</FormLabel>
@@ -502,6 +533,7 @@ export default function AddInventoryPage() {
                       <FormField
                         control={form.control}
                         name="quantity"
+                        disabled={isPending}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Available quantity</FormLabel>
@@ -525,6 +557,7 @@ export default function AddInventoryPage() {
                       <FormField
                         control={form.control}
                         name="minStockLevel"
+                        disabled={isPending}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Minimum Stock Level</FormLabel>
@@ -551,6 +584,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="image"
+                      disabled={isPending}
                       render={() => (
                         <FormItem>
                           <FormLabel className="mx-auto">
@@ -571,6 +605,7 @@ export default function AddInventoryPage() {
                               </div>
                               <Input
                                 type="file"
+                                disabled={isPending}
                                 accept="image/*"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
@@ -593,6 +628,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="description"
+                      disabled={isPending}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Description</FormLabel>
@@ -613,8 +649,12 @@ export default function AddInventoryPage() {
 
                 {/* Submit Button */}
                 <div className="flex justify-end pt-6">
-                  <Button type="submit" className="px-8">
-                    Add Product
+                  <Button
+                    type="submit"
+                    className="px-8 disabled:cursor-not-allowed"
+                    disabled={isPending}
+                  >
+                    {isPending ? "Adding Product..." : "Add Product"}
                   </Button>
                 </div>
               </form>
