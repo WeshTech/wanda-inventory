@@ -6,10 +6,12 @@ import {
 import {
   CreateBusinessProductResponse,
   FindProductByBarcodeResponse,
+  GetBusinessProductsResponse,
 } from "@/types/inventory";
 import { getProductApi } from "@/server/inventory/get-product";
 import { InventoryFormData } from "@/schemas/inventory/add-inventory";
 import { createBusinessProductApi } from "@/server/inventory/create-business-product";
+import { getBusinessProductsApi } from "@/server/inventory/get-business-products";
 
 interface CreateProductInput {
   formData: InventoryFormData;
@@ -39,5 +41,14 @@ export const useCreateBusinessProduct = (): UseMutationResult<
   return useMutation<CreateBusinessProductResponse, Error, CreateProductInput>({
     mutationFn: ({ formData, businessId }: CreateProductInput) =>
       createBusinessProductApi(formData, businessId),
+  });
+};
+
+export const useBusinessProducts = (businessId: string) => {
+  return useQuery<GetBusinessProductsResponse, Error>({
+    queryKey: ["getbusinessproducts", businessId],
+    queryFn: () => getBusinessProductsApi(businessId),
+    enabled: !!businessId,
+    staleTime: 60 * 60 * 1000 * 10,
   });
 };

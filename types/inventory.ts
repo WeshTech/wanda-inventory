@@ -30,3 +30,25 @@ export type CreateBusinessProductResponse = {
   message: string;
   data: ProductData | null;
 };
+
+//single product structure
+export type BusinessProductStoreRow = {
+  businessProductId: string;
+  productId?: string | null;
+  imageUrl?: string | null;
+  barcode?: string | null;
+  productName?: string | null;
+  categoryName?: string | null;
+  quantity: number;
+  sellingPrice: number | null;
+  totalQuantity: number;
+  totalMinStock: number;
+  status: "InStock" | "lowStock" | "out of stock";
+};
+
+//total products response
+export type GetBusinessProductsResponse = {
+  success: boolean;
+  message: string;
+  data: BusinessProductStoreRow[] | null;
+};

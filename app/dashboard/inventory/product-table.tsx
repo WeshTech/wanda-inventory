@@ -1,8 +1,7 @@
-"use client"; // This component needs client-side interactivity for react-table, search, and filters
+"use client";
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import type { Product, ProductStatus } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -12,162 +11,316 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input"; // Import Input for search bar
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Import Select for filters
-import { XCircle } from "lucide-react"; // Icon for clearing filters
-import { Button } from "@/components/ui/button"; // For clear filter button
-
-// Import react-table hooks and types
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Plus, XCircle, ArrowUpDown } from "lucide-react";
 import {
   type ColumnDef,
-  type ColumnFilter, // Import ColumnFilter type
+  type ColumnFilter,
+  type SortingState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
-  getFilteredRowModel, // Import for filtering
+  getFilteredRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { ProductActionsCell } from "./product-action-cells";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
+import { useAuthStore } from "@/stores/authStore";
+import { useBusinessProducts } from "@/server-queries/inventoryQueries";
+import type { BusinessProductStoreRow } from "@/types/inventory";
+import Loader from "@/components/ui/loading-spiner";
 
-// Import the new pagination component
-// Import the new ProductActionsCell component
+// Define the ProductStatus type
+export type ProductStatus = "In Stock" | "Low Stock" | "Out of Stock";
 
-interface ProductTableProps {
-  products: Product[];
-}
+// Define the Product type
+export type Product = {
+  id: string;
+  serialNumber: string;
+  name: string;
+  category: string;
+  quantity: number;
+  price: number;
+  status: ProductStatus;
+  image: string;
+};
 
-// Helper function to determine the status badge color
-const getStatusColor = (status: ProductStatus) => {
+const getStatusColor = (status: string) => {
   switch (status) {
-    case "In Stock":
+    case "InStock":
       return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-    case "Low Stock":
+    case "lowStock":
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-    case "Out of Stock":
+    case "out of stock":
       return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
     default:
       return "";
   }
 };
 
-export default function ProductTable({ products }: ProductTableProps) {
-  const [globalFilter, setGlobalFilter] = useState(""); // State for global search
-  const [statusFilter, setStatusFilter] = useState<ProductStatus | "all">(
-    "all"
-  ); // State for status filter
-  const [categoryFilter, setCategoryFilter] = useState<string | "all">("all"); // State for category filter
+// Helper function to convert BusinessProductStoreRow to Product type
+const mapBusinessProductToProduct = (
+  businessProduct: BusinessProductStoreRow
+): Product => {
+  // Map status to match Product type's ProductStatus
+  const mapStatus = (
+    status: "InStock" | "lowStock" | "out of stock"
+  ): ProductStatus => {
+    switch (status) {
+      case "InStock":
+        return "In Stock";
+      case "lowStock":
+        return "Low Stock";
+      case "out of stock":
+        return "Out of Stock";
+      default:
+        return "In Stock";
+    }
+  };
 
-  // Dynamically get unique categories from products for the filter dropdown
+  return {
+    id: businessProduct.businessProductId,
+    serialNumber: businessProduct.barcode || "",
+    name: businessProduct.productName || "",
+    category: businessProduct.categoryName || "",
+    quantity: businessProduct.quantity,
+    price: businessProduct.sellingPrice || 0,
+    status: mapStatus(businessProduct.status),
+    image: businessProduct.imageUrl || "",
+  };
+};
+
+export default function ProductTable() {
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+  const businessId = user?.businessId || "";
+  const { data, isLoading, error } = useBusinessProducts(businessId);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [statusFilter, setStatusFilter] = useState<
+    "InStock" | "lowStock" | "out of stock" | "all"
+  >("all");
+  const [categoryFilter, setCategoryFilter] = useState<string | "all">("all");
+
+  const products = useMemo(() => data?.data || [], [data]);
+
   const uniqueCategories = useMemo(() => {
     const categories = new Set<string>();
-    products.forEach((product) => categories.add(product.category));
+    products.forEach(
+      (product) => product.categoryName && categories.add(product.categoryName)
+    );
     return Array.from(categories).sort();
   }, [products]);
 
-  // Define columns for the product table using ColumnDef from react-table
-  const columns: ColumnDef<Product>[] = [
+  const columns: ColumnDef<BusinessProductStoreRow>[] = [
     {
-      accessorKey: "image",
+      accessorKey: "imageUrl",
       header: "Image",
       cell: ({ row }) => (
-        <Image
-          src={row.original.image || "/placeholder.svg"}
-          width={48}
-          height={48}
-          alt={row.original.name}
-          className="aspect-square rounded-md object-cover"
-        />
+        <div className="flex justify-center">
+          <Image
+            src={row.original.imageUrl || "/placeholder.svg"}
+            width={48}
+            height={48}
+            alt={row.original.productName || "Product"}
+            className="aspect-square rounded-md object-cover"
+          />
+        </div>
       ),
-      enableSorting: false, // Disable sorting for image column
-      enableColumnFilter: false, // Disable filtering for image column
+      enableSorting: false,
+      enableColumnFilter: false,
+      size: 80,
     },
     {
-      accessorKey: "serialNumber",
-      header: "Product SN",
+      accessorKey: "barcode",
+      header: ({ column }) => {
+        return (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Product SN
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
       cell: ({ row }) => (
-        <div className="font-medium">{row.getValue("serialNumber")}</div>
+        <div className="font-medium text-center">
+          {row.getValue("barcode") || "N/A"}
+        </div>
       ),
     },
     {
-      accessorKey: "name",
-      header: "Product Name",
+      accessorKey: "productName",
+      header: ({ column }) => {
+        return (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Product Name
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="text-center">{row.getValue("productName")}</div>
+      ),
     },
     {
-      accessorKey: "category",
-      header: "Category",
+      accessorKey: "categoryName",
+      header: ({ column }) => {
+        return (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Category
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="text-center">{row.getValue("categoryName")}</div>
+      ),
     },
     {
       accessorKey: "quantity",
-      header: "Quantity",
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
+      header: ({ column }) => {
+        return (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Quantity
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
       cell: ({ row }) => (
-        <Badge className={getStatusColor(row.original.status)}>
-          {row.getValue("status")}
-        </Badge>
+        <div className="text-center">{row.getValue("quantity")}</div>
       ),
     },
     {
-      accessorKey: "price",
-      header: "Price",
-      cell: ({ row }) => `$${(row.getValue("price") as number).toFixed(2)}`,
+      accessorKey: "status",
+      header: ({ column }) => {
+        return (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Status
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <Badge className={getStatusColor(row.original.status)}>
+            {row.getValue("status")}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "sellingPrice",
+      header: ({ column }) => {
+        return (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="hover:bg-transparent p-0"
+            >
+              Price
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+      cell: ({ row }) => (
+        <div className="text-center">{`KES ${
+          (row.getValue("sellingPrice") as number)?.toFixed(2) || "0.00"
+        }`}</div>
+      ),
     },
     {
       id: "actions",
+      header: () => <div className="text-center">Actions</div>,
       enableHiding: false,
       enableSorting: false,
       enableColumnFilter: false,
-      cell: ({ row }) => <ProductActionsCell product={row.original} />,
+      size: 100,
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <ProductActionsCell
+            product={mapBusinessProductToProduct(row.original)}
+          />
+        </div>
+      ),
     },
   ];
 
-  // Construct column filters explicitly to avoid `as any`
-  const currentColumnFilters: ColumnFilter[] = [];
-  if (statusFilter !== "all") {
-    currentColumnFilters.push({ id: "status", value: statusFilter });
-  }
-  if (categoryFilter !== "all") {
-    currentColumnFilters.push({ id: "category", value: categoryFilter });
-  }
+  const currentColumnFilters = useMemo(() => {
+    const filters: ColumnFilter[] = [];
+    if (statusFilter !== "all") {
+      filters.push({ id: "status", value: statusFilter });
+    }
+    if (categoryFilter !== "all") {
+      filters.push({ id: "categoryName", value: categoryFilter });
+    }
+    return filters;
+  }, [statusFilter, categoryFilter]);
 
   const table = useReactTable({
     data: products,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(), // Enable filtering
-    onGlobalFilterChange: setGlobalFilter, // Update global filter state
-    onColumnFiltersChange: (updater) => {
-      // This updater can be a function or a direct value
-      if (typeof updater === "function") {
-        const newFilters = updater(table.getState().columnFilters);
-        const newStatusFilter =
-          newFilters.find((f) => f.id === "status")?.value || "all";
-        const newCategoryFilter =
-          newFilters.find((f) => f.id === "category")?.value || "all";
-        setStatusFilter(newStatusFilter as ProductStatus | "all");
-        setCategoryFilter(newCategoryFilter as string | "all");
-      } else {
-        const newStatusFilter =
-          updater.find((f) => f.id === "status")?.value || "all";
-        const newCategoryFilter =
-          updater.find((f) => f.id === "category")?.value || "all";
-        setStatusFilter(newStatusFilter as ProductStatus | "all");
-        setCategoryFilter(newCategoryFilter as string | "all");
-      }
-    },
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
     state: {
       globalFilter,
-      columnFilters: currentColumnFilters, // Use the explicitly constructed array
+      columnFilters: currentColumnFilters,
+      sorting,
     },
     initialState: {
       pagination: {
@@ -180,31 +333,24 @@ export default function ProductTable({ products }: ProductTableProps) {
     setGlobalFilter("");
     setStatusFilter("all");
     setCategoryFilter("all");
-    table.resetColumnFilters(); // Reset column filters in react-table state
-    table.setGlobalFilter(""); // Reset global filter in react-table state
   };
 
   return (
-    <div className="border rounded-lg shadow-sm">
+    <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
       <div className="flex flex-col md:flex-row items-center justify-between p-4 gap-4">
-        {/* Search Input */}
         <Input
           placeholder="Search products..."
           value={globalFilter ?? ""}
           onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm flex-1"
         />
-
-        {/* Filter Dropdowns */}
         <div className="flex items-center gap-2 flex-wrap justify-end">
-          {/* Status Filter */}
           <Select
             value={statusFilter}
-            onValueChange={(value: ProductStatus | "all") => {
+            onValueChange={(
+              value: "InStock" | "lowStock" | "out of stock" | "all"
+            ) => {
               setStatusFilter(value);
-              table
-                .getColumn("status")
-                ?.setFilterValue(value === "all" ? undefined : value);
             }}
           >
             <SelectTrigger className="w-[180px]">
@@ -212,20 +358,15 @@ export default function ProductTable({ products }: ProductTableProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="In Stock">In Stock</SelectItem>
-              <SelectItem value="Low Stock">Low Stock</SelectItem>
-              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+              <SelectItem value="InStock">In Stock</SelectItem>
+              <SelectItem value="lowStock">Low Stock</SelectItem>
+              <SelectItem value="out of stock">Out of Stock</SelectItem>
             </SelectContent>
           </Select>
-
-          {/* Category Filter */}
           <Select
             value={categoryFilter}
             onValueChange={(value: string | "all") => {
               setCategoryFilter(value);
-              table
-                .getColumn("category")
-                ?.setFilterValue(value === "all" ? undefined : value);
             }}
           >
             <SelectTrigger className="w-[180px]">
@@ -240,8 +381,6 @@ export default function ProductTable({ products }: ProductTableProps) {
               ))}
             </SelectContent>
           </Select>
-
-          {/* Clear Filters Button */}
           {(globalFilter ||
             statusFilter !== "all" ||
             categoryFilter !== "all") && (
@@ -257,29 +396,65 @@ export default function ProductTable({ products }: ProductTableProps) {
         </div>
       </div>
 
-      {/* Scrollable Table Container */}
-      <div className="overflow-x-auto p-4 max-w-[90vw]">
-        <Table>
+      <div className="p-4">
+        <Table className="table-fixed w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading || isAuthLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center"
+                >
+                  <div className="flex justify-center items-center">
+                    <Loader text="Loading products..." size="md" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-red-600"
+                >
+                  Error: {error.message || "Failed to fetch products."}
+                </TableCell>
+              </TableRow>
+            ) : products.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-64 text-center text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-lg font-medium">No store found</p>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Products
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -299,9 +474,21 @@ export default function ProductTable({ products }: ProductTableProps) {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-64 text-center text-muted-foreground"
                 >
-                  No results.
+                  <div className="flex flex-col items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src="/images/nostorefound.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <p className="text-base font-medium">
+                      No products match the applied filters
+                    </p>
+                    <Button onClick={handleClearFilters} variant="outline">
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Clear Filters
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
