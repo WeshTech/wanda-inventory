@@ -138,7 +138,7 @@ export default function ProductTable() {
       ),
       enableSorting: false,
       enableColumnFilter: false,
-      size: 80,
+      minSize: 80,
     },
     {
       accessorKey: "barcode",
@@ -163,6 +163,7 @@ export default function ProductTable() {
           {row.getValue("barcode") || "N/A"}
         </div>
       ),
+      minSize: 120,
     },
     {
       accessorKey: "productName",
@@ -182,9 +183,15 @@ export default function ProductTable() {
           </div>
         );
       },
-      cell: ({ row }) => (
-        <div className="text-center">{row.getValue("productName")}</div>
-      ),
+      cell: ({ row }) => {
+        const productName = row.getValue("productName") as string;
+        const truncatedName =
+          productName.length > 20
+            ? `${productName.substring(0, 20)}...`
+            : productName;
+        return <div className="text-center">{truncatedName}</div>;
+      },
+      minSize: 180,
     },
     {
       accessorKey: "categoryName",
@@ -207,6 +214,7 @@ export default function ProductTable() {
       cell: ({ row }) => (
         <div className="text-center">{row.getValue("categoryName")}</div>
       ),
+      minSize: 120,
     },
     {
       accessorKey: "quantity",
@@ -229,6 +237,7 @@ export default function ProductTable() {
       cell: ({ row }) => (
         <div className="text-center">{row.getValue("quantity")}</div>
       ),
+      minSize: 100,
     },
     {
       accessorKey: "status",
@@ -255,6 +264,7 @@ export default function ProductTable() {
           </Badge>
         </div>
       ),
+      minSize: 120,
     },
     {
       accessorKey: "sellingPrice",
@@ -279,6 +289,7 @@ export default function ProductTable() {
           (row.getValue("sellingPrice") as number)?.toFixed(2) || "0.00"
         }`}</div>
       ),
+      minSize: 120,
     },
     {
       id: "actions",
@@ -286,7 +297,6 @@ export default function ProductTable() {
       enableHiding: false,
       enableSorting: false,
       enableColumnFilter: false,
-      size: 100,
       cell: ({ row }) => (
         <div className="flex justify-center">
           <ProductActionsCell
@@ -294,6 +304,7 @@ export default function ProductTable() {
           />
         </div>
       ),
+      minSize: 100,
     },
   ];
 
@@ -396,104 +407,106 @@ export default function ProductTable() {
         </div>
       </div>
 
-      <div className="p-4">
-        <Table className="table-fixed w-full">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading || isAuthLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-64 text-center"
-                >
-                  <div className="flex justify-center items-center">
-                    <Loader text="Loading products..." size="md" />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : error ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-64 text-center text-red-600"
-                >
-                  Error: {error.message || "Failed to fetch products."}
-                </TableCell>
-              </TableRow>
-            ) : products.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-64 text-center text-muted-foreground"
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src="/images/nostorefound.jpg" />
-                      <AvatarFallback>NF</AvatarFallback>
-                    </Avatar>
-                    <p className="text-lg font-medium">No store found</p>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Products
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+      <div className="overflow-x-auto">
+        <div className="p-4 min-w-[1000px]">
+          <Table className="w-full">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-64 text-center text-muted-foreground"
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src="/images/nostorefound.jpg" />
-                      <AvatarFallback>NF</AvatarFallback>
-                    </Avatar>
-                    <p className="text-base font-medium">
-                      No products match the applied filters
-                    </p>
-                    <Button onClick={handleClearFilters} variant="outline">
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Clear Filters
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading || isAuthLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-64 text-center"
+                  >
+                    <div className="flex justify-center items-center">
+                      <Loader text="Loading products..." size="md" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-64 text-center text-red-600"
+                  >
+                    Error: {error.message || "Failed to fetch products."}
+                  </TableCell>
+                </TableRow>
+              ) : products.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-64 text-center text-muted-foreground"
+                  >
+                    <div className="flex flex-col items-center gap-4">
+                      <Avatar className="h-24 w-24">
+                        <AvatarImage src="/images/nostorefound.jpg" />
+                        <AvatarFallback>NF</AvatarFallback>
+                      </Avatar>
+                      <p className="text-lg font-medium">No store found</p>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Products
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-64 text-center text-muted-foreground"
+                  >
+                    <div className="flex flex-col items-center gap-4">
+                      <Avatar className="h-24 w-24">
+                        <AvatarImage src="/images/nostorefound.jpg" />
+                        <AvatarFallback>NF</AvatarFallback>
+                      </Avatar>
+                      <p className="text-base font-medium">
+                        No products match the applied filters
+                      </p>
+                      <Button onClick={handleClearFilters} variant="outline">
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <div className="p-4">

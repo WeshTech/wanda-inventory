@@ -52,3 +52,19 @@ export type GetBusinessProductsResponse = {
   message: string;
   data: BusinessProductStoreRow[] | null;
 };
+
+//stats data structure
+export type InventoryStats = {
+  totalAssetValue: number;
+  totalProducts: number;
+  totalInStock: number;
+  totalLowStock: number;
+  totalOutOfStock: number;
+};
+
+//stats response structure
+export type GetInventoryStatsResponse = {
+  success: boolean;
+  message: string;
+  data: InventoryStats | null;
+};
