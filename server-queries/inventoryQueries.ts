@@ -2,6 +2,7 @@ import {
   useMutation,
   UseMutationResult,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import {
   CreateBusinessProductResponse,
@@ -20,7 +21,7 @@ interface CreateProductInput {
   businessId: string;
 }
 
-//find product by barcode
+// find product by barcode
 export function useFindProductByBarcode(
   businessId: string,
   barcode: string,
@@ -34,19 +35,27 @@ export function useFindProductByBarcode(
   });
 }
 
-// Custom hook for creating a business product
+// create business product + invalidate business products on success
 export const useCreateBusinessProduct = (): UseMutationResult<
   CreateBusinessProductResponse,
   Error,
   CreateProductInput
 > => {
+  const queryClient = useQueryClient();
+
   return useMutation<CreateBusinessProductResponse, Error, CreateProductInput>({
     mutationFn: ({ formData, businessId }: CreateProductInput) =>
       createBusinessProductApi(formData, businessId),
+
+    onSuccess: (_, { businessId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["getbusinessproducts", businessId],
+      });
+    },
   });
 };
 
-//getting business products
+// get business products
 export const useBusinessProducts = (businessId: string) => {
   return useQuery<GetBusinessProductsResponse, Error>({
     queryKey: ["getbusinessproducts", businessId],
@@ -56,7 +65,7 @@ export const useBusinessProducts = (businessId: string) => {
   });
 };
 
-//getting inventory stats
+// get inventory stats
 export const useInventoryStats = (businessId: string) => {
   return useQuery<GetInventoryStatsResponse, Error>({
     queryKey: ["getinventoryStats", businessId],

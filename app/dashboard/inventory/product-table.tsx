@@ -39,6 +39,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useBusinessProducts } from "@/server-queries/inventoryQueries";
 import type { BusinessProductStoreRow } from "@/types/inventory";
 import Loader from "@/components/ui/loading-spiner";
+import { useRouter } from "next/navigation";
 
 // Define the ProductStatus type
 export type ProductStatus = "In Stock" | "Low Stock" | "Out of Stock";
@@ -106,6 +107,7 @@ export default function ProductTable() {
   const { data, isLoading, error } = useBusinessProducts(businessId);
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<
     "InStock" | "lowStock" | "out of stock" | "all"
   >("all");
@@ -458,8 +460,13 @@ export default function ProductTable() {
                         <AvatarImage src="/images/nostorefound.jpg" />
                         <AvatarFallback>NF</AvatarFallback>
                       </Avatar>
-                      <p className="text-lg font-medium">No store found</p>
-                      <Button>
+                      <p className="text-lg font-medium">No products found</p>
+                      <p className="text-base">Create your first product</p>
+                      <Button
+                        onClick={() =>
+                          router.push("/dashboard/inventory/products")
+                        }
+                      >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Products
                       </Button>

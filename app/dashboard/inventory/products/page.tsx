@@ -116,10 +116,8 @@ export default function AddInventoryPage() {
       supplier: "",
       store: "",
       category: "",
-      buyingPrice: 0,
       sellingPrice: 0,
       minStockLevel: 0,
-      quantity: 1,
       image: "",
       description: "",
     },
@@ -479,31 +477,6 @@ export default function AddInventoryPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="buyingPrice"
-                        disabled={isPending}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Buying Price</FormLabel>
-                            <FormControl>
-                              <Input
-                                id="buyingPrice"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
                         name="sellingPrice"
                         disabled={isPending}
                         render={({ field }) => (
@@ -527,33 +500,7 @@ export default function AddInventoryPage() {
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="quantity"
-                        disabled={isPending}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Available quantity</FormLabel>
-                            <FormControl>
-                              <Input
-                                id="quantity"
-                                type="number"
-                                placeholder="0"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(parseInt(e.target.value) || 0)
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Min Stock Level */}
                       <FormField
                         control={form.control}
                         name="minStockLevel"
@@ -637,7 +584,7 @@ export default function AddInventoryPage() {
                               id="description"
                               placeholder="Enter product description (optional)"
                               {...field}
-                              className="min-h-[80px] resize-none"
+                              className="min-h-[80px] md:min-h-[180px] resize-none"
                             />
                           </FormControl>
                           <FormMessage />
