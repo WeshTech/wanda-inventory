@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { PurchaseOrdersTable } from "./purchase-order-table";
 import { DeletePurchaseOrderDialog } from "./delete-purchase-orders";
 import { useRouter } from "next/navigation";
+import { GeneratePurchaseOrderDialog } from "./generate-purchase-order-dialog";
 
 export type PurchaseOrder = {
   id: string;
@@ -73,6 +74,8 @@ export default function PurchaseOrdersPage() {
     null
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
+
   const router = useRouter();
 
   const handleDeleteOrder = (order: PurchaseOrder) => {
@@ -108,13 +111,22 @@ export default function PurchaseOrdersPage() {
           <h1 className="text-3xl font-bold text-foreground">
             Purchase Orders
           </h1>
-          <Button
-            className="flex items-center gap-2"
-            onClick={() => router.push("/dashboard/purchase-orders/po")}
-          >
-            <Plus className="h-4 w-4" />
-            Create Purchase Order
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setIsGenerateDialogOpen(true)}
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate Purchase Order
+            </Button>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => router.push("/dashboard/purchase-orders/po")}
+            >
+              <Plus className="h-4 w-4" />
+              Create Purchase Order
+            </Button>
+          </div>
         </div>
 
         {/* Table */}
@@ -122,6 +134,11 @@ export default function PurchaseOrdersPage() {
           data={purchaseOrders}
           onDelete={handleDeleteOrder}
           onUpdateStatus={handleUpdateStatus}
+        />
+
+        <GeneratePurchaseOrderDialog
+          open={isGenerateDialogOpen}
+          onOpenChange={setIsGenerateDialogOpen}
         />
 
         {/* Dialogs */}
