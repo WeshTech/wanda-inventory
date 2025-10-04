@@ -1,15 +1,9 @@
-"use client"; // This is a Client Component
+"use client";
 
 import { useState } from "react";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Trash2, EyeOff } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +14,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import toast from "react-hot-toast";
 
 interface ProductActionsCellProps {
   product: Product;
@@ -27,64 +28,91 @@ interface ProductActionsCellProps {
 
 export function ProductActionsCell({ product }: ProductActionsCellProps) {
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"hide" | "delete" | null>(null);
+  const [actionType, setActionType] = useState<"delete" | null>(null);
 
-  // Handles opening the alert dialog for hide/delete actions
-  const handleActionClick = (action: "hide" | "delete") => {
+  // Handles opening the alert dialog for delete action
+  const handleActionClick = (action: "delete") => {
     setActionType(action);
     setIsAlertDialogOpen(true);
   };
 
-  // Handles confirming the action in the alert dialog
+  // Handles confirming the delete action
   const handleConfirmAction = () => {
     if (actionType) {
-      console.log(`${actionType} product:`, product.name);
-      // In a real application, you would send a request to your backend here
-      // e.g., using a Server Action or an API route to update/delete the product
-      // After successful action, you might want to refresh the page data:
-      // router.refresh(); // if using Next.js router
+      toast.error(`We do not allow deleting products yet!`);
     }
     setIsAlertDialogOpen(false);
     setActionType(null);
   };
 
-  return (
-    <div className="text-right">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-8 h-8">
-            <MoreHorizontal className="w-4 h-4" />
-            <span className="sr-only">Actions</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => handleActionClick("hide")}>
-            <EyeOff className="w-4 h-4 mr-2" />
-            Hide Product
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleActionClick("delete")}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Product
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+  // Handles direct view action
+  const handleViewProduct = () => {
+    console.log("Viewing product:", product.name);
+  };
 
-      {/* Confirmation Alert Dialog for Hide/Delete Actions */}
+  return (
+    <div className="flex justify-end gap-3">
+      <TooltipProvider>
+        {/* View Product Icon */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleViewProduct}
+              className="w-8 h-8"
+            >
+              <Eye className="w-4 h-4 text-muted-foreground" />
+              <span className="sr-only">View Product</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>View Product</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Delete Icon */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleActionClick("delete")}
+              className="w-8 h-8 hover:bg-red-200"
+            >
+              <Trash2 className="w-4 h-4 text-destructive" />
+              <span className="sr-only">Delete Product</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Delete Product</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Confirmation Dialog (only for delete) */}
       <AlertDialog open={isAlertDialogOpen} onOpenChange={setIsAlertDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Are you sure you want to {actionType} &quot;{product.name}&quot;?
+              Are you sure you want to delete “{product.name}”?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently {actionType}{" "}
-              the product from your inventory.
+              This action cannot be undone. This will permanently remove the
+              product from your inventory.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmAction}>
-              {actionType === "delete" ? "Delete" : "Hide"}
+
+            {/* Render the actual Button as the Action using asChild so classes apply */}
+            <AlertDialogAction asChild>
+              <Button
+                onClick={handleConfirmAction}
+                className="bg-red-200 text-red-800 hover:bg-red-300 focus-visible:ring-2 focus-visible:ring-red-400 transition-colors"
+              >
+                Delete
+              </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

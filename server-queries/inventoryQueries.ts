@@ -62,6 +62,6 @@ export const useInventoryStats = (businessId: string) => {
     queryKey: ["getinventoryStats", businessId],
     queryFn: () => getInventoryStatsApi(businessId),
     enabled: !!businessId,
-    staleTime: 1000 * 60 * 60 * 10,
+    staleTime: 1000,
   });
 };

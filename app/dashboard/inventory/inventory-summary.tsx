@@ -48,16 +48,13 @@ export default function InventorySummary() {
     return (
       <div className="text-center text-red-500">
         Error: {error?.message || "Failed to load inventory stats"}
+        <InventoryCardSkeleton />
       </div>
     );
   }
 
   if (!data?.success || !data.data) {
-    return (
-      <div className="text-center text-gray-500 dark:text-gray-400">
-        No inventory data available
-      </div>
-    );
+    return <InventoryCardSkeleton />;
   }
 
   const {
