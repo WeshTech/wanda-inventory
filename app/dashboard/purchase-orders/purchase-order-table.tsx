@@ -8,7 +8,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   createColumnHelper,
-  flexRender,
+  flexRender, // Fixed: Import flexRender from @tanstack/react-table instead of @/components/ui/table
   type SortingState,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
@@ -27,34 +27,29 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow, // Removed flexRender from this import
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Trash2,
-  Search,
-  Eye,
-  PenLine,
-} from "lucide-react";
-import { PurchaseOrder } from "./page";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowUpDown, X, Trash2, Search, Eye, PenLine } from "lucide-react";
 import { DataTablePagination } from "./data-table-pagination";
 import Link from "next/link";
+import type { PurchaseOrderResponseItem } from "@/types/purchaseorder";
+import { useAuthStore } from "@/stores/authStore";
+import { useGetPurchaseOrders } from "@/server-queries/purchaseorderQueries";
+import Loader from "@/components/ui/loading-spiner";
 
 interface PurchaseOrdersTableProps {
-  data: PurchaseOrder[];
-  onDelete: (order: PurchaseOrder) => void;
-  onUpdateStatus: (order: PurchaseOrder, newStatus: string) => void;
+  onDelete: (order: PurchaseOrderResponseItem) => void;
 }
 
-const columnHelper = createColumnHelper<PurchaseOrder>();
+const columnHelper = createColumnHelper<PurchaseOrderResponseItem>();
 
 const statusColors = {
   pending:
@@ -67,34 +62,50 @@ const statusColors = {
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-export function PurchaseOrdersTable({
-  data,
-  onDelete,
-}: PurchaseOrdersTableProps) {
+export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+  const businessId = user?.businessId || "";
+
+  const {
+    data: purchaseOrdersResponse,
+    isLoading: isQueryLoading,
+    isError,
+  } = useGetPurchaseOrders(businessId);
+
+  const data = useMemo(
+    () => purchaseOrdersResponse?.data || [],
+    [purchaseOrdersResponse]
+  );
+
   const columns = useMemo(
     () => [
-      columnHelper.accessor("id", {
+      columnHelper.accessor("purchaseOrderId", {
         header: ({ column }) => (
           <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Purchase Order ID
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         ),
-        cell: ({ row }) => (
-          <div className="text-center font-medium">{row.getValue("id")}</div>
-        ),
+        cell: ({ row }) => {
+          const id: string = row.getValue("purchaseOrderId");
+          const shortId = id
+            ? `PO-${id.slice(-6).toUpperCase()}`
+            : "PO-UNKNOWN";
+          return <div className="font-medium">{shortId}</div>;
+        },
       }),
-      columnHelper.accessor("supplier", {
+
+      columnHelper.accessor("supplierName", {
         header: ({ column }) => (
           <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Supplier
@@ -102,15 +113,15 @@ export function PurchaseOrdersTable({
           </div>
         ),
         cell: ({ row }) => (
-          <div className="text-center max-w-[200px] truncate">
-            {row.getValue("supplier")}
+          <div className="max-w-[200px] truncate">
+            {row.getValue("supplierName") || "N/A"}
           </div>
         ),
       }),
-      columnHelper.accessor("store", {
+      columnHelper.accessor("storeName", {
         header: ({ column }) => (
           <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Store
@@ -118,15 +129,15 @@ export function PurchaseOrdersTable({
           </div>
         ),
         cell: ({ row }) => (
-          <div className="text-center max-w-[150px] truncate">
-            {row.getValue("store")}
+          <div className="max-w-[150px] truncate">
+            {row.getValue("storeName") || "N/A"}
           </div>
         ),
       }),
       columnHelper.accessor("status", {
         header: ({ column }) => (
           <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Status
@@ -136,32 +147,16 @@ export function PurchaseOrdersTable({
         cell: ({ row }) => {
           const status = row.getValue("status") as keyof typeof statusColors;
           return (
-            <Badge className={`text-center ${statusColors[status]}`}>
+            <Badge className={`${statusColors[status]}`}>
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </Badge>
           );
         },
       }),
-      columnHelper.accessor("dateCreated", {
+      columnHelper.accessor("productCount", {
         header: ({ column }) => (
           <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Date Created
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="text-center whitespace-nowrap">
-            {new Date(row.getValue("dateCreated")).toLocaleDateString()}
-          </div>
-        ),
-      }),
-      columnHelper.accessor("products", {
-        header: ({ column }) => (
-          <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Products
@@ -169,24 +164,38 @@ export function PurchaseOrdersTable({
           </div>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-medium">
-            {row.getValue("products")}
-          </div>
+          <div className="font-medium">{row.getValue("productCount")}</div>
         ),
       }),
-      columnHelper.accessor("dateExpected", {
+      columnHelper.accessor("dateCreated", {
         header: ({ column }) => (
           <div
-            className="h-auto p-0 font-semibold flex items-center cursor-pointer"
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Date Expected
+            Date Created
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         ),
         cell: ({ row }) => (
-          <div className="text-center whitespace-nowrap">
-            {new Date(row.getValue("dateExpected")).toLocaleDateString()}
+          <div className="whitespace-nowrap">
+            {new Date(row.getValue("dateCreated")).toLocaleDateString()}
+          </div>
+        ),
+      }),
+      columnHelper.accessor("createdBy", {
+        header: ({ column }) => (
+          <div
+            className="h-auto p-0 font-semibold flex items-center justify-center cursor-pointer"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Created By
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="max-w-[150px] truncate">
+            {row.getValue("createdBy")}
           </div>
         ),
       }),
@@ -196,35 +205,65 @@ export function PurchaseOrdersTable({
         cell: ({ row }) => {
           const order = row.original;
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/purchase-orders/${order.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Details
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/purchase-orders/po/${order.id}`}>
-                    <PenLine className="mr-2 h-4 w-4" />
-                    Update details
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onDelete(order)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TooltipProvider>
+              <div className="flex items-center justify-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      asChild
+                    >
+                      <Link
+                        href={`/dashboard/purchase-orders/${order.purchaseOrderId}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View Details</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      asChild
+                    >
+                      <Link
+                        href={`/dashboard/purchase-orders/po/${order.purchaseOrderId}`}
+                      >
+                        <PenLine className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Update Details</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-red-200 dark:hover:bg-red-900/30"
+                      onClick={() => onDelete(order)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           );
         },
       }),
@@ -250,16 +289,55 @@ export function PurchaseOrdersTable({
     },
   });
 
-  // Get unique values for filters
-  const uniqueStatuses = Array.from(new Set(data.map((item) => item.status)));
-  const uniqueStores = Array.from(new Set(data.map((item) => item.store)));
-  const uniqueSuppliers = Array.from(
-    new Set(data.map((item) => item.supplier))
+  const { uniqueStatuses, uniqueStores, uniqueSuppliers } = useMemo(
+    () => ({
+      uniqueStatuses: Array.from(new Set(data.map((item) => item.status))),
+      uniqueStores: Array.from(new Set(data.map((item) => item.storeName))),
+      uniqueSuppliers: Array.from(
+        new Set(data.map((item) => item.supplierName))
+      ),
+    }),
+    [data]
   );
 
+  const hasActiveFilters =
+    columnFilters.length > 0 || (globalFilter && globalFilter.length > 0);
+
+  const clearAllFilters = () => {
+    setColumnFilters([]);
+    setGlobalFilter("");
+  };
+
+  if (isAuthLoading || isQueryLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader text="extracting purchase orders" />
+      </div>
+    );
+  }
+
+  if (isError || !purchaseOrdersResponse?.success || !data.length) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <Avatar className="h-24 w-24">
+          <AvatarImage
+            src="/images/nostorefound.jpg"
+            alt="No purchase orders"
+          />
+          <AvatarFallback>PO</AvatarFallback>
+        </Avatar>
+        <p className="text-muted-foreground">No purchase orders found</p>
+        <Button asChild>
+          <Link href="/dashboard/purchase-orders/new">
+            Generate Purchase Order
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 bg-gradient-to-br from-primary/5 via-background to-secondary/10">
-      {/* Filters */}
+    <div className="space-y-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -271,7 +349,7 @@ export function PurchaseOrdersTable({
           />
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4 sm:items-center">
           <Select
             value={
               (table.getColumn("status")?.getFilterValue() as string) ?? ""
@@ -296,10 +374,12 @@ export function PurchaseOrdersTable({
           </Select>
 
           <Select
-            value={(table.getColumn("store")?.getFilterValue() as string) ?? ""}
+            value={
+              (table.getColumn("storeName")?.getFilterValue() as string) ?? ""
+            }
             onValueChange={(value) =>
               table
-                .getColumn("store")
+                .getColumn("storeName")
                 ?.setFilterValue(value === "all" ? "" : value)
             }
           >
@@ -309,8 +389,8 @@ export function PurchaseOrdersTable({
             <SelectContent>
               <SelectItem value="all">All Stores</SelectItem>
               {uniqueStores.map((store) => (
-                <SelectItem key={store} value={store}>
-                  {store}
+                <SelectItem key={store || "N/A"} value={store || "N/A"}>
+                  {store || "N/A"}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -318,11 +398,12 @@ export function PurchaseOrdersTable({
 
           <Select
             value={
-              (table.getColumn("supplier")?.getFilterValue() as string) ?? ""
+              (table.getColumn("supplierName")?.getFilterValue() as string) ??
+              ""
             }
             onValueChange={(value) =>
               table
-                .getColumn("supplier")
+                .getColumn("supplierName")
                 ?.setFilterValue(value === "all" ? "" : value)
             }
           >
@@ -332,18 +413,29 @@ export function PurchaseOrdersTable({
             <SelectContent>
               <SelectItem value="all">All Suppliers</SelectItem>
               {uniqueSuppliers.map((supplier) => (
-                <SelectItem key={supplier} value={supplier}>
-                  {supplier}
+                <SelectItem key={supplier || "N/A"} value={supplier || "N/A"}>
+                  {supplier || "N/A"}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearAllFilters}
+              className="gap-2 bg-transparent"
+            >
+              <X className="h-4 w-4" />
+              Clear Filters
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border bg-card">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-w-screen">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -388,9 +480,22 @@ export function PurchaseOrdersTable({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center"
+                    className="h-96 text-center"
                   >
-                    No results.
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <Avatar className="h-24 w-24 border-2 border-muted">
+                        <AvatarImage
+                          src="/images/nostorefound.jpg"
+                          alt="No purchase orders"
+                        />
+                        <AvatarFallback className="text-lg">PO</AvatarFallback>
+                      </Avatar>
+                      <div className="text-center">
+                        <p className="text-base font-medium text-muted-foreground">
+                          No purchase order matches your criteria
+                        </p>
+                      </div>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -399,7 +504,6 @@ export function PurchaseOrdersTable({
         </div>
       </div>
 
-      {/* Pagination */}
       <DataTablePagination table={table} />
     </div>
   );

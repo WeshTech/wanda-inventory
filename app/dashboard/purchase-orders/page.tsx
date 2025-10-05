@@ -16,6 +16,7 @@ export type PurchaseOrder = {
   dateCreated: string;
   products: number;
   dateExpected: string;
+  createdBy: string;
 };
 
 // Mock data for demonstration
@@ -28,6 +29,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     dateCreated: "2024-01-15",
     products: 25,
     dateExpected: "2024-01-25",
+    createdBy: "Sarah Johnson",
   },
   {
     id: "PO-002",
@@ -37,6 +39,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     dateCreated: "2024-01-14",
     products: 12,
     dateExpected: "2024-01-24",
+    createdBy: "Michael Chen",
   },
   {
     id: "PO-003",
@@ -46,6 +49,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     dateCreated: "2024-01-13",
     products: 8,
     dateExpected: "2024-01-23",
+    createdBy: "Emily Rodriguez",
   },
   {
     id: "PO-004",
@@ -55,6 +59,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     dateCreated: "2024-01-12",
     products: 15,
     dateExpected: "2024-01-22",
+    createdBy: "David Thompson",
   },
   {
     id: "PO-005",
@@ -64,6 +69,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     dateCreated: "2024-01-11",
     products: 30,
     dateExpected: "2024-01-21",
+    createdBy: "Lisa Wang",
   },
 ];
 
