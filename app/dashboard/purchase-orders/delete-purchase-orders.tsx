@@ -10,12 +10,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
-import { PurchaseOrder } from "./page";
+import type { PurchaseOrderResponseItem } from "@/types/purchaseorder";
 
 interface DeletePurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  order: PurchaseOrder | null;
+  order: PurchaseOrderResponseItem | null;
   onConfirm: () => void;
 }
 
@@ -26,6 +26,11 @@ export function DeletePurchaseOrderDialog({
   onConfirm,
 }: DeletePurchaseOrderDialogProps) {
   if (!order) return null;
+
+  // Format the purchase order ID for display
+  const shortId = order.purchaseOrderId
+    ? `PO-${order.purchaseOrderId.slice(-6).toUpperCase()}`
+    : "PO-UNKNOWN";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -50,15 +55,25 @@ export function DeletePurchaseOrderDialog({
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm font-medium">Purchase Order ID:</span>
-              <span className="text-sm font-mono">{order.id}</span>
+              <span className="text-sm font-mono">{shortId}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Supplier:</span>
-              <span className="text-sm">{order.supplier}</span>
+              <span className="text-sm">{order.supplierName || "N/A"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Store:</span>
-              <span className="text-sm">{order.store}</span>
+              <span className="text-sm">{order.storeName || "N/A"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Status:</span>
+              <span className="text-sm capitalize">
+                {order.status.toLowerCase()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Products:</span>
+              <span className="text-sm">{order.productCount}</span>
             </div>
           </div>
         </div>

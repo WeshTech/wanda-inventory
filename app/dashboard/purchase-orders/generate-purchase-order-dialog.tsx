@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -8,69 +9,93 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { GeneratePurchaseOrderForm } from "./generate-purchase-order-form";
-import Loader from "@/components/ui/loading-spiner";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { CalendarIcon } from "lucide-react";
+import {
+  GeneratePurchaseOrderFormData,
+  GeneratePurchaseOrderSchema,
+} from "@/schemas/purchaseorder/generatePurchaseorderSchema";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
+import { useGeneratePurchaseOrder } from "@/server-queries/purchaseorderQueries";
 
 interface GeneratePurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+// Mock data (replace with backend data if needed)
+const suppliers = [
+  "ABC Supplies Co.",
+  "XYZ Electronics",
+  "Global Parts Ltd",
+  "Tech Solutions Inc",
+  "Office Supplies Pro",
+];
+
+const stores = [
+  "Main Store",
+  "Electronics Branch",
+  "Warehouse A",
+  "Office Branch",
+  "Downtown Location",
+];
+
 export function GeneratePurchaseOrderDialog({
   open,
   onOpenChange,
 }: GeneratePurchaseOrderDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showLoader, setShowLoader] = useState(false);
-  const [loaderText, setLoaderText] = useState(
-    "sit back while we perform the magic"
-  );
-  const [startTime, setStartTime] = useState<number | null>(null);
+  const form = useForm<GeneratePurchaseOrderFormData>({
+    resolver: zodResolver(GeneratePurchaseOrderSchema),
+    defaultValues: {
+      supplier: "",
+      store: "",
+      expectedDate: "",
+    },
+  });
 
-  // Reset state when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setIsSubmitting(false);
-      setShowLoader(false);
-      setLoaderText("sit back while we perform the magic");
-      setStartTime(null);
+  const { user } = useAuthStore();
+  const businessId = user?.businessId;
+
+  const { mutate, isPending } = useGeneratePurchaseOrder();
+
+  const onSubmit = (data: GeneratePurchaseOrderFormData) => {
+    if (!businessId) {
+      toast.error("Business ID not found. Please log in again.");
+      return;
     }
-  }, [open]);
 
-  // Update loader text after 2 seconds
-  useEffect(() => {
-    if (startTime && isSubmitting) {
-      const timer = setTimeout(() => {
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= 2000) {
-          setLoaderText("finishing up...");
-        }
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [startTime, isSubmitting]);
-
-  const handleSubmit = async (data) => {
-    setIsSubmitting(true);
-    setStartTime(Date.now());
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // Show loader after fields disappear
-    setShowLoader(true);
-
-    // Simulate additional processing
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Success - close dialog
-    setIsSubmitting(false);
-    setShowLoader(false);
-    onOpenChange(false);
-
-    // Here you would typically handle the actual purchase order generation
-    console.log("Generated purchase order with data:", data);
+    mutate(
+      { formData: data, businessId },
+      {
+        onSuccess: (response) => {
+          toast.success(
+            `✅ ${response.message} — PO #${response.data?.purchaseOrderNumber}`
+          );
+          form.reset();
+          onOpenChange(false); // Close the dialog on success
+        },
+        onError: (error) => {
+          toast.error(`❌ ${error.message}`);
+        },
+      }
+    );
   };
 
   return (
@@ -83,14 +108,94 @@ export function GeneratePurchaseOrderDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {showLoader ? (
-          <Loader text="loading" />
-        ) : (
-          <GeneratePurchaseOrderForm
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="supplier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supplier</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isPending}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a supplier" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {suppliers.map((supplier) => (
+                        <SelectItem key={supplier} value={supplier}>
+                          {supplier}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="store"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Store</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isPending}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a store" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {stores.map((store) => (
+                        <SelectItem key={store} value={store}>
+                          {store}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expectedDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Expected Delivery Date</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type="date"
+                        placeholder="Select expected date"
+                        {...field}
+                        className="pl-10"
+                        disabled={isPending}
+                      />
+                      <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Generating..." : "Generate Purchase Order"}
+            </Button>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

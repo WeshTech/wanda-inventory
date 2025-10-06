@@ -7,106 +7,36 @@ import { PurchaseOrdersTable } from "./purchase-order-table";
 import { DeletePurchaseOrderDialog } from "./delete-purchase-orders";
 import { useRouter } from "next/navigation";
 import { GeneratePurchaseOrderDialog } from "./generate-purchase-order-dialog";
-
-export type PurchaseOrder = {
-  id: string;
-  supplier: string;
-  store: string;
-  status: "pending" | "approved" | "shipped" | "delivered" | "cancelled";
-  dateCreated: string;
-  products: number;
-  dateExpected: string;
-  createdBy: string;
-};
-
-// Mock data for demonstration
-const mockPurchaseOrders: PurchaseOrder[] = [
-  {
-    id: "PO-001",
-    supplier: "ABC Supplies Co.",
-    store: "Main Store",
-    status: "pending",
-    dateCreated: "2024-01-15",
-    products: 25,
-    dateExpected: "2024-01-25",
-    createdBy: "Sarah Johnson",
-  },
-  {
-    id: "PO-002",
-    supplier: "XYZ Electronics",
-    store: "Electronics Branch",
-    status: "approved",
-    dateCreated: "2024-01-14",
-    products: 12,
-    dateExpected: "2024-01-24",
-    createdBy: "Michael Chen",
-  },
-  {
-    id: "PO-003",
-    supplier: "Global Parts Ltd",
-    store: "Warehouse A",
-    status: "shipped",
-    dateCreated: "2024-01-13",
-    products: 8,
-    dateExpected: "2024-01-23",
-    createdBy: "Emily Rodriguez",
-  },
-  {
-    id: "PO-004",
-    supplier: "Tech Solutions Inc",
-    store: "Main Store",
-    status: "delivered",
-    dateCreated: "2024-01-12",
-    products: 15,
-    dateExpected: "2024-01-22",
-    createdBy: "David Thompson",
-  },
-  {
-    id: "PO-005",
-    supplier: "Office Supplies Pro",
-    store: "Office Branch",
-    status: "cancelled",
-    dateCreated: "2024-01-11",
-    products: 30,
-    dateExpected: "2024-01-21",
-    createdBy: "Lisa Wang",
-  },
-];
+import { PurchaseOrderResponseItem } from "@/types/purchaseorder";
+import { toast as sonnerToast } from "sonner";
+import toast from "react-hot-toast";
 
 export default function PurchaseOrdersPage() {
-  const [purchaseOrders, setPurchaseOrders] =
-    useState<PurchaseOrder[]>(mockPurchaseOrders);
-  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(
-    null
-  );
+  const [selectedOrder, setSelectedOrder] =
+    useState<PurchaseOrderResponseItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
 
   const router = useRouter();
 
-  const handleDeleteOrder = (order: PurchaseOrder) => {
+  const handleDeleteOrder = (order: PurchaseOrderResponseItem) => {
     setSelectedOrder(order);
     setIsDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = () => {
     if (selectedOrder) {
-      setPurchaseOrders((prev) =>
-        prev.filter((po) => po.id !== selectedOrder.id)
-      );
-      setSelectedOrder(null);
-      setIsDeleteDialogOpen(false);
-    }
-  };
+      // Show loading toast
+      const loadingToast = sonnerToast.loading("Deleting purchase order...");
 
-  const handleUpdateStatus = (order: PurchaseOrder, newStatus: string) => {
-    setPurchaseOrders((prev) =>
-      prev.map((po) =>
-        po.id === order.id
-          ? { ...po, status: newStatus as PurchaseOrder["status"] }
-          : po
-      )
-    );
+      setTimeout(() => {
+        sonnerToast.dismiss(loadingToast);
+        toast.error("Delete operation blocked");
+
+        setSelectedOrder(null);
+        setIsDeleteDialogOpen(false);
+      }, 1300);
+    }
   };
 
   return (
@@ -135,19 +65,16 @@ export default function PurchaseOrdersPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <PurchaseOrdersTable
-          data={purchaseOrders}
-          onDelete={handleDeleteOrder}
-          onUpdateStatus={handleUpdateStatus}
-        />
+        {/* Table - fetches its own data internally */}
+        <PurchaseOrdersTable onDelete={handleDeleteOrder} />
 
+        {/* Generate Dialog */}
         <GeneratePurchaseOrderDialog
           open={isGenerateDialogOpen}
           onOpenChange={setIsGenerateDialogOpen}
         />
 
-        {/* Dialogs */}
+        {/* Delete Dialog */}
         <DeletePurchaseOrderDialog
           open={isDeleteDialogOpen}
           onOpenChange={setIsDeleteDialogOpen}

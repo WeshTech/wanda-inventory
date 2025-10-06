@@ -38,12 +38,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowUpDown, X, Trash2, Search, Eye, PenLine } from "lucide-react";
-import { DataTablePagination } from "./data-table-pagination";
 import Link from "next/link";
 import type { PurchaseOrderResponseItem } from "@/types/purchaseorder";
 import { useAuthStore } from "@/stores/authStore";
 import { useGetPurchaseOrders } from "@/server-queries/purchaseorderQueries";
 import Loader from "@/components/ui/loading-spiner";
+import { DataTablePagination } from "@/components/dashboard/TablePagination";
 
 interface PurchaseOrdersTableProps {
   onDelete: (order: PurchaseOrderResponseItem) => void;
@@ -52,14 +52,16 @@ interface PurchaseOrdersTableProps {
 const columnHelper = createColumnHelper<PurchaseOrderResponseItem>();
 
 const statusColors = {
-  pending:
+  DRAFT: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+  SUBMITTED:
     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-  approved: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  shipped:
+  APPROVED: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  RECEIVED: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  PARTIAL:
     "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-  delivered:
-    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  CANCELLED: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300",
+  CLOSED: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300",
 };
 
 export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
@@ -179,7 +181,14 @@ export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
         ),
         cell: ({ row }) => (
           <div className="whitespace-nowrap">
-            {new Date(row.getValue("dateCreated")).toLocaleDateString()}
+            {new Date(row.getValue("dateCreated")).toLocaleString("en-KE", {
+              timeZone: "Africa/Nairobi",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </div>
         ),
       }),

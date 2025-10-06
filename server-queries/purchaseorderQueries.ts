@@ -3,6 +3,7 @@ import {
   UseMutationResult,
   useQuery,
   UseQueryResult,
+  useQueryClient,
 } from "@tanstack/react-query";
 import {
   GeneratePurchaseOrderResponse,
@@ -18,6 +19,8 @@ export const useGeneratePurchaseOrder = (): UseMutationResult<
   Error,
   { formData: GeneratePurchaseOrderFormData; businessId: string }
 > => {
+  const queryClient = useQueryClient();
+
   return useMutation<
     GeneratePurchaseOrderResponse,
     Error,
@@ -26,10 +29,15 @@ export const useGeneratePurchaseOrder = (): UseMutationResult<
     mutationKey: ["generatepurchaseorder"],
     mutationFn: ({ formData, businessId }) =>
       generatePurchaseOrderApi(formData, businessId),
+    onSuccess: (_, { businessId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["purchaseOrders", businessId],
+      });
+    },
   });
 };
 
-//get purchase orders
+// Get purchase orders
 export const useGetPurchaseOrders = (
   businessId: string
 ): UseQueryResult<PurchaseOrderResponse, Error> => {
@@ -37,6 +45,6 @@ export const useGetPurchaseOrders = (
     queryKey: ["purchaseOrders", businessId],
     queryFn: () => getPurchaseordersApi(businessId),
     enabled: !!businessId,
-    staleTime: 5 * 60 * 1000 * 60 * 10,
+    staleTime: 5,
   });
 };

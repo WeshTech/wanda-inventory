@@ -11,15 +11,7 @@ export interface GeneratePurchaseOrderResponse {
   data?: GeneratePurchaseOrderData | null;
 }
 
-//product item structure in purchase order
-export interface PurchaseOrderProduct {
-  barcode: string | null;
-  productName: string | null;
-  quantity: number;
-  price: number;
-}
-
-//purchase order structure
+//purchase order summary item structure
 export interface PurchaseOrderResponseItem {
   purchaseOrderId: string;
   supplierName: string | null;
@@ -27,9 +19,7 @@ export interface PurchaseOrderResponseItem {
   status: string;
   createdBy: string;
   dateCreated: Date;
-  dateExpected: Date | null;
   productCount: number;
-  products: PurchaseOrderProduct[];
 }
 
 //get purchase order response structure
