@@ -3,7 +3,16 @@ import { z } from "zod";
 export const purchaseOrderSchema = z.object({
   supplier: z.string().min(1, "Supplier is required"),
   store: z.string().min(1, "Store is required"),
-  status: z.enum(["pending", "approved", "shipped", "delivered", "cancelled"]),
+  status: z.enum([
+    "DRAFT",
+    "SUBMITTED",
+    "APPROVED",
+    "REJECTED",
+    "RECEIVED",
+    "PARTIAL",
+    "CANCELLED",
+    "CLOSED",
+  ]),
 });
 
 export const productSchema = z.object({
@@ -24,7 +33,16 @@ export const addProductSchema = z.object({
 export const createPurchaseOrderSchema = z.object({
   supplier: z.string().min(1, "Supplier is required"),
   store: z.string().min(1, "Store is required"),
-  status: z.enum(["pending", "approved", "shipped", "delivered", "cancelled"]), // Remove .default("pending")
+  status: z.enum([
+    "DRAFT",
+    "SUBMITTED",
+    "APPROVED",
+    "REJECTED",
+    "RECEIVED",
+    "PARTIAL",
+    "CANCELLED",
+    "CLOSED",
+  ]),
   dateExpected: z.string().min(1, "Expected date is required"),
   createdBy: z.string().min(1, "Created by is required"),
 });
