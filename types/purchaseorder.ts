@@ -41,7 +41,7 @@ export interface Product {
 // Product as it comes from the backend (API)
 export interface PurchaseOrderProduct {
   barcode: string | null;
-  productName: string | null; // backend uses productName
+  productName: string | null;
   quantity: number;
   price: number;
 }

@@ -19,14 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ProductFormData, productSchema } from "@/schemas/purchaseOrderSchema";
-
-type Product = {
-  id: string;
-  barcode: string;
-  name: string;
-  quantity: number;
-  price: number;
-};
+import { Product } from "@/types/purchaseorder";
 
 interface UpdateProductDialogProps {
   open: boolean;
@@ -44,8 +37,8 @@ export function UpdateProductDialog({
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      barcode: product.barcode,
-      name: product.name,
+      barcode: product.barcode || "",
+      name: product.name || "",
       quantity: product.quantity,
       price: product.price,
     },

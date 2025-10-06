@@ -10,14 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-type Product = {
-  id: string;
-  barcode: string;
-  name: string;
-  quantity: number;
-  price: number;
-};
+import { Product } from "@/types/purchaseorder";
 
 interface DeleteProductDialogProps {
   open: boolean;
