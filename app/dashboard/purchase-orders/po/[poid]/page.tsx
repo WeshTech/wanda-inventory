@@ -1,3 +1,4 @@
+// "use client";
 "use client";
 
 import { useEffect, useState } from "react";
@@ -43,12 +44,16 @@ import { DeleteProductDialog } from "./delete-product-dialog";
 import { format } from "date-fns";
 import type { PurchaseOrderProduct } from "@/types/purchaseorder";
 import { useAuthStore } from "@/stores/authStore";
-import { usePurchaseOrderDetail } from "@/server-queries/purchaseorderQueries";
-import { toast } from "sonner";
+import {
+  usePurchaseOrderDetail,
+  useUpdatePurchaseOrder,
+} from "@/server-queries/purchaseorderQueries";
+import { toast as sonnerToast } from "sonner";
 import {
   type UpdatePurchaseOrderFormData,
   updatePurchaseOrderSchema,
 } from "@/schemas/purchaseOrderSchema";
+import toast from "react-hot-toast";
 
 interface Product {
   id: string;
@@ -82,6 +87,10 @@ export default function EditPurchaseOrderPage() {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Initialize the mutation hook with businessId
+  const { mutate: updatePurchaseOrder, isPending: isMutating } =
+    useUpdatePurchaseOrder(businessId);
+
   const form = useForm<UpdatePurchaseOrderFormData>({
     resolver: zodResolver(updatePurchaseOrderSchema),
     defaultValues: {
@@ -93,7 +102,7 @@ export default function EditPurchaseOrderPage() {
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message || "Failed to load purchase order.");
+      sonnerToast.error(error.message || "Failed to load purchase order.");
       const timer = setTimeout(() => {
         router.replace("/dashboard/purchase-orders");
       }, 100);
@@ -157,18 +166,26 @@ export default function EditPurchaseOrderPage() {
 
   const onSubmit = (data: UpdatePurchaseOrderFormData) => {
     if (!checkIfDirty()) {
-      toast.warning("No changes detected", {
+      sonnerToast.warning("No changes detected", {
         description: "Please make changes to the form before updating.",
       });
       return;
     }
 
-    console.log("[v0] Purchase order form submitted:", data);
-    // Handle form submission logic here
-    toast.success("Purchase order updated successfully!");
+    const loadingToastId = sonnerToast.loading("Updating purchase order...");
 
-    setProducts((prev) => prev.map((p) => ({ ...p, isModified: false })));
-    setOriginalProducts(JSON.parse(JSON.stringify(products)));
+    updatePurchaseOrder(data, {
+      onSuccess: () => {
+        sonnerToast.dismiss(loadingToastId);
+        toast.success("Purchase order updated successfully!");
+        setProducts((prev) => prev.map((p) => ({ ...p, isModified: false })));
+        setOriginalProducts(JSON.parse(JSON.stringify(products)));
+      },
+      onError: (error) => {
+        sonnerToast.dismiss(loadingToastId);
+        toast.error(error.message || "Failed to update purchase order.");
+      },
+    });
   };
 
   const handleAddProduct = (
@@ -242,6 +259,7 @@ export default function EditPurchaseOrderPage() {
           onClick={form.handleSubmit(onSubmit)}
           className="shrink-0 gap-2"
           size="lg"
+          disabled={isMutating} // Disable Save button during mutation
         >
           <Save className="h-4 w-4" />
           Save Changes
@@ -361,6 +379,7 @@ export default function EditPurchaseOrderPage() {
                 type="button"
                 onClick={() => setShowAddDialog(true)}
                 className="gap-2"
+                disabled={isMutating} // Disable Add Product button during mutation
               >
                 <Plus className="h-4 w-4" />
                 Add Product
