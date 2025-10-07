@@ -19,13 +19,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ProductFormData, productSchema } from "@/schemas/purchaseOrderSchema";
-import { Product } from "@/types/purchaseorder";
 
 interface UpdateProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product: Product;
-  onUpdate: (product: Product) => void;
+  product: updateProduct;
+  onUpdate: (product: updateProduct) => void;
+}
+export interface updateProduct {
+  businessProductId: string;
+  id: string;
+  barcode: string | null;
+  name: string | null;
+  quantity: number;
+  price: number;
 }
 
 export function UpdateProductDialog({

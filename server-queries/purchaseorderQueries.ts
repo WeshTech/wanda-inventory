@@ -9,11 +9,14 @@ import {
   GeneratePurchaseOrderResponse,
   PurchaseOrderDetailResponse,
   PurchaseOrderResponse,
+  UpdatePurchaseOrderResponse,
 } from "@/types/purchaseorder";
 import { generatePurchaseOrderApi } from "@/server/purchaseorder/generate-purchaseorder";
 import { GeneratePurchaseOrderFormData } from "@/schemas/purchaseorder/generatePurchaseorderSchema";
 import { getPurchaseordersApi } from "@/server/purchaseorder/get-purchaseorder";
 import { getPurchaseorderByIdApi } from "@/server/purchaseorder/get-PO-by-id";
+import { UpdatePurchaseOrderFormData } from "@/schemas/purchaseOrderSchema";
+import { updatePurchaseorderByIdApi } from "@/server/purchaseorder/update-PO-byId";
 
 // Hook to generate a purchase order
 export const useGeneratePurchaseOrder = (): UseMutationResult<
@@ -60,6 +63,37 @@ export const usePurchaseOrderDetail = (
     queryKey: ["purchaseOrderDetail", businessId, purchaseOrderId],
     queryFn: async () => getPurchaseorderByIdApi(businessId, purchaseOrderId),
     enabled: !!businessId && !!purchaseOrderId,
-    staleTime: 1000,
+    staleTime: 5,
+  });
+};
+
+// Update purchase order by ID
+export const useUpdatePurchaseOrder = (businessId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    UpdatePurchaseOrderResponse,
+    Error,
+    UpdatePurchaseOrderFormData
+  >({
+    mutationFn: async (formData) => {
+      return await updatePurchaseorderByIdApi(formData, businessId);
+    },
+    onSuccess: (data) => {
+      // Invalidate the specific purchase order detail query
+      if (data?.data?.purchaseOrderId) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            "purchaseOrderDetail",
+            businessId,
+            data.data.purchaseOrderId,
+          ],
+        });
+      }
+      //invalidate the purchase orders list query
+      queryClient.invalidateQueries({
+        queryKey: ["purchaseOrders", businessId],
+      });
+    },
   });
 };

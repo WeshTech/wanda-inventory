@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus, Trash2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -37,26 +37,30 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  PurchaseOrderFormData,
-  purchaseOrderSchema,
-} from "@/schemas/purchaseOrderSchema";
 import { AddProductDialog } from "./add-product-dialog";
 import { UpdateProductDialog } from "./update-product-dialog";
 import { DeleteProductDialog } from "./delete-product-dialog";
 import { format } from "date-fns";
-import { PurchaseOrderProduct } from "@/types/purchaseorder";
+import type { PurchaseOrderProduct } from "@/types/purchaseorder";
 import { useAuthStore } from "@/stores/authStore";
 import { usePurchaseOrderDetail } from "@/server-queries/purchaseorderQueries";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import {
+  type UpdatePurchaseOrderFormData,
+  updatePurchaseOrderSchema,
+} from "@/schemas/purchaseOrderSchema";
 
 interface Product {
   id: string;
+  businessProductId: string;
   barcode: string | null;
   name: string | null;
   quantity: number;
   price: number;
+  isModified?: boolean;
 }
+
+const DEFAULT_BUSINESS_PRODUCT_ID = "00000000-0000-0000-0000-000000000000";
 
 export default function EditPurchaseOrderPage() {
   const { poid } = useParams<{ poid: string }>();
@@ -72,17 +76,18 @@ export default function EditPurchaseOrderPage() {
   const purchaseOrder = purchaseOrderResponse?.data;
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [originalProducts, setOriginalProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const form = useForm<PurchaseOrderFormData>({
-    resolver: zodResolver(purchaseOrderSchema),
+  const form = useForm<UpdatePurchaseOrderFormData>({
+    resolver: zodResolver(updatePurchaseOrderSchema),
     defaultValues: {
-      supplier: purchaseOrder?.supplier || "",
-      store: purchaseOrder?.store || "",
-      status: purchaseOrder?.status,
+      purchaseOrderId: poid,
+      status: undefined,
+      products: [],
     },
   });
 
@@ -98,39 +103,103 @@ export default function EditPurchaseOrderPage() {
 
   useEffect(() => {
     if (purchaseOrder) {
-      form.reset({
-        supplier: purchaseOrder.supplier || "",
-        store: purchaseOrder.store || "",
-        status: purchaseOrder.status,
-      });
-      setProducts(
-        purchaseOrder.products.map(
-          (p: PurchaseOrderProduct, index: number) => ({
-            id: `${index + 1}`,
-            barcode: p.barcode,
-            name: p.productName,
-            quantity: p.quantity,
-            price: p.price,
-          })
-        )
+      const initialProducts = purchaseOrder.products.map(
+        (p: PurchaseOrderProduct, index: number) => ({
+          id: `${index + 1}`,
+          businessProductId: p.businessProductId,
+          barcode: p.barcode,
+          name: p.productName,
+          quantity: p.quantity,
+          price: p.price,
+          isModified: false,
+        })
       );
-    }
-  }, [purchaseOrder, form]);
 
-  const onSubmit = (data: PurchaseOrderFormData) => {
-    console.log("[v1] Purchase order form submitted:", data);
-    // Handle form submission logic here
+      form.reset({
+        purchaseOrderId: poid,
+        status: purchaseOrder.status,
+        products: initialProducts.map((p) => ({
+          businessProductId: p.businessProductId,
+          barcode: p.barcode || undefined,
+          productName: p.name || undefined,
+          quantity: p.quantity,
+          price: p.price,
+        })),
+      });
+
+      setProducts(initialProducts);
+      setOriginalProducts(JSON.parse(JSON.stringify(initialProducts)));
+    }
+  }, [purchaseOrder, form, poid]);
+
+  const checkIfDirty = () => {
+    const currentStatus = form.getValues("status");
+    const originalStatus = purchaseOrder?.status;
+
+    const statusChanged = currentStatus !== originalStatus;
+    const productsChanged = products.some((p) => p.isModified);
+
+    return statusChanged || productsChanged;
   };
 
-  const handleAddProduct = (product: Omit<Product, "id">) => {
-    const newProduct = { ...product, id: `${products.length + 1}` };
+  useEffect(() => {
+    form.setValue(
+      "products",
+      products.map((p) => ({
+        businessProductId: p.businessProductId,
+        barcode: p.barcode || undefined,
+        productName: p.name || undefined,
+        quantity: p.quantity,
+        price: p.price,
+      }))
+    );
+  }, [products, form]);
+
+  const onSubmit = (data: UpdatePurchaseOrderFormData) => {
+    if (!checkIfDirty()) {
+      toast.warning("No changes detected", {
+        description: "Please make changes to the form before updating.",
+      });
+      return;
+    }
+
+    console.log("[v0] Purchase order form submitted:", data);
+    // Handle form submission logic here
+    toast.success("Purchase order updated successfully!");
+
+    setProducts((prev) => prev.map((p) => ({ ...p, isModified: false })));
+    setOriginalProducts(JSON.parse(JSON.stringify(products)));
+  };
+
+  const handleAddProduct = (
+    product: Omit<Product, "id" | "businessProductId">
+  ) => {
+    const newProduct: Product = {
+      ...product,
+      id: `${products.length + 1}`,
+      businessProductId: DEFAULT_BUSINESS_PRODUCT_ID,
+      isModified: true,
+    };
     setProducts([...products, newProduct]);
     setShowAddDialog(false);
   };
 
   const handleUpdateProduct = (updatedProduct: Product) => {
-    setProducts(
-      products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id === updatedProduct.id) {
+          const original = originalProducts.find((op) => op.id === p.id);
+          const isModified = original
+            ? original.quantity !== updatedProduct.quantity ||
+              original.price !== updatedProduct.price ||
+              original.barcode !== updatedProduct.barcode ||
+              original.name !== updatedProduct.name
+            : true;
+
+          return { ...updatedProduct, isModified };
+        }
+        return p;
+      })
     );
     setShowUpdateDialog(false);
     setSelectedProduct(null);
@@ -154,284 +223,279 @@ export default function EditPurchaseOrderPage() {
   if (isLoading) return <div>Loading purchase order...</div>;
 
   if (!purchaseOrder) return <div>Purchase order not found.</div>;
+
   return (
     <div className="container mx-auto p-6 max-w-6xl bg-gradient-to-br from-primary/5 via-background to-secondary/10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-balance">Edit Purchase Order</h1>
-        <p className="text-muted-foreground">
-          Purchase Order ID:{" "}
-          {`PO-${new Date(purchaseOrder.dateCreated).getFullYear()}-${String(
-            purchaseOrder.orderNumber
-          ).padStart(3, "0")}`}
-        </p>
+      <div className="mb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-balance">
+            Edit Purchase Order
+          </h1>
+          <p className="text-muted-foreground mb-4">
+            Purchase Order ID:{" "}
+            {`PO-${new Date(purchaseOrder.dateCreated).getFullYear()}-${String(
+              purchaseOrder.orderNumber
+            ).padStart(3, "0")}`}
+          </p>
+        </div>
+        <Button
+          onClick={form.handleSubmit(onSubmit)}
+          className="shrink-0 gap-2"
+          size="lg"
+        >
+          <Save className="h-4 w-4" />
+          Save Changes
+        </Button>
       </div>
 
-      <div className="grid gap-6">
-        {/* Purchase Order Details Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Purchase Order Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="supplier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Supplier</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select supplier" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {/* Assuming suppliers are fetched similarly */}
-                            <SelectItem value="supplier-1">
-                              ABC Electronics Ltd
-                            </SelectItem>
-                            <SelectItem value="supplier-2">
-                              Tech Solutions Inc
-                            </SelectItem>
-                            <SelectItem value="supplier-3">
-                              Global Parts Co
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="store"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Store</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select store" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {/* Assuming stores are fetched similarly */}
-                            <SelectItem value="store-1">
-                              Main Store - Downtown
-                            </SelectItem>
-                            <SelectItem value="store-2">
-                              Branch Store - Mall
-                            </SelectItem>
-                            <SelectItem value="store-3">
-                              Warehouse - Industrial
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="shipped">Shipped</SelectItem>
-                            <SelectItem value="delivered">Delivered</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+      <Form {...form}>
+        <form className="grid gap-6">
+          {/* Purchase Order Details Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Purchase Order Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="w-full">
+                  <FormLabel>Supplier</FormLabel>
+                  <Input
+                    value={purchaseOrder.supplier || "N/A"}
+                    disabled
+                    className="bg-muted"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <FormLabel>Date Created</FormLabel>
-                    <Input
-                      value={format(
-                        new Date(purchaseOrder.dateCreated),
-                        "yyyy-MM-dd"
-                      )}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Date Expected</FormLabel>
-                    <Input
-                      value={
-                        purchaseOrder.dateExpected
-                          ? new Date(purchaseOrder.dateExpected).toLocaleString(
-                              "en-KE",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              }
-                            )
-                          : "N/A"
-                      }
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Created By</FormLabel>
-                    <Input
-                      value={purchaseOrder.createdBy}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
+                <div className="w-full">
+                  <FormLabel>Store</FormLabel>
+                  <Input
+                    value={purchaseOrder.store || "N/A"}
+                    disabled
+                    className="bg-muted"
+                  />
                 </div>
 
-                <Button type="submit" className="w-full md:w-auto">
-                  Save Changes
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="DRAFT">Draft</SelectItem>
+                          <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                          <SelectItem value="APPROVED">Approved</SelectItem>
+                          <SelectItem value="REJECTED">Rejected</SelectItem>
+                          <SelectItem value="RECEIVED">Received</SelectItem>
+                          <SelectItem value="PARTIAL">Partial</SelectItem>
+                          <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                          <SelectItem value="CLOSED">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-        {/* Products Section */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Products</CardTitle>
-            <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>PO NO</TableHead>
-                    <TableHead>Barcode</TableHead>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead className="text-right">
-                      Unit Price (KES)
-                    </TableHead>
-                    <TableHead className="text-right">Total (KES)</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((product, index) => (
-                    <TableRow key={product.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {product.barcode || "-"}
-                      </TableCell>
-                      <TableCell>{product.name || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        {product.quantity}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        KES {product.price.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        KES {(product.quantity * product.price).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="flex gap-2 justify-end">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedProduct(product);
-                                  setShowUpdateDialog(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Edit Product</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedProduct(product);
-                                  setShowDeleteDialog(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Delete Product</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Totals Section */}
-            <div className="mt-6 flex justify-end">
-              <div className="w-full max-w-sm space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal:</span>
-                  <span>KES {subtotal.toFixed(2)}</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="w-full">
+                  <FormLabel>Date Created</FormLabel>
+                  <Input
+                    value={format(
+                      new Date(purchaseOrder.dateCreated),
+                      "yyyy-MM-dd"
+                    )}
+                    disabled
+                    className="bg-muted"
+                  />
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Tax (0%):</span>
-                  <span>KES {tax.toFixed(2)}</span>
+                <div className="w-full">
+                  <FormLabel>Date Expected</FormLabel>
+                  <Input
+                    value={
+                      purchaseOrder.dateExpected
+                        ? new Date(purchaseOrder.dateExpected).toLocaleString(
+                            "en-KE",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            }
+                          )
+                        : "N/A"
+                    }
+                    disabled
+                    className="bg-muted"
+                  />
                 </div>
-                <div className="flex justify-between font-bold text-lg border-t pt-2">
-                  <span>Total:</span>
-                  <span>KES {total.toFixed(2)}</span>
+                <div className="w-full">
+                  <FormLabel>Created By</FormLabel>
+                  <Input
+                    value={purchaseOrder.createdBy}
+                    disabled
+                    className="bg-muted"
+                  />
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+
+          {/* Products Section */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Products</CardTitle>
+              <Button
+                type="button"
+                onClick={() => setShowAddDialog(true)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-center">PO NO</TableHead>
+                      <TableHead className="text-center">Product ID</TableHead>
+                      <TableHead className="text-center">Barcode</TableHead>
+                      <TableHead className="text-center">
+                        Product Name
+                      </TableHead>
+                      <TableHead className="text-center">Quantity</TableHead>
+                      <TableHead className="text-center">
+                        Unit Price (KES)
+                      </TableHead>
+                      <TableHead className="text-center">Total (KES)</TableHead>
+                      <TableHead className="text-center w-[100px]">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product, index) => (
+                      <TooltipProvider key={product.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TableRow
+                              className={
+                                product.isModified
+                                  ? "bg-yellow-100 dark:bg-yellow-950/30 hover:bg-yellow-200 dark:hover:bg-yellow-950/50"
+                                  : ""
+                              }
+                            >
+                              <TableCell className="text-center">
+                                {index + 1}
+                              </TableCell>
+                              <TableCell className="font-mono text-sm text-center">
+                                {product.businessProductId.slice(-6)}
+                              </TableCell>
+                              <TableCell className="font-mono text-sm text-center">
+                                {product.barcode || "-"}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {product.name || "-"}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {product.quantity}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                KES {product.price.toFixed(2)}
+                              </TableCell>
+                              <TableCell className="text-center font-medium">
+                                KES{" "}
+                                {(product.quantity * product.price).toFixed(2)}
+                              </TableCell>
+                              <TableCell className="flex gap-2 justify-center">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedProduct(product);
+                                          setShowUpdateDialog(true);
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Edit Product</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedProduct(product);
+                                          setShowDeleteDialog(true);
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Delete Product</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </TableCell>
+                            </TableRow>
+                          </TooltipTrigger>
+                          {product.isModified && (
+                            <TooltipContent side="left">
+                              <p className="font-semibold">Modified</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Totals Section */}
+              <div className="mt-6 flex justify-end">
+                <div className="w-full max-w-sm space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal:</span>
+                    <span>KES {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Tax (0%):</span>
+                    <span>KES {tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg border-t pt-2">
+                    <span>Total:</span>
+                    <span>KES {total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
 
       {/* Dialogs */}
       <AddProductDialog

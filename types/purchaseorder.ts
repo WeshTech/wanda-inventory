@@ -38,8 +38,9 @@ export interface Product {
   price: number;
 }
 
-// Product as it comes from the backend (API)
+// Product types
 export interface PurchaseOrderProduct {
+  businessProductId: string;
   barcode: string | null;
   productName: string | null;
   quantity: number;
@@ -74,3 +75,16 @@ export interface PurchaseOrderDetailResponse {
   message: string;
   data: PurchaseOrderData | null;
 }
+
+//update purchase order response data
+export type UpdatePurchaseOrderData = {
+  purchaseOrderId: string;
+  updatedAt: string;
+};
+
+//update purchase order response structure
+export type UpdatePurchaseOrderResponse = {
+  success: boolean;
+  message: string;
+  data: UpdatePurchaseOrderData | null;
+};
