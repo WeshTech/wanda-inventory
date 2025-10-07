@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Plus, Trash2 } from "lucide-react";
@@ -48,6 +48,7 @@ import { format } from "date-fns";
 import { PurchaseOrderProduct } from "@/types/purchaseorder";
 import { useAuthStore } from "@/stores/authStore";
 import { usePurchaseOrderDetail } from "@/server-queries/purchaseorderQueries";
+import toast from "react-hot-toast";
 
 interface Product {
   id: string;
@@ -59,12 +60,13 @@ interface Product {
 
 export default function EditPurchaseOrderPage() {
   const { poid } = useParams<{ poid: string }>();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const businessId = user?.businessId || "";
+  const router = useRouter();
 
   const {
     data: purchaseOrderResponse,
-    isLoading,
+    isLoading: isQueryLoading,
     error,
   } = usePurchaseOrderDetail(businessId, poid);
   const purchaseOrder = purchaseOrderResponse?.data;
@@ -84,7 +86,16 @@ export default function EditPurchaseOrderPage() {
     },
   });
 
-  // Update form and products when purchase order data is fetched
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "Failed to load purchase order.");
+      const timer = setTimeout(() => {
+        router.replace("/dashboard/purchase-orders");
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [error, router]);
+
   useEffect(() => {
     if (purchaseOrder) {
       form.reset({
@@ -108,7 +119,7 @@ export default function EditPurchaseOrderPage() {
 
   const onSubmit = (data: PurchaseOrderFormData) => {
     console.log("[v1] Purchase order form submitted:", data);
-    // Handle form submission
+    // Handle form submission logic here
   };
 
   const handleAddProduct = (product: Omit<Product, "id">) => {
@@ -135,13 +146,14 @@ export default function EditPurchaseOrderPage() {
     (sum, product) => sum + product.quantity * product.price,
     0
   );
-  const tax = 0; // 0% tax as specified
+  const tax = 0;
   const total = subtotal + tax;
 
-  if (isLoading) return <div>Loading purchase order...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-  if (!purchaseOrder) return <div>No purchase order found</div>;
+  const isLoading = isQueryLoading || !isAuthenticated;
 
+  if (isLoading) return <div>Loading purchase order...</div>;
+
+  if (!purchaseOrder) return <div>Purchase order not found.</div>;
   return (
     <div className="container mx-auto p-6 max-w-6xl bg-gradient-to-br from-primary/5 via-background to-secondary/10">
       <div className="mb-6">

@@ -19,7 +19,10 @@ export const getPurchaseorderByIdApi = async (
         data: response.data?.data,
       };
     } else {
-      throw new Error("Failed to fetch purchase order. Please try again.");
+      throw new Error(
+        `${response.data.message}` ||
+          "Failed to fetch purchase order. Please try again."
+      );
     }
   } catch (error) {
     if (error instanceof AxiosError) {
