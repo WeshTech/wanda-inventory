@@ -54,6 +54,7 @@ import {
   updatePurchaseOrderSchema,
 } from "@/schemas/purchaseOrderSchema";
 import toast from "react-hot-toast";
+import EditPurchaseOrderPageSkeleton from "./loading";
 
 interface Product {
   id: string;
@@ -237,7 +238,7 @@ export default function EditPurchaseOrderPage() {
 
   const isLoading = isQueryLoading || !isAuthenticated;
 
-  if (isLoading) return <div>Loading purchase order...</div>;
+  if (isLoading) return <EditPurchaseOrderPageSkeleton />;
 
   if (!purchaseOrder) return <div>Purchase order not found.</div>;
 
