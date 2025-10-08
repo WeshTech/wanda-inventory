@@ -9,12 +9,14 @@ import {
   FindProductByBarcodeResponse,
   GetBusinessProductsResponse,
   GetInventoryStatsResponse,
+  SearchBusinessProductResponse,
 } from "@/types/inventory";
 import { getProductApi } from "@/server/inventory/get-product";
 import { InventoryFormData } from "@/schemas/inventory/add-inventory";
 import { createBusinessProductApi } from "@/server/inventory/create-business-product";
 import { getBusinessProductsApi } from "@/server/inventory/get-business-products";
 import { getInventoryStatsApi } from "@/server/inventory/get-inventory-stats";
+import { searchBusinessProductsApi } from "@/server/inventory/search-business-product";
 
 interface CreateProductInput {
   formData: InventoryFormData;
@@ -72,5 +74,18 @@ export const useInventoryStats = (businessId: string) => {
     queryFn: () => getInventoryStatsApi(businessId),
     enabled: !!businessId,
     staleTime: 1000,
+  });
+};
+
+//search business products
+export const useSearchBusinessProducts = (
+  businessId: string,
+  searchTerm: string
+) => {
+  return useQuery<SearchBusinessProductResponse, Error>({
+    queryKey: ["searchBusinessProducts", businessId, searchTerm],
+    queryFn: () => searchBusinessProductsApi(businessId, searchTerm),
+    enabled: !!businessId && !!searchTerm,
+    retry: false,
   });
 };

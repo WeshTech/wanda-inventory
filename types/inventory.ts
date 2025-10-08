@@ -68,3 +68,17 @@ export type GetInventoryStatsResponse = {
   message: string;
   data: InventoryStats | null;
 };
+
+// Response item for each matched product
+export type BusinessProductResult = {
+  businessProductId: string;
+  productName: string | null;
+  productBarcode: string | null;
+};
+
+// Generic API response wrapper
+export type SearchBusinessProductResponse = {
+  success: boolean;
+  message: string;
+  data: BusinessProductResult[] | null;
+};
