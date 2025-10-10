@@ -28,3 +28,23 @@ export type CreatePRResponse = {
   message: string;
   data: PurchaseReceiptResponseData | null;
 };
+
+//PR data structure
+export type PurchaseReceiptData = {
+  purchaseReceiptId: string;
+  receiptNumber: number;
+  receiptName: string;
+  supplier: string;
+  store: string;
+  totalAmount: number;
+  status: "RECEIVED" | "REJECTED";
+  dateCreated: string;
+  createdBy: string | null;
+};
+
+//PR response structure
+export type GetPurchaseReceiptsResponse = {
+  success: boolean;
+  message: string;
+  data: PurchaseReceiptData[] | null;
+};

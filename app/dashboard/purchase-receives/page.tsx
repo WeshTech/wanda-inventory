@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ const mockReceipts = [
 const stores = ["All Stores", "Main Branch", "IT Department", "Marketing Dept"];
 
 export default function PurchaseReceiptsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [storeFilter, setStoreFilter] = useState("all");
@@ -167,7 +169,12 @@ export default function PurchaseReceiptsPage() {
                   </SelectContent>
                 </Select>
 
-                <Button className="whitespace-nowrap">
+                <Button
+                  className="whitespace-nowrap"
+                  onClick={() =>
+                    router.push("/dashboard/purchase-receives/process")
+                  }
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Create Receipt
                 </Button>

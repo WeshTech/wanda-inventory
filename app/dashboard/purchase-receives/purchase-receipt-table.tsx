@@ -30,35 +30,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ArrowUpDown, Eye, Edit, Trash2 } from "lucide-react";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-
-type Receipt = {
-  id: string;
-  receiptNo: string;
-  receiptName: string;
-  supplier: string;
-  store: string;
-  totalAmount: number;
-  status: "received" | "pending";
-  date: string;
-};
+import { useAuthStore } from "@/stores/authStore";
+import { PurchaseReceiptData } from "@/types/purchasereceipts";
+import { usePurchaseReceipts } from "@/server-queries/purchaseReceiptsQueries";
+import { formatToKenyanTime } from "@/utils/time-format";
+import Loader from "@/components/ui/loading-spiner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PurchaseReceiptsTableProps {
-  receipts: Receipt[];
   onDeleteReceipt: (receiptId: string) => void;
 }
 
-const columnHelper = createColumnHelper<Receipt>();
+const columnHelper = createColumnHelper<PurchaseReceiptData>();
 
 export function PurchaseReceiptsTable({
-  receipts,
   onDeleteReceipt,
 }: PurchaseReceiptsTableProps) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
+  const businessId = user?.businessId || "";
+  const {
+    data: receiptsData,
+    isLoading: isReceiptsLoading,
+    error,
+  } = usePurchaseReceipts(businessId);
 
   const columns = [
-    columnHelper.accessor("receiptNo", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+    columnHelper.accessor("receiptNumber", {
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -68,14 +72,21 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => (
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => (
         <div className="text-center font-medium">
-          {row.getValue("receiptNo")}
+          {`PR-${new Date(row.original.dateCreated).getFullYear()}-${row
+            .getValue<number>("receiptNumber")
+            .toString()
+            .padStart(3, "0")}`}
         </div>
       ),
     }),
     columnHelper.accessor("receiptName", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -85,12 +96,16 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => (
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => (
         <div className="text-center">{row.getValue("receiptName")}</div>
       ),
     }),
     columnHelper.accessor("supplier", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -100,12 +115,16 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => (
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => (
         <div className="text-center">{row.getValue("supplier")}</div>
       ),
     }),
     columnHelper.accessor("store", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -115,12 +134,16 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => (
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => (
         <div className="text-center">{row.getValue("store")}</div>
       ),
     }),
     columnHelper.accessor("totalAmount", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -130,7 +153,7 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => (
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => (
         <div className="text-center font-medium">
           KSh{" "}
           {row.getValue<number>("totalAmount").toLocaleString("en-KE", {
@@ -141,7 +164,11 @@ export function PurchaseReceiptsTable({
       ),
     }),
     columnHelper.accessor("status", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -151,26 +178,29 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => {
-        const status = row.getValue<"received" | "pending">("status");
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => {
+        const status = row.getValue<string>("status");
+        const badgeClasses =
+          status === "RECEIVED"
+            ? "bg-green-100 text-green-800 hover:bg-green-200"
+            : status === "REJECTED"
+            ? "bg-red-100 text-red-800 hover:bg-red-200"
+            : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
         return (
           <div className="text-center">
-            <Badge
-              variant={status === "received" ? "default" : "secondary"}
-              className={
-                status === "received"
-                  ? "bg-green-100 text-green-800 hover:bg-green-200"
-                  : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-              }
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+            <Badge variant="default" className={badgeClasses}>
+              {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
             </Badge>
           </div>
         );
       },
     }),
-    columnHelper.accessor("date", {
-      header: ({ column }: { column: Column<Receipt, unknown> }) => (
+    columnHelper.accessor("dateCreated", {
+      header: ({
+        column,
+      }: {
+        column: Column<PurchaseReceiptData, unknown>;
+      }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -180,16 +210,16 @@ export function PurchaseReceiptsTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }: { row: Row<Receipt> }) => (
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => (
         <div className="text-center">
-          {new Date(row.getValue<string>("date")).toLocaleDateString("en-KE")}
+          {formatToKenyanTime(new Date(row.getValue<string>("dateCreated")))}
         </div>
       ),
     }),
     columnHelper.display({
       id: "actions",
       header: () => <div className="text-center font-semibold">Actions</div>,
-      cell: ({ row }: { row: Row<Receipt> }) => {
+      cell: ({ row }: { row: Row<PurchaseReceiptData> }) => {
         const receipt = row.original;
         return (
           <div className="text-center">
@@ -201,11 +231,10 @@ export function PurchaseReceiptsTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {/* View */}
                 <DropdownMenuItem
                   onClick={() =>
                     router.push(
-                      `/dashboard/purchase-receives/${receipt.receiptNo}`
+                      `/dashboard/purchase-receives/${receipt.purchaseReceiptId}`
                     )
                   }
                   className="group hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-400 cursor-pointer"
@@ -213,12 +242,10 @@ export function PurchaseReceiptsTable({
                   <Eye className="mr-2 h-4 w-4 group-hover:text-green-700 dark:group-hover:text-green-400" />
                   View Details
                 </DropdownMenuItem>
-
-                {/* Update */}
                 <DropdownMenuItem
                   onClick={() =>
                     router.push(
-                      `/dashboard/purchase-receives/receipt/${receipt.receiptNo}`
+                      `/dashboard/purchase-receives/receipt/${receipt.purchaseReceiptId}`
                     )
                   }
                   className="group hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400 cursor-pointer"
@@ -226,10 +253,8 @@ export function PurchaseReceiptsTable({
                   <Edit className="mr-2 h-4 w-4 group-hover:text-yellow-700 dark:group-hover:text-yellow-400" />
                   Update
                 </DropdownMenuItem>
-
-                {/* Delete */}
                 <DropdownMenuItem
-                  onClick={() => onDeleteReceipt(receipt.id)}
+                  onClick={() => onDeleteReceipt(receipt.purchaseReceiptId)}
                   className="group hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/30 dark:hover:text-red-400 cursor-pointer"
                 >
                   <Trash2 className="mr-2 h-4 w-4 group-hover:text-red-700 dark:group-hover:text-red-400" />
@@ -243,6 +268,8 @@ export function PurchaseReceiptsTable({
     }),
   ];
 
+  const receipts: PurchaseReceiptData[] = receiptsData?.data || [];
+
   const table = useReactTable({
     data: receipts,
     columns,
@@ -253,6 +280,36 @@ export function PurchaseReceiptsTable({
       sorting,
     },
   });
+
+  if (isAuthLoading || isReceiptsLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader text="loading purchase receipts" />
+      </div>
+    );
+  }
+
+  if (error || !isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center h-64 space-y-3">
+        <Avatar className="w-24 h-24 border-none rounded-none overflow-hidden">
+          <AvatarImage
+            src={error ? "/images/nostorefound.jpg" : undefined}
+            alt="No Store Found"
+            className={error ? "rounded-full object-cover" : "object-cover"}
+          />
+          <AvatarFallback className="rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-sm">
+            NS
+          </AvatarFallback>
+        </Avatar>
+        <p className="text-gray-600 text-sm">
+          {error
+            ? "Error loading purchase receipts"
+            : "Please authenticate to view receipts"}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -304,7 +361,6 @@ export function PurchaseReceiptsTable({
           </TableBody>
         </Table>
       </div>
-
       <DataTablePagination table={table} />
     </div>
   );
