@@ -26,5 +26,5 @@ export const purchaseReceiptSchema = z.object({
     .min(1, "At least one product is required"),
 });
 
-export type ProductItem = z.infer<typeof productItemSchema>;
-export type PurchaseReceipt = z.infer<typeof purchaseReceiptSchema>;
+export type ProductItemFormData = z.infer<typeof productItemSchema>;
+export type PurchaseReceiptFormData = z.infer<typeof purchaseReceiptSchema>;

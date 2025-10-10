@@ -87,5 +87,6 @@ export const useSearchBusinessProducts = (
     queryFn: () => searchBusinessProductsApi(businessId, searchTerm),
     enabled: !!businessId && !!searchTerm,
     retry: false,
+    staleTime: 1000 * 60 * 60 * 10,
   });
 };
