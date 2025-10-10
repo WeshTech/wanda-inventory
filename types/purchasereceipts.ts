@@ -48,3 +48,33 @@ export type GetPurchaseReceiptsResponse = {
   message: string;
   data: PurchaseReceiptData[] | null;
 };
+
+//single product
+export type PurchaseReceiptProduct = {
+  businessProductId: string;
+  productId: string | null;
+  imageUrl: string | null;
+  productCode: string | null;
+  productName: string | null;
+  quantity: number;
+  unitPrice: number;
+};
+
+// purchase receipt data structure
+export type IndividualPurchaseReceiptData = {
+  purchaseReceiptId: string;
+  purchaseOrderId: string;
+  receiptNumber: number;
+  receiptName: string;
+  supplierName: string;
+  storeName: string;
+  status: "RECEIVED" | "REJECTED";
+  products: PurchaseReceiptProduct[];
+};
+
+// single PR response
+export type GetPurchaseReceiptResponse = {
+  success: boolean;
+  message: string;
+  data: IndividualPurchaseReceiptData | null;
+};
