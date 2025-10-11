@@ -78,3 +78,33 @@ export type GetPurchaseReceiptResponse = {
   message: string;
   data: IndividualPurchaseReceiptData | null;
 };
+
+//update purchase receipt data
+export type updatePurchaseReceiptData = {
+  purchaseReceiptId: string;
+  updatedAt: string;
+};
+// --- Response Type ---
+export type updatePurchaseReceiptResponse = {
+  success: boolean;
+  message: string;
+  data: updatePurchaseReceiptData | null;
+};
+
+export type UpdateReceiptSubmissionData = {
+  receiptName: string;
+  purchaseReceiptId: string | undefined;
+  store: string;
+  supplier: string;
+  purchaseOrderId: string;
+  receiptNumber: number;
+  totalAmount: number;
+  products: Array<{
+    businessProductId: string;
+    productCode: string;
+    productName: string;
+    unitPrice: number;
+    quantity: number;
+    imageUrl?: string | null | undefined;
+  }>;
+};

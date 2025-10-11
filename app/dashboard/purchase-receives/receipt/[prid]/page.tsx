@@ -31,10 +31,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuthStore } from "@/stores/authStore";
-import { useGetPurchaseReceiptById } from "@/server-queries/purchaseReceiptsQueries";
+import {
+  useGetPurchaseReceiptById,
+  useUpdatePurchaseReceipt,
+} from "@/server-queries/purchaseReceiptsQueries";
 import { z } from "zod";
-import type { PurchaseReceiptProduct } from "@/types/purchasereceipts";
+import type {
+  PurchaseReceiptProduct,
+  UpdateReceiptSubmissionData,
+} from "@/types/purchasereceipts";
+import { toast } from "react-hot-toast";
+import { toast as sonnerToast } from "sonner";
 
 // Form schema for client-side validation
 const UpdateReceiptFormSchema = z.object({
@@ -71,8 +85,16 @@ export default function UpdateReceiptPage() {
     error,
   } = useGetPurchaseReceiptById(businessId ?? "", purchaseReceiptId);
 
+  // Import and use the mutation hook
+  const updateReceiptMutation = useUpdatePurchaseReceipt();
+
   const [totalAmount, setTotalAmount] = useState(0);
   const [isFormDirty, setIsFormDirty] = useState(false);
+  const [modifiedProducts, setModifiedProducts] = useState<Set<number>>(
+    new Set()
+  );
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentEditIndex, setCurrentEditIndex] = useState<number | null>(null);
 
   const form = useForm<UpdateReceiptFormData>({
     defaultValues: {
@@ -91,7 +113,6 @@ export default function UpdateReceiptPage() {
     name: "products",
   });
 
-  // Track form changes
   useEffect(() => {
     const subscription = form.watch(() => {
       setIsFormDirty(form.formState.isDirty);
@@ -99,7 +120,6 @@ export default function UpdateReceiptPage() {
     return () => subscription.unsubscribe();
   }, [form]);
 
-  // Populate form with backend data
   useEffect(() => {
     if (data?.success && data.data) {
       const loadedProducts: UpdateReceiptFormData["products"] =
@@ -123,7 +143,6 @@ export default function UpdateReceiptPage() {
     }
   }, [data, form]);
 
-  // Calculate total amount
   useEffect(() => {
     const total = fields.reduce(
       (sum, field) => sum + field.unitPrice * field.quantity,
@@ -135,19 +154,56 @@ export default function UpdateReceiptPage() {
   const onSubmit = async (formData: UpdateReceiptFormData) => {
     try {
       const validatedData = UpdateReceiptFormSchema.parse(formData);
+      const dirtyProducts = validatedData.products.filter((_, index) =>
+        modifiedProducts.has(index)
+      );
+
       const calculatedTotal = validatedData.products.reduce(
         (sum, p) => sum + p.unitPrice * p.quantity,
         0
       );
-      console.log("Validated receipt data:", {
-        ...validatedData,
+
+      const submissionData: UpdateReceiptSubmissionData = {
+        receiptName: validatedData.receiptName,
+        purchaseReceiptId: data?.data?.purchaseReceiptId,
+        store: validatedData.store,
+        supplier: validatedData.supplier,
+        purchaseOrderId: validatedData.purchaseOrderId,
+        receiptNumber: validatedData.receiptNumber,
         totalAmount: calculatedTotal,
+        products: dirtyProducts,
+      };
+
+      // Show loading toast (using sonner)
+      const loadingToastId = sonnerToast.loading(
+        "Updating purchase receipt..."
+      );
+
+      // Run mutation
+      const response = await updateReceiptMutation.mutateAsync({
+        businessId: businessId!,
+        businessUserId: "ab5c1e61-20f6-4816-898c-67e9857e76a3",
+        formData: submissionData,
       });
-      // TODO: Call update API mutation here
-      alert("Receipt updated successfully!");
-    } catch (error) {
-      console.error("Validation failed:", error);
-      alert("Failed to update receipt. Please check the form data.");
+
+      // Dismiss loading toast
+      sonnerToast.dismiss(loadingToastId);
+
+      // Handle success
+      if (response.success) {
+        toast.success(
+          response.message || "Purchase receipt updated successfully!"
+        );
+        setModifiedProducts(new Set());
+        form.reset(formData); // reset form to mark clean
+        setIsFormDirty(false);
+      } else {
+        // Handle server-side validation or business logic errors
+        toast.error(response.message || "Failed to update receipt.");
+      }
+    } catch {
+      sonnerToast.dismiss();
+      toast.error("Failed to update receipt. Please check the form data.");
     }
   };
 
@@ -171,11 +227,16 @@ export default function UpdateReceiptPage() {
       ...data,
       imageUrl: data.imageUrl ?? null,
     });
+    setModifiedProducts((prev) => new Set(prev).add(index));
     productForm.reset();
     setIsFormDirty(true);
+    setDialogOpen(false);
   };
 
-  const openUpdateDialog = (product: UpdateReceiptFormData["products"][0]) => {
+  const openUpdateDialog = (
+    product: UpdateReceiptFormData["products"][0],
+    index: number
+  ) => {
     productForm.reset({
       businessProductId: product.businessProductId,
       imageUrl: product.imageUrl,
@@ -184,6 +245,8 @@ export default function UpdateReceiptPage() {
       unitPrice: product.unitPrice,
       quantity: product.quantity,
     });
+    setCurrentEditIndex(index);
+    setDialogOpen(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -236,15 +299,28 @@ export default function UpdateReceiptPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Receipt Information</CardTitle>
-            <Button
-              type="submit"
-              form="receipt-form"
-              disabled={!isFormDirty}
-              className="hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-400"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Update Receipt
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="submit"
+                    form="receipt-form"
+                    disabled={!isFormDirty || updateReceiptMutation.isPending}
+                    className="hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {updateReceiptMutation.isPending
+                      ? "Updating..."
+                      : "Update Receipt"}
+                  </Button>
+                </TooltipTrigger>
+                {!isFormDirty && (
+                  <TooltipContent>
+                    <p>Update products or Receipt Name to submit</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -354,16 +430,6 @@ export default function UpdateReceiptPage() {
                     value={totalAmount.toFixed(2)}
                   />
                 </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="hover:bg-yellow-50 hover:text-yellow-700 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400 bg-transparent"
-                  >
-                    Cancel
-                  </Button>
-                </div>
               </form>
             </Form>
           </CardContent>
@@ -396,168 +462,206 @@ export default function UpdateReceiptPage() {
                   </TableRow>
                 ) : (
                   fields.map((field, index) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="text-center">
-                        <Avatar className="w-10 h-10 border-2 border-primary mx-auto">
-                          <AvatarImage
-                            src={field.imageUrl || "/placeholder.svg"}
-                            alt={field.productName}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="text-sm bg-muted text-foreground">
-                            {field.productName?.charAt(0).toUpperCase() || "P"}
-                          </AvatarFallback>
-                        </Avatar>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Input
-                          value={field.productCode}
-                          disabled
-                          className="bg-muted font-mono text-center"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Input
-                          value={field.productName}
-                          disabled
-                          className="bg-muted text-center"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Input
-                          value={formatCurrency(field.unitPrice)}
-                          disabled
-                          className="bg-muted text-center"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Input
-                          value={field.quantity}
-                          disabled
-                          className="bg-muted text-center"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        <Input
-                          value={formatCurrency(
-                            field.unitPrice * field.quantity
-                          )}
-                          disabled
-                          className="bg-muted text-center"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-primary hover:text-primary"
-                              onClick={() => openUpdateDialog(field)}
+                    <TooltipProvider key={field.id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableRow
+                            className={
+                              modifiedProducts.has(index)
+                                ? "bg-yellow-50 dark:bg-yellow-900/20"
+                                : ""
+                            }
+                          >
+                            <TableCell className="text-center">
+                              <Avatar className="w-10 h-10 border-2 border-primary mx-auto">
+                                <AvatarImage
+                                  src={field.imageUrl || "/placeholder.svg"}
+                                  alt={field.productName}
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="text-sm bg-muted text-foreground">
+                                  {field.productName?.charAt(0).toUpperCase() ||
+                                    "P"}
+                                </AvatarFallback>
+                              </Avatar>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Input
+                                value={field.productCode}
+                                disabled
+                                className="bg-muted font-mono text-center"
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Input
+                                value={field.productName}
+                                disabled
+                                className="bg-muted text-center"
+                              />
+                            </TableCell>
+                            <TableCell
+                              className="text-center cursor-pointer"
+                              onClick={() => openUpdateDialog(field, index)}
                             >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Update Product</DialogTitle>
-                            </DialogHeader>
-                            <Form {...productForm}>
-                              <form
-                                onSubmit={productForm.handleSubmit((data) =>
-                                  handleProductSubmit(data, index)
+                              <Input
+                                value={formatCurrency(field.unitPrice)}
+                                className="text-center cursor-pointer"
+                                readOnly
+                              />
+                            </TableCell>
+                            <TableCell
+                              className="text-center cursor-pointer"
+                              onClick={() => openUpdateDialog(field, index)}
+                            >
+                              <Input
+                                value={field.quantity}
+                                className="text-center cursor-pointer"
+                                readOnly
+                              />
+                            </TableCell>
+                            <TableCell className="text-center font-medium">
+                              <Input
+                                value={formatCurrency(
+                                  field.unitPrice * field.quantity
                                 )}
-                                className="space-y-4"
+                                disabled
+                                className="bg-muted text-center"
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Dialog
+                                open={dialogOpen && currentEditIndex === index}
+                                onOpenChange={(open) => {
+                                  setDialogOpen(open);
+                                  if (!open) setCurrentEditIndex(null);
+                                }}
                               >
-                                <FormField
-                                  control={productForm.control}
-                                  name="productCode"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Product Code</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          disabled
-                                          placeholder="Enter product code"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={productForm.control}
-                                  name="productName"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Product Name</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          disabled
-                                          placeholder="Enter product name"
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={productForm.control}
-                                  name="unitPrice"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Unit Price (KSh)</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          type="number"
-                                          step="0.01"
-                                          placeholder="Enter unit price"
-                                          onChange={(e) =>
-                                            field.onChange(
-                                              Number.parseFloat(
-                                                e.target.value
-                                              ) || 0
-                                            )
-                                          }
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={productForm.control}
-                                  name="quantity"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Quantity</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          type="number"
-                                          placeholder="Enter quantity"
-                                          onChange={(e) =>
-                                            field.onChange(
-                                              Number.parseInt(e.target.value) ||
-                                                0
-                                            )
-                                          }
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <Button type="submit">Update Product</Button>
-                              </form>
-                            </Form>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-primary hover:text-primary"
+                                    onClick={() =>
+                                      openUpdateDialog(field, index)
+                                    }
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Update Product</DialogTitle>
+                                  </DialogHeader>
+                                  <Form {...productForm}>
+                                    <form
+                                      onSubmit={productForm.handleSubmit(
+                                        (data) =>
+                                          handleProductSubmit(data, index)
+                                      )}
+                                      className="space-y-4"
+                                    >
+                                      <FormField
+                                        control={productForm.control}
+                                        name="productCode"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Product Code</FormLabel>
+                                            <FormControl>
+                                              <Input
+                                                {...field}
+                                                disabled
+                                                placeholder="Enter product code"
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={productForm.control}
+                                        name="productName"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Product Name</FormLabel>
+                                            <FormControl>
+                                              <Input
+                                                {...field}
+                                                disabled
+                                                placeholder="Enter product name"
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={productForm.control}
+                                        name="unitPrice"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>
+                                              Unit Price (KSh)
+                                            </FormLabel>
+                                            <FormControl>
+                                              <Input
+                                                {...field}
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="Enter unit price"
+                                                onChange={(e) =>
+                                                  field.onChange(
+                                                    Number.parseFloat(
+                                                      e.target.value
+                                                    ) || 0
+                                                  )
+                                                }
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={productForm.control}
+                                        name="quantity"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel>Quantity</FormLabel>
+                                            <FormControl>
+                                              <Input
+                                                {...field}
+                                                type="number"
+                                                placeholder="Enter quantity"
+                                                onChange={(e) =>
+                                                  field.onChange(
+                                                    Number.parseInt(
+                                                      e.target.value
+                                                    ) || 0
+                                                  )
+                                                }
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <Button type="submit">
+                                        Update Product
+                                      </Button>
+                                    </form>
+                                  </Form>
+                                </DialogContent>
+                              </Dialog>
+                            </TableCell>
+                          </TableRow>
+                        </TooltipTrigger>
+                        {modifiedProducts.has(index) && (
+                          <TooltipContent>
+                            <p>Modified</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   ))
                 )}
               </TableBody>
@@ -565,7 +669,7 @@ export default function UpdateReceiptPage() {
           </div>
 
           {fields.length > 0 && (
-            <div className="flex justify-end">
+            <div className="flex justify-end mb-3">
               <div className="bg-card border rounded-lg p-3 sm:p-4 min-w-48 sm:min-w-64">
                 <div className="flex justify-between items-center gap-2">
                   <span className="text-sm sm:text-base font-medium">
