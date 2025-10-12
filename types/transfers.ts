@@ -36,3 +36,20 @@ export type SingleTransferResponse = {
   message: string;
   data: TransferCreatedDto | null;
 };
+
+//single transfer
+export type TransferLineDto = {
+  productName: string;
+  from: string;
+  to: string;
+  status: string;
+  createdBy: string | null;
+  transferedAt: string;
+};
+
+// transfers response
+export type GetTransfersResponse = {
+  success: boolean;
+  message: string;
+  data: TransferLineDto[] | null;
+};
