@@ -23,20 +23,24 @@ import { X, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSearchStoreProducts } from "@/server-queries/storeProductQueries";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
+import toast from "react-hot-toast";
+import { SingleTransferFormData } from "@/types/transfers";
+import { useCreateSingleTransfer } from "@/server-queries/transferQueries";
 
 interface CreateTransferDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface FormData {
+export interface FormData {
   searchTerm: string;
   productCode: string;
   productName: string;
+  storeProductId: string;
   fromStore: string;
   toStore: string;
   quantity: string;
-  notes: string;
+  notes: string | null;
 }
 
 const BUSINESS_ID = "68ce994dfba92cd4362e1abd";
@@ -51,13 +55,13 @@ export function CreateTransferDialog({
     searchTerm: "",
     productCode: "",
     productName: "",
+    storeProductId: "",
     fromStore: "",
     toStore: "",
     quantity: "",
     notes: "",
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedProductImage, setSelectedProductImage] = useState<
     string | undefined
@@ -74,6 +78,9 @@ export function CreateTransferDialog({
       })) || []
     );
   }, [businessStoresData]);
+
+  const { mutate: createTransfer, isPending: isSubmitting } =
+    useCreateSingleTransfer();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -103,8 +110,13 @@ export function CreateTransferDialog({
           p.productName === formData.productName
       );
       setSelectedProductImage(selectedProduct?.imageUrl);
+      setFormData((prev) => ({
+        ...prev,
+        storeProductId: selectedProduct?.storeProductId || "",
+      }));
     } else {
       setSelectedProductImage(undefined);
+      setFormData((prev) => ({ ...prev, storeProductId: "" }));
     }
   }, [formData.productCode, formData.productName, products]);
 
@@ -112,6 +124,18 @@ export function CreateTransferDialog({
     if (field === "searchTerm" && value.length > 50) return;
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+
+    if (field === "productCode" || field === "productName") {
+      const product = products.find((p) => p[field] === value);
+      if (product) {
+        setFormData((prev) => ({
+          ...prev,
+          productCode: field === "productCode" ? value : product.productCode,
+          productName: field === "productName" ? value : product.productName,
+          storeProductId: product.storeProductId,
+        }));
+      }
+    }
   };
 
   const validateForm = (): boolean => {
@@ -120,6 +144,8 @@ export function CreateTransferDialog({
       newErrors.productCode = "Product code is required";
     if (!formData.productName.trim())
       newErrors.productName = "Product name is required";
+    if (!formData.storeProductId)
+      newErrors.productCode = "Product selection is required";
     if (!formData.fromStore) newErrors.fromStore = "From store is required";
     if (!formData.toStore) newErrors.toStore = "To store is required";
     if (formData.fromStore === formData.toStore && formData.fromStore) {
@@ -141,6 +167,7 @@ export function CreateTransferDialog({
       searchTerm: "",
       productCode: "",
       productName: "",
+      storeProductId: "",
       fromStore: "",
       toStore: "",
       quantity: "",
@@ -153,11 +180,41 @@ export function CreateTransferDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // mock delay
-    resetForm();
-    setIsSubmitting(false);
-    onOpenChange(false);
+
+    const toastId = toast.loading("Creating transfer...");
+
+    const transferData: SingleTransferFormData = {
+      storeProductId: formData.storeProductId,
+      fromStore: formData.fromStore,
+      toStore: formData.toStore,
+      quantity: Number(formData.quantity),
+      notes: formData.notes || null,
+      searchTerm: formData.searchTerm,
+      productCode: formData.productCode,
+      productName: formData.productName,
+    };
+
+    createTransfer(
+      {
+        formData: transferData,
+        businessId: BUSINESS_ID,
+        businessUserId: BUSINESS_USER_ID,
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(response.message || "Transfer created successfully", {
+            id: toastId,
+          });
+          resetForm();
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to create transfer", {
+            id: toastId,
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -171,6 +228,7 @@ export function CreateTransferDialog({
               size="sm"
               onClick={() => onOpenChange(false)}
               className="h-6 w-6 p-0"
+              disabled={isSubmitting}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -197,6 +255,7 @@ export function CreateTransferDialog({
                 }
                 maxLength={50}
                 className="pl-9"
+                disabled={isSubmitting}
               />
               {isSearching && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
@@ -230,13 +289,8 @@ export function CreateTransferDialog({
                     value={formData.productCode}
                     onValueChange={(value) => {
                       handleInputChange("productCode", value);
-                      const product = products.find(
-                        (p) => p.productCode === value
-                      );
-                      if (product)
-                        handleInputChange("productName", product.productName);
                     }}
-                    disabled={products.length === 0}
+                    disabled={products.length === 0 || isSubmitting}
                   >
                     <SelectTrigger
                       className={errors.productCode ? "border-red-500" : ""}
@@ -268,13 +322,8 @@ export function CreateTransferDialog({
                     value={formData.productName}
                     onValueChange={(value) => {
                       handleInputChange("productName", value);
-                      const product = products.find(
-                        (p) => p.productName === value
-                      );
-                      if (product)
-                        handleInputChange("productCode", product.productCode);
                     }}
-                    disabled={products.length === 0}
+                    disabled={products.length === 0 || isSubmitting}
                   >
                     <SelectTrigger
                       className={errors.productName ? "border-red-500" : ""}
@@ -309,7 +358,7 @@ export function CreateTransferDialog({
                     onValueChange={(value) =>
                       handleInputChange("fromStore", value)
                     }
-                    disabled={isLoadingStores}
+                    disabled={isLoadingStores || isSubmitting}
                   >
                     <SelectTrigger
                       className={errors.fromStore ? "border-red-500" : ""}
@@ -318,7 +367,7 @@ export function CreateTransferDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {stores
-                        .filter((store) => store.value !== formData.toStore) // Exclude the selected "To Store"
+                        .filter((store) => store.value !== formData.toStore)
                         .map((store) => (
                           <SelectItem key={store.value} value={store.value}>
                             {store.label}
@@ -340,7 +389,7 @@ export function CreateTransferDialog({
                     onValueChange={(value) =>
                       handleInputChange("toStore", value)
                     }
-                    disabled={isLoadingStores}
+                    disabled={isLoadingStores || isSubmitting}
                   >
                     <SelectTrigger
                       className={errors.toStore ? "border-red-500" : ""}
@@ -349,7 +398,7 @@ export function CreateTransferDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {stores
-                        .filter((store) => store.value !== formData.fromStore) // Exclude the selected "From Store"
+                        .filter((store) => store.value !== formData.fromStore)
                         .map((store) => (
                           <SelectItem key={store.value} value={store.value}>
                             {store.label}
@@ -391,6 +440,7 @@ export function CreateTransferDialog({
               value={formData.quantity}
               onChange={(e) => handleInputChange("quantity", e.target.value)}
               className={errors.quantity ? "border-red-500" : ""}
+              disabled={isSubmitting}
             />
             {errors.quantity && (
               <p className="text-sm text-red-500">{errors.quantity}</p>
@@ -407,8 +457,9 @@ export function CreateTransferDialog({
               placeholder="Add any additional notes or instructions..."
               className="resize-none"
               rows={3}
-              value={formData.notes}
+              value={formData.notes ?? ""}
               onChange={(e) => handleInputChange("notes", e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 

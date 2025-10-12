@@ -11,3 +11,28 @@ export interface Transfer {
 }
 
 export type TransferStatus = Transfer["status"];
+
+//single transfer form data
+export interface SingleTransferFormData {
+  searchTerm: string;
+  productCode: string;
+  productName: string;
+  storeProductId: string;
+  fromStore: string;
+  toStore: string;
+  quantity: number;
+  notes: string | null;
+}
+
+//create transfer type
+export type TransferCreatedDto = {
+  transferId: string;
+  createdAt: string;
+};
+
+//create transfer response type
+export type SingleTransferResponse = {
+  success: boolean;
+  message: string;
+  data: TransferCreatedDto | null;
+};
