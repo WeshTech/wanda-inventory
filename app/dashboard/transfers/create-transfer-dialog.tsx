@@ -1,7 +1,7 @@
 "use client";
-
-import type React from "react";
 import { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,28 +19,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { X, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSearchStoreProducts } from "@/server-queries/storeProductQueries";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
 import toast from "react-hot-toast";
-import { SingleTransferFormData } from "@/types/transfers";
+import type { SingleTransferFormData } from "@/types/transfers";
 import { useCreateSingleTransfer } from "@/server-queries/transferQueries";
+import {
+  transferFormSchema,
+  TransferFormValues,
+} from "@/schemas/transfers/singleTransferSchema";
 
 interface CreateTransferDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-export interface FormData {
-  searchTerm: string;
-  productCode: string;
-  productName: string;
-  storeProductId: string;
-  fromStore: string;
-  toStore: string;
-  quantity: string;
-  notes: string | null;
 }
 
 const BUSINESS_ID = "68ce994dfba92cd4362e1abd";
@@ -51,21 +52,24 @@ export function CreateTransferDialog({
   open,
   onOpenChange,
 }: CreateTransferDialogProps) {
-  const [formData, setFormData] = useState<FormData>({
-    searchTerm: "",
-    productCode: "",
-    productName: "",
-    storeProductId: "",
-    fromStore: "",
-    toStore: "",
-    quantity: "",
-    notes: "",
-  });
-  const [errors, setErrors] = useState<Partial<FormData>>({});
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedProductImage, setSelectedProductImage] = useState<
     string | undefined
   >();
+
+  const form = useForm<TransferFormValues>({
+    resolver: zodResolver(transferFormSchema),
+    defaultValues: {
+      searchTerm: "",
+      productCode: "",
+      productName: "",
+      storeProductId: "",
+      fromStore: "",
+      toStore: "",
+      quantity: "",
+      notes: "",
+    },
+  });
 
   const { data: businessStoresData, isLoading: isLoadingStores } =
     useGetBusinessStores();
@@ -82,12 +86,18 @@ export function CreateTransferDialog({
   const { mutate: createTransfer, isPending: isSubmitting } =
     useCreateSingleTransfer();
 
+  const searchTerm = form.watch("searchTerm");
+  const productCode = form.watch("productCode");
+  const productName = form.watch("productName");
+  const fromStore = form.watch("fromStore");
+  const toStore = form.watch("toStore");
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchTerm(formData.searchTerm);
+      setDebouncedSearchTerm(searchTerm);
     }, 500);
     return () => clearTimeout(timer);
-  }, [formData.searchTerm]);
+  }, [searchTerm]);
 
   const { data: searchResults, isLoading: isSearching } =
     useSearchStoreProducts({
@@ -103,95 +113,53 @@ export function CreateTransferDialog({
   );
 
   useEffect(() => {
-    if (formData.productCode || formData.productName) {
+    if (productCode || productName) {
       const selectedProduct = products.find(
-        (p) =>
-          p.productCode === formData.productCode ||
-          p.productName === formData.productName
+        (p) => p.productCode === productCode || p.productName === productName
       );
       setSelectedProductImage(selectedProduct?.imageUrl);
-      setFormData((prev) => ({
-        ...prev,
-        storeProductId: selectedProduct?.storeProductId || "",
-      }));
+      form.setValue("storeProductId", selectedProduct?.storeProductId || "");
     } else {
       setSelectedProductImage(undefined);
-      setFormData((prev) => ({ ...prev, storeProductId: "" }));
+      form.setValue("storeProductId", "");
     }
-  }, [formData.productCode, formData.productName, products]);
+  }, [productCode, productName, products, form]);
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    if (field === "searchTerm" && value.length > 50) return;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
-
-    if (field === "productCode" || field === "productName") {
-      const product = products.find((p) => p[field] === value);
-      if (product) {
-        setFormData((prev) => ({
-          ...prev,
-          productCode: field === "productCode" ? value : product.productCode,
-          productName: field === "productName" ? value : product.productName,
-          storeProductId: product.storeProductId,
-        }));
-      }
+  const handleProductCodeChange = (value: string) => {
+    const product = products.find((p) => p.productCode === value);
+    if (product) {
+      form.setValue("productCode", value);
+      form.setValue("productName", product.productName);
+      form.setValue("storeProductId", product.storeProductId);
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
-    if (!formData.productCode.trim())
-      newErrors.productCode = "Product code is required";
-    if (!formData.productName.trim())
-      newErrors.productName = "Product name is required";
-    if (!formData.storeProductId)
-      newErrors.productCode = "Product selection is required";
-    if (!formData.fromStore) newErrors.fromStore = "From store is required";
-    if (!formData.toStore) newErrors.toStore = "To store is required";
-    if (formData.fromStore === formData.toStore && formData.fromStore) {
-      newErrors.fromStore = "From and To stores must be different";
-      newErrors.toStore = "From and To stores must be different";
+  const handleProductNameChange = (value: string) => {
+    const product = products.find((p) => p.productName === value);
+    if (product) {
+      form.setValue("productName", value);
+      form.setValue("productCode", product.productCode);
+      form.setValue("storeProductId", product.storeProductId);
     }
-    if (!formData.quantity.trim()) {
-      newErrors.quantity = "Quantity is required";
-    } else {
-      const q = Number(formData.quantity);
-      if (isNaN(q) || q <= 0) newErrors.quantity = "Quantity must be positive";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const resetForm = () => {
-    setFormData({
-      searchTerm: "",
-      productCode: "",
-      productName: "",
-      storeProductId: "",
-      fromStore: "",
-      toStore: "",
-      quantity: "",
-      notes: "",
-    });
-    setErrors({});
+    form.reset();
     setSelectedProductImage(undefined);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
+  const onSubmit = (data: TransferFormValues) => {
     const toastId = toast.loading("Creating transfer...");
 
     const transferData: SingleTransferFormData = {
-      storeProductId: formData.storeProductId,
-      fromStore: formData.fromStore,
-      toStore: formData.toStore,
-      quantity: Number(formData.quantity),
-      notes: formData.notes || null,
-      searchTerm: formData.searchTerm,
-      productCode: formData.productCode,
-      productName: formData.productName,
+      storeProductId: data.storeProductId,
+      fromStore: data.fromStore,
+      toStore: data.toStore,
+      quantity: Number(data.quantity),
+      notes: data.notes || null,
+      searchTerm: data.searchTerm,
+      productCode: data.productCode,
+      productName: data.productName,
     };
 
     createTransfer(
@@ -238,260 +206,283 @@ export function CreateTransferDialog({
           </p>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* Search field */}
-          <div className="space-y-2">
-            <Label htmlFor="search" className="text-sm font-medium">
-              Search Product
-            </Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="search"
-                placeholder="Type to search products..."
-                value={formData.searchTerm}
-                onChange={(e) =>
-                  handleInputChange("searchTerm", e.target.value)
-                }
-                maxLength={50}
-                className="pl-9"
-                disabled={isSubmitting}
-              />
-              {isSearching && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  Searching...
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {formData.searchTerm.length}/50 characters
-            </p>
-          </div>
-
-          {/* Responsive Grid Section */}
-          <div
-            className="
-              grid grid-cols-1 
-              md:grid-cols-[1.3fr_0.7fr] 
-              lg:grid-cols-3 
-              gap-6
-            "
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 py-4"
           >
-            {/* LEFT SECTION (Product info & Stores) */}
-            <div className="space-y-4 lg:col-span-2 md:col-span-1">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Product Code */}
-                <div className="space-y-2">
-                  <Label htmlFor="productCode" className="text-sm font-medium">
-                    Product Code *
-                  </Label>
-                  <Select
-                    value={formData.productCode}
-                    onValueChange={(value) => {
-                      handleInputChange("productCode", value);
-                    }}
-                    disabled={products.length === 0 || isSubmitting}
-                  >
-                    <SelectTrigger
-                      className={errors.productCode ? "border-red-500" : ""}
-                    >
-                      <SelectValue placeholder="Select product code" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map((product) => (
-                        <SelectItem
-                          key={product.storeProductId}
-                          value={product.productCode}
+            {/* Search field */}
+            <FormField
+              control={form.control}
+              name="searchTerm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Search Product</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Type to search products..."
+                        {...field}
+                        maxLength={50}
+                        className="pl-9"
+                        disabled={isSubmitting}
+                      />
+                      {isSearching && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          Searching...
+                        </span>
+                      )}
+                    </div>
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    {field.value.length}/50 characters
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Responsive Grid Section */}
+            <div
+              className="
+                grid grid-cols-1 
+                md:grid-cols-[1.3fr_0.7fr] 
+                lg:grid-cols-3 
+                gap-6
+              "
+            >
+              {/* LEFT SECTION (Product info & Stores) */}
+              <div className="space-y-4 lg:col-span-2 md:col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Product Code */}
+                  <FormField
+                    control={form.control}
+                    name="productCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Code *</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={handleProductCodeChange}
+                          disabled={products.length === 0 || isSubmitting}
                         >
-                          {product.productCode}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.productCode && (
-                    <p className="text-sm text-red-500">{errors.productCode}</p>
-                  )}
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select product code" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {products.map((product) => (
+                              <SelectItem
+                                key={product.storeProductId}
+                                value={product.productCode}
+                              >
+                                {product.productCode}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Product Name */}
+                  <FormField
+                    control={form.control}
+                    name="productName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Name *</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={handleProductNameChange}
+                          disabled={products.length === 0 || isSubmitting}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select product name" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {products.map((product) => (
+                              <SelectItem
+                                key={product.storeProductId}
+                                value={product.productName}
+                              >
+                                {product.productName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                {/* Product Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="productName" className="text-sm font-medium">
-                    Product Name *
-                  </Label>
-                  <Select
-                    value={formData.productName}
-                    onValueChange={(value) => {
-                      handleInputChange("productName", value);
-                    }}
-                    disabled={products.length === 0 || isSubmitting}
-                  >
-                    <SelectTrigger
-                      className={errors.productName ? "border-red-500" : ""}
-                    >
-                      <SelectValue placeholder="Select product name" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map((product) => (
-                        <SelectItem
-                          key={product.storeProductId}
-                          value={product.productName}
+                {/* Store Selectors */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="fromStore"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>From Store *</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isLoadingStores || isSubmitting}
                         >
-                          {product.productName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.productName && (
-                    <p className="text-sm text-red-500">{errors.productName}</p>
-                  )}
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select source store" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {stores
+                              .filter((store) => store.value !== toStore)
+                              .map((store) => (
+                                <SelectItem
+                                  key={store.value}
+                                  value={store.value}
+                                >
+                                  {store.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="toStore"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>To Store *</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isLoadingStores || isSubmitting}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select destination store" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {stores
+                              .filter((store) => store.value !== fromStore)
+                              .map((store) => (
+                                <SelectItem
+                                  key={store.value}
+                                  value={store.value}
+                                >
+                                  {store.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
 
-              {/* Store Selectors */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fromStore" className="text-sm font-medium">
-                    From Store *
-                  </Label>
-                  <Select
-                    value={formData.fromStore}
-                    onValueChange={(value) =>
-                      handleInputChange("fromStore", value)
-                    }
-                    disabled={isLoadingStores || isSubmitting}
-                  >
-                    <SelectTrigger
-                      className={errors.fromStore ? "border-red-500" : ""}
-                    >
-                      <SelectValue placeholder="Select source store" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stores
-                        .filter((store) => store.value !== formData.toStore)
-                        .map((store) => (
-                          <SelectItem key={store.value} value={store.value}>
-                            {store.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.fromStore && (
-                    <p className="text-sm text-red-500">{errors.fromStore}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="toStore" className="text-sm font-medium">
-                    To Store *
-                  </Label>
-                  <Select
-                    value={formData.toStore}
-                    onValueChange={(value) =>
-                      handleInputChange("toStore", value)
-                    }
-                    disabled={isLoadingStores || isSubmitting}
-                  >
-                    <SelectTrigger
-                      className={errors.toStore ? "border-red-500" : ""}
-                    >
-                      <SelectValue placeholder="Select destination store" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stores
-                        .filter((store) => store.value !== formData.fromStore)
-                        .map((store) => (
-                          <SelectItem key={store.value} value={store.value}>
-                            {store.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.toStore && (
-                    <p className="text-sm text-red-500">{errors.toStore}</p>
-                  )}
-                </div>
+              {/* RIGHT SECTION (Product Image) */}
+              <div className="flex flex-col items-center justify-start gap-2 md:items-end lg:items-center">
+                <Label className="text-sm font-medium self-start lg:self-center">
+                  Product Image
+                </Label>
+                <Avatar className="h-32 w-32 rounded-lg shadow-md">
+                  <AvatarImage
+                    src={selectedProductImage || "/images/noimagefound.jpg"}
+                    alt="Product"
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="rounded-lg">
+                    No Image
+                  </AvatarFallback>
+                </Avatar>
               </div>
             </div>
 
-            {/* RIGHT SECTION (Product Image) */}
-            <div className="flex flex-col items-center justify-start gap-2 md:items-end lg:items-center">
-              <Label className="text-sm font-medium self-start lg:self-center">
-                Product Image
-              </Label>
-              <Avatar className="h-32 w-32 rounded-lg shadow-md">
-                <AvatarImage
-                  src={selectedProductImage || "/images/noimagefound.jpg"}
-                  alt="Product"
-                  className="object-cover"
-                />
-                <AvatarFallback className="rounded-lg">No Image</AvatarFallback>
-              </Avatar>
+            {/* Quantity */}
+            <FormField
+              control={form.control}
+              name="quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter quantity"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Add any additional notes or instructions..."
+                      className="resize-none"
+                      rows={3}
+                      {...field}
+                      value={field.value ?? ""}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Buttons */}
+            <div className="flex justify-center gap-3 pt-4 mb-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full bg-transparent"
+                onClick={resetForm}
+                disabled={isSubmitting}
+              >
+                Reset
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full bg-transparent"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="rounded-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Creating..." : "Create Transfer"}
+              </Button>
             </div>
-          </div>
-
-          {/* Quantity */}
-          <div className="space-y-2">
-            <Label htmlFor="quantity" className="text-sm font-medium">
-              Quantity *
-            </Label>
-            <Input
-              id="quantity"
-              placeholder="Enter quantity"
-              value={formData.quantity}
-              onChange={(e) => handleInputChange("quantity", e.target.value)}
-              className={errors.quantity ? "border-red-500" : ""}
-              disabled={isSubmitting}
-            />
-            {errors.quantity && (
-              <p className="text-sm text-red-500">{errors.quantity}</p>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm font-medium">
-              Notes
-            </Label>
-            <Textarea
-              id="notes"
-              placeholder="Add any additional notes or instructions..."
-              className="resize-none"
-              rows={3}
-              value={formData.notes ?? ""}
-              onChange={(e) => handleInputChange("notes", e.target.value)}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-center gap-3 pt-4 mb-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={resetForm}
-              disabled={isSubmitting}
-            >
-              Reset
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="rounded-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Creating..." : "Create Transfer"}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
