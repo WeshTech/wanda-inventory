@@ -22,6 +22,7 @@ import {
 import { X, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSearchStoreProducts } from "@/server-queries/storeProductQueries";
+import { useGetBusinessStores } from "@/server-queries/storeQueries";
 
 interface CreateTransferDialogProps {
   open: boolean;
@@ -37,13 +38,6 @@ interface FormData {
   quantity: string;
   notes: string;
 }
-
-const stores = [
-  { value: "main", label: "Main Store" },
-  { value: "branch-a", label: "Branch A" },
-  { value: "branch-b", label: "Branch B" },
-  { value: "branch-c", label: "Branch C" },
-];
 
 const BUSINESS_ID = "68ce994dfba92cd4362e1abd";
 const BUSINESS_USER_ID = "0bb76180-080d-4cd4-af6e-a8a6d772f477";
@@ -68,6 +62,18 @@ export function CreateTransferDialog({
   const [selectedProductImage, setSelectedProductImage] = useState<
     string | undefined
   >();
+
+  const { data: businessStoresData, isLoading: isLoadingStores } =
+    useGetBusinessStores();
+
+  const stores = useMemo(() => {
+    return (
+      businessStoresData?.data?.stores?.map((store) => ({
+        value: store.id,
+        label: store.name,
+      })) || []
+    );
+  }, [businessStoresData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -303,6 +309,7 @@ export function CreateTransferDialog({
                     onValueChange={(value) =>
                       handleInputChange("fromStore", value)
                     }
+                    disabled={isLoadingStores}
                   >
                     <SelectTrigger
                       className={errors.fromStore ? "border-red-500" : ""}
@@ -310,11 +317,13 @@ export function CreateTransferDialog({
                       <SelectValue placeholder="Select source store" />
                     </SelectTrigger>
                     <SelectContent>
-                      {stores.map((store) => (
-                        <SelectItem key={store.value} value={store.value}>
-                          {store.label}
-                        </SelectItem>
-                      ))}
+                      {stores
+                        .filter((store) => store.value !== formData.toStore) // Exclude the selected "To Store"
+                        .map((store) => (
+                          <SelectItem key={store.value} value={store.value}>
+                            {store.label}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   {errors.fromStore && (
@@ -331,6 +340,7 @@ export function CreateTransferDialog({
                     onValueChange={(value) =>
                       handleInputChange("toStore", value)
                     }
+                    disabled={isLoadingStores}
                   >
                     <SelectTrigger
                       className={errors.toStore ? "border-red-500" : ""}
@@ -338,11 +348,13 @@ export function CreateTransferDialog({
                       <SelectValue placeholder="Select destination store" />
                     </SelectTrigger>
                     <SelectContent>
-                      {stores.map((store) => (
-                        <SelectItem key={store.value} value={store.value}>
-                          {store.label}
-                        </SelectItem>
-                      ))}
+                      {stores
+                        .filter((store) => store.value !== formData.fromStore) // Exclude the selected "From Store"
+                        .map((store) => (
+                          <SelectItem key={store.value} value={store.value}>
+                            {store.label}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   {errors.toStore && (

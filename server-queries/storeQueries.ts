@@ -2,7 +2,11 @@ import { CreateStoreFormData } from "@/schemas/stores/createStoreSchema";
 import { createStoreApi } from "@/server/stores/createStore";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import { useAuthStore } from "@/stores/authStore";
-import { CreateStoreResponse, GetStoresResult, Store } from "@/types/stores";
+import {
+  CreateStoreResponse,
+  GetBusinessStoresResponse,
+  Store,
+} from "@/types/stores";
 import {
   useMutation,
   UseMutationResult,
@@ -10,12 +14,10 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-/*
- * Get all the stores
- */
+//* Get all the stores
 export const useGetBusinessStores = () => {
   const { isAuthenticated, user, isLoading: authLoading } = useAuthStore();
-  return useQuery<GetStoresResult, Error>({
+  return useQuery<GetBusinessStoresResponse, Error>({
     queryKey: ["getbusinessStores", user?.businessId],
     queryFn: getBusinessStores,
     enabled: !authLoading && isAuthenticated && !!user?.businessId,
@@ -23,9 +25,7 @@ export const useGetBusinessStores = () => {
   });
 };
 
-/*
- * Create store Query
- */
+// * Create store Query
 export const useCreateStore = (): UseMutationResult<
   CreateStoreResponse,
   Error,

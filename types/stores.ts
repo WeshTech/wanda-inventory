@@ -23,9 +23,9 @@ export interface BusinessStoresData {
 
 // Successful response from backend
 export type GetBusinessStoresResponse = {
-  success: true;
+  success: boolean;
   message: string;
-  data: BusinessStoresData;
+  data: BusinessStoresData | null;
 };
 
 // Union type for queries
