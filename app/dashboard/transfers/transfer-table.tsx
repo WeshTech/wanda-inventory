@@ -28,7 +28,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { TransferLineDto } from "@/types/transfers";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { useBusinessTransfers } from "@/server-queries/transferQueries";
 import Loader from "@/components/ui/loading-spiner";
 
@@ -226,8 +226,8 @@ export function TransfersTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const { user, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId ?? "";
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
   const { data: transfersData, isLoading: isTransfersLoading } =
     useBusinessTransfers(businessId);
 

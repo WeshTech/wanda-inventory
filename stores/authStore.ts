@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { ContextResponse } from "@/types/context";
+import type {
+  ContextResponse,
+  ContextData,
+  ContextPermissions,
+} from "@/types/context";
 
 interface AuthState {
   contextResponse: ContextResponse | null;
@@ -13,6 +17,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
+//  Zustand store
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -21,7 +26,6 @@ export const useAuthStore = create<AuthState>()(
       isLoading: true,
 
       setContextResponse: (contextResponse) => {
-        // Store the full backend response
         set({
           contextResponse,
           isAuthenticated: contextResponse.success && !!contextResponse.data,
@@ -41,17 +45,13 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-context-storage",
       storage: createJSONStorage(() => localStorage),
-
-      // ✅ Persist everything exactly as returned from the backend
       partialize: (state) => ({
         contextResponse: state.contextResponse,
         isAuthenticated: state.isAuthenticated,
       }),
-
       onRehydrateStorage: () => {
         return (state, error) => {
           if (error) {
-            console.warn("Failed to rehydrate auth state:", error);
             useAuthStore.getState().setLoading(false);
             return;
           }
@@ -64,3 +64,23 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Return the entire data object
+export const useAuthContext = (): ContextData | null =>
+  useAuthStore((state) => state.contextResponse?.data ?? null);
+
+// Extract the user object (email, role, businessName)
+export const useAuthUser = () =>
+  useAuthStore((state) => state.contextResponse?.data?.user ?? null);
+
+// Extract the permissions object
+export const useAuthPermissions = (): ContextPermissions | null =>
+  useAuthStore((state) => state.contextResponse?.data?.permissions ?? null);
+
+// Extract store access array
+export const useAuthStoreAccess = (): string[] =>
+  useAuthStore((state) => state.contextResponse?.data?.storeAccess ?? []);
+
+// Extract the business ID
+export const useAuthBusinessId = (): string | null =>
+  useAuthStore((state) => state.contextResponse?.data?.businessId ?? null);

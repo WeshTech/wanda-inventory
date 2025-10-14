@@ -33,7 +33,7 @@ import {
 } from "@/schemas/expenses/updateExpenseSchema";
 import toast from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import { useUpdateExpense } from "@/server-queries/expensesQueries";
 import { AllExpenseResponseData } from "@/types/expenses";
 import { useEffect } from "react";
@@ -74,7 +74,7 @@ export function UpdateExpenseDialog({
     }
   }, [expense, form]);
 
-  const businessId = useAuthStore((state) => state.user?.businessId);
+  const businessId = useAuthBusinessId();
   const { mutate: updateExpense, isPending } = useUpdateExpense();
 
   const onSubmit = (data: UpdateExpenseFormData) => {

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/form";
 import { ComboBox } from "@/components/ui/combobox";
 import toast from "react-hot-toast";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import { useBusinessSuppliersQuery } from "@/server-queries/supplierQueries";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
 import { useStoreCategories } from "@/server-queries/storeCategoryQueries";
@@ -69,8 +69,7 @@ export interface FindProductByBarcodeResponse {
 }
 
 export default function AddInventoryPage() {
-  const { user } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const businessId = useAuthBusinessId() ?? "";
 
   const { data: suppliersData } = useBusinessSuppliersQuery(businessId);
   const { data: storesQuery } = useGetBusinessStores();

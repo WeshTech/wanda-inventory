@@ -36,13 +36,13 @@ import {
   User2,
 } from "lucide-react";
 
-import { useAuthStore } from "@/stores/authStore";
-import { logoutUser } from "@/server/auth/logout";
+import { useAuthUser } from "@/stores/authStore";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useLogoutUser } from "@/server/auth/logout";
 
 export const AppSidebar = () => {
-  const { user } = useAuthStore();
+  const user = useAuthUser();
   const pathname = usePathname();
 
   const isActivePath = (path: string) => {
@@ -65,7 +65,9 @@ export const AppSidebar = () => {
                   height={2500}
                   className="rounded-full h-8 w-8"
                 />
-                <p>{user?.name ? user.name : "Wanda Inventory"}</p>
+                <p>
+                  {user?.businessName ? user.businessName : "Wanda Inventory"}
+                </p>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -192,7 +194,7 @@ export const AppSidebar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton className="hover:bg-accent hover:text-accent-foreground">
-                  <User2 /> {user?.name || "John Doe"}{" "}
+                  <User2 /> {user?.businessName || "John Doe"}{" "}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -209,7 +211,7 @@ export const AppSidebar = () => {
 
                 <DropdownMenuItem
                   variant="destructive"
-                  onClick={logoutUser}
+                  onClick={useLogoutUser}
                   className="hover:bg-destructive hover:text-destructive-foreground"
                 >
                   <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />

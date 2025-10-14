@@ -23,7 +23,7 @@ import {
   CustomerFormData,
   customerSchema,
 } from "@/schemas/customers/createCustomerSchema";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useCreateCustomer } from "@/server-queries/customerQueries";
@@ -46,8 +46,8 @@ export function AddCustomerDialog({
     },
   });
 
-  const businessId = useAuthStore((state) => state.user?.businessId || "");
-  const createCustomerMutation = useCreateCustomer(businessId);
+  const businessId = useAuthBusinessId();
+  const createCustomerMutation = useCreateCustomer(businessId ?? "");
 
   const handleSubmit = (data: CustomerFormData) => {
     const promise = createCustomerMutation.mutateAsync(data);

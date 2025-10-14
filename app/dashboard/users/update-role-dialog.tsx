@@ -24,7 +24,7 @@ import {
 import { PermissionActions, PermissionModuleKeys } from "@/types/roles";
 
 import { z } from "zod";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import {
   useGetBusinessRole,
   useUpdateBusinessRole,
@@ -126,7 +126,7 @@ export function UpdateRoleDialog({
   roleId,
   onRoleUpdate,
 }: UpdateRoleDialogProps) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
 
   // Fetch role data when dialog opens with a roleId
   const {
@@ -134,11 +134,10 @@ export function UpdateRoleDialog({
     isLoading: isLoadingRole,
     error: roleError,
   } = useGetBusinessRole(roleId || "");
+  const businessId = useAuthBusinessId() ?? "";
 
   // Updated hook usage with businessId
-  const { mutate: updateRole, isPending } = useUpdateBusinessRole(
-    user?.businessId
-  );
+  const { mutate: updateRole, isPending } = useUpdateBusinessRole(businessId);
 
   const form = useForm<UpdateRoleInput>({
     resolver: zodResolver(updateRoleSchema),
@@ -194,7 +193,7 @@ export function UpdateRoleDialog({
       hotToast.error("Authentication is still loading");
       return;
     }
-    if (!isAuthenticated || !user?.businessId) {
+    if (!isAuthenticated || !businessId) {
       hotToast.error(
         "You must be logged in with a valid business to update a role"
       );
@@ -205,7 +204,7 @@ export function UpdateRoleDialog({
       title: values.title,
       description: values.description,
       permissions: values.permissions,
-      businessId: user.businessId,
+      businessId: businessId,
     };
 
     const toastId = sonnerToast.loading("Updating role...");

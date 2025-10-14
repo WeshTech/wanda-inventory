@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ArrowUpDown, Eye, Edit, Trash2 } from "lucide-react";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { PurchaseReceiptData } from "@/types/purchasereceipts";
 import { usePurchaseReceipts } from "@/server-queries/purchaseReceiptsQueries";
 import { formatToKenyanTime } from "@/utils/time-format";
@@ -48,8 +48,8 @@ export function PurchaseReceiptsTable({
 }: PurchaseReceiptsTableProps) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() || "";
   const {
     data: receiptsData,
     isLoading: isReceiptsLoading,

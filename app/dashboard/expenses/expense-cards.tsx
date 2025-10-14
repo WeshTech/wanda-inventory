@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { useBusinessExpensesSummaryQuery } from "@/server-queries/expensesQueries";
 import { ExpenseCardsSkeleton } from "./expense-card-skeleton";
 
@@ -29,14 +29,14 @@ const formatCurrency = (value: number): string =>
   }).format(value);
 
 export function ExpenseCards() {
-  const { user, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId ?? "";
+  const { isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId();
 
   const {
     data,
     isLoading: queryLoading,
     isFetching,
-  } = useBusinessExpensesSummaryQuery(businessId);
+  } = useBusinessExpensesSummaryQuery(businessId ?? "");
 
   const isStillLoading = authLoading || queryLoading || isFetching;
 

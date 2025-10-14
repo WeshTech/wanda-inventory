@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
 
 interface AddCategoryDialogProps {
@@ -38,8 +38,8 @@ export function AddCategoryDialog({
   open,
   onOpenChange,
 }: AddCategoryDialogProps) {
-  const { isLoading: authLoading, user } = useAuthStore();
-  const businessId = user?.businessId ?? "";
+  const { isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId();
   const { data: storesData, isLoading: storesLoading } = useGetBusinessStores();
 
   const form = useForm<CategoryFormData>({
@@ -51,7 +51,7 @@ export function AddCategoryDialog({
     },
   });
 
-  const createCategory = useCreateStoreCategory(businessId);
+  const createCategory = useCreateStoreCategory(businessId ?? "");
 
   const onSubmit: SubmitHandler<CategoryFormData> = (data) => {
     const loadingId = toast.loading("Creating category...");

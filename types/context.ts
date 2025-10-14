@@ -68,7 +68,7 @@ export type ContextPermissions = {
 
 //single staff context
 export type ContextData = {
-  user: { email: string; role: string };
+  user: { email: string; role: string; businessName: string };
   permissions: ContextPermissions;
   storeAccess: string[];
   businessId: string;

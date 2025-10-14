@@ -32,7 +32,7 @@ import {
 } from "@/schemas/expenses/createExpenseSchema";
 import toast from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import { useCreateExpense } from "@/server-queries/expensesQueries";
 
 interface AddExpenseDialogProps {
@@ -54,7 +54,7 @@ export function AddExpenseDialog({
     },
   });
 
-  const businessId = useAuthStore((state) => state.user?.businessId);
+  const businessId = useAuthBusinessId();
   const { mutate: createExpense, isPending } = useCreateExpense();
 
   const onSubmit = (data: ExpenseFormData) => {

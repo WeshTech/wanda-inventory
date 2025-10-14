@@ -30,7 +30,7 @@ import {
 import { CreateRoleDialog } from "./create-role-dialog";
 import { UpdateRoleDialog } from "./update-role-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import { useGetBusinessRoles } from "@/server-queries/roleQueries";
 import { BusinessRoleItem } from "@/types/roles";
 import { formatToKenyanTime } from "@/utils/time-format";
@@ -49,8 +49,7 @@ export function RolesTable() {
   const [isAddRoleDialogOpen, setIsAddRoleDialogOpen] = useState(false);
   const [updateRoleId, setUpdateRoleId] = useState<string | null>(null);
 
-  const user = useAuthStore((state) => state.user);
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   const {
     data: rolesResponse,

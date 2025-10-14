@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { BusinessUserResponseData } from "@/types/users";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   useBlockedBusinessUsers,
@@ -64,8 +64,8 @@ const getRoleColor = (role: string) => {
 };
 
 export function BlockedUsersTable() {
-  const { user, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   // ✅ use the new blocked users hook
   const {

@@ -1,6 +1,6 @@
 "use client";
 import { useInventoryStats } from "@/server-queries/inventoryQueries";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { DollarSign, Info, Package, Box } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -28,9 +28,9 @@ function InventoryCardSkeleton() {
 }
 
 export default function InventorySummary() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [isAuthenticating, setIsAuthenticating] = useState(true);
-  const businessId = user?.businessId || "";
+  const businessId = useAuthBusinessId() || "";
 
   const { data, isLoading, isError, error } = useInventoryStats(businessId);
 

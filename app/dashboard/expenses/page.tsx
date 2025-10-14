@@ -43,7 +43,7 @@ import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { AddExpenseDialog } from "./add-expenses-dialog";
 import { UpdateExpenseDialog } from "./update-expense-dialog";
 import { ExpenseCards } from "./expense-cards";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -54,8 +54,8 @@ import { AllExpenseResponseData } from "@/types/expenses";
 import { formatToKenyanTime } from "@/utils/time-format";
 
 export default function ExpensesPage() {
-  const { user, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   const {
     data,
@@ -63,7 +63,7 @@ export default function ExpensesPage() {
     isFetching,
     error,
     refetch,
-  } = useBusinessExpensesQuery(businessId);
+  } = useBusinessExpensesQuery(businessId ?? "");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

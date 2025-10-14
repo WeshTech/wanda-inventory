@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { SingleRoleResponse } from "@/types/roles";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
@@ -6,8 +6,8 @@ import { AxiosError } from "axios";
 export const getBusinessRoleApi = async (
   roleId: string
 ): Promise<SingleRoleResponse> => {
-  const { user, isLoading } = useAuthStore.getState();
-  const businessId = user?.businessId;
+  const { isLoading } = useAuthStore.getState();
+  const businessId = useAuthBusinessId() ?? "";
 
   if (!businessId) {
     if (isLoading) {

@@ -7,7 +7,7 @@ import { getBlockedBusinessUsersApi } from "@/server/users/get-blocked-users";
 import { getInvitedBusinessUsersApi } from "@/server/users/get-invited-users";
 import { unblockBusinessUserApi } from "@/server/users/unblock-user";
 import { updateBusinessUserApi } from "@/server/users/update-user";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import {
   BusinessUsersResponse,
   CreateBusinessUserResponse,
@@ -34,8 +34,8 @@ export const useBusinessUsers = (businessId: string | undefined) => {
 //create business user
 export const useCreateBusinessUser = () => {
   const queryClient = useQueryClient();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   return useMutation<CreateBusinessUserResponse, Error, InviteUserForm>({
     mutationKey: ["createBusinessUser", businessId],
@@ -68,8 +68,7 @@ export const useCreateBusinessUser = () => {
 //update business user
 export const useUpdateBusinessUser = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   return useMutation({
     mutationFn: ({
@@ -97,8 +96,7 @@ export const useUpdateBusinessUser = () => {
 //block business user
 export const useBlockBusinessUser = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   return useMutation({
     mutationKey: ["blockBusinessUser"],
@@ -126,8 +124,7 @@ export const useBlockBusinessUser = () => {
 //unblock business user
 export const useUnblockBusinessUser = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   return useMutation({
     mutationKey: ["unblockBusinessUser"],

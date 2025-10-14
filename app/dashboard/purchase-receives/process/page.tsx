@@ -42,7 +42,11 @@ import {
   purchaseReceiptSchema,
 } from "@/schemas/purchase-receipts/addPurchaseReceiptSchema";
 import { ProductDialog } from "./add-product-dialog";
-import { useAuthStore } from "@/stores/authStore";
+import {
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthUser,
+} from "@/stores/authStore";
 import { useBusinessSuppliersQuery } from "@/server-queries/supplierQueries";
 import { SupplierData } from "@/types/suppliers";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
@@ -71,8 +75,9 @@ export default function CreatePurchaseReceiptPage() {
     useState<ProductItemFormData | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const { user, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const { isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() || "";
+  const user = useAuthUser();
 
   const {
     data: suppliersData,

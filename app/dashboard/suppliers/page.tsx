@@ -33,15 +33,15 @@ import { SimplePagination } from "./simple-pagination";
 import { EditSupplierDialog } from "./edit-supplier-dialog";
 import { DeleteConfirmationDialog } from "./delete-confirmation-dialog";
 import { AddSupplierDialog } from "./add-suppler-dialog";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { SupplierData } from "@/types/suppliers";
 import { useBusinessSuppliersQuery } from "@/server-queries/supplierQueries";
 import { SuppliersSkeletonPage } from "./supplier-skeleton";
 import Image from "next/image";
 
 export default function SuppliersPage() {
-  const { user, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const { isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() || "";
 
   const {
     data,

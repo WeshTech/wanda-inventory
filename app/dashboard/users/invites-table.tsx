@@ -24,7 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { BusinessUserResponseData } from "@/types/users";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useInvitedBusinessUsers } from "@/server-queries/userQuery";
 import { formatToKenyanTime } from "@/utils/time-format";
@@ -45,8 +45,8 @@ const getRoleColor = (role: string) => {
 };
 
 export function InvitesTable() {
-  const { user, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   const {
     data,

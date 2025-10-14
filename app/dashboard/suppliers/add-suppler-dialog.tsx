@@ -18,7 +18,7 @@ import {
 } from "@/schemas/suppliers/createSupplierSchema";
 import { toast } from "react-hot-toast";
 import { toast as sonnerToast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import { useCreateSupplier } from "@/server-queries/supplierQueries";
 
 interface AddSupplierDialogProps {
@@ -30,8 +30,7 @@ export function AddSupplierDialog({
   open,
   onOpenChange,
 }: AddSupplierDialogProps) {
-  const { user } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   const form = useForm<SupplierFormData>({
     resolver: zodResolver(supplierSchema),

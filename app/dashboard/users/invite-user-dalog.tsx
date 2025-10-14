@@ -31,7 +31,7 @@ import {
   InviteUserForm,
   inviteUserSchema,
 } from "@/schemas/users/inviteUserSchema";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { toast as sonnerToast } from "sonner";
 import toast from "react-hot-toast";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
@@ -49,8 +49,8 @@ export function InviteUserDialog({
   isOpen,
   onOpenChange,
 }: InviteUserDialogProps) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   const storesQuery = useGetBusinessStores();
   const rolesQuery = useGetBusinessRoles(businessId);

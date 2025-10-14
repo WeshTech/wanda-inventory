@@ -34,7 +34,7 @@ import { SimplePagination } from "./simple-pagination";
 import { CreateStoreDialog } from "./create-store-dialog";
 import NoStoresFoundPage from "./no-store-found";
 import StoresPageSkeleton from "./loading";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
 
 const getInitials = (name: string) => {
@@ -62,7 +62,8 @@ export default function StoresPage() {
   } = useGetBusinessStores();
 
   // Handle auth state
-  const { isLoading: authLoading, isAuthenticated, user } = useAuthStore();
+  const { isLoading: authLoading, isAuthenticated } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   // Sync local loading state with query and auth
   useEffect(() => {
@@ -81,7 +82,7 @@ export default function StoresPage() {
   }, [queryError, storesData]);
 
   // Early return for auth loading or unauthenticated state
-  if (authLoading || !isAuthenticated || !user?.businessId) {
+  if (authLoading || !isAuthenticated || !businessId) {
     return <StoresPageSkeleton />;
   }
 

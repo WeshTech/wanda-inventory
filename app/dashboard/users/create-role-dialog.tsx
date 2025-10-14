@@ -28,7 +28,7 @@ import {
   PERMISSION_MODULES,
 } from "@/schemas/users/createRole.Schema";
 import { z } from "zod";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { useCreateBusinessRole } from "@/server-queries/roleQueries";
 import { toast as sonnerToast } from "sonner"; // shadcn sonner
 import { toast as hotToast } from "react-hot-toast";
@@ -44,10 +44,9 @@ export function CreateRoleDialog({
   open,
   onOpenChange,
 }: CreateRoleDialogProps) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const { mutate: createRole, isPending } = useCreateBusinessRole(
-    user?.businessId
-  );
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
+  const { mutate: createRole, isPending } = useCreateBusinessRole(businessId);
 
   const form = useForm<CreateRoleInput>({
     resolver: zodResolver(createRoleSchema),
@@ -81,7 +80,7 @@ export function CreateRoleDialog({
       hotToast.error("Authentication is still loading");
       return;
     }
-    if (!isAuthenticated || !user?.businessId) {
+    if (!isAuthenticated || !businessId) {
       hotToast.error(
         "You must be logged in with a valid business to create a role"
       );

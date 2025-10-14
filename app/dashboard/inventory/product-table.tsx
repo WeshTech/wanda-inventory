@@ -35,7 +35,7 @@ import {
 } from "@tanstack/react-table";
 import { ProductActionsCell } from "./product-action-cells";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { useBusinessProducts } from "@/server-queries/inventoryQueries";
 import type { BusinessProductStoreRow } from "@/types/inventory";
 import Loader from "@/components/ui/loading-spiner";
@@ -102,8 +102,8 @@ const mapBusinessProductToProduct = (
 };
 
 export default function ProductTable() {
-  const { user, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
   const { data, isLoading, error } = useBusinessProducts(businessId);
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);

@@ -51,7 +51,7 @@ import {
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { UpdateUserDialog } from "./update-user-dialog";
 import { BusinessUserResponseData } from "@/types/users";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   useBlockBusinessUser,
@@ -75,9 +75,9 @@ const getRoleColor = (role: string) => {
 };
 
 export function UsersTable() {
-  const { user, isLoading: isAuthLoading } = useAuthStore();
+  const { isLoading: isAuthLoading } = useAuthStore();
 
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
   const {
     data,
     isLoading: queryLoading,

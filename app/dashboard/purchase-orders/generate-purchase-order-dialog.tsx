@@ -32,7 +32,7 @@ import {
   GeneratePurchaseOrderSchema,
 } from "@/schemas/purchaseorder/generatePurchaseorderSchema";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 import { useGeneratePurchaseOrder } from "@/server-queries/purchaseorderQueries";
 
 interface GeneratePurchaseOrderDialogProps {
@@ -70,8 +70,7 @@ export function GeneratePurchaseOrderDialog({
     },
   });
 
-  const { user } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   const { mutate, isPending } = useGeneratePurchaseOrder();
 

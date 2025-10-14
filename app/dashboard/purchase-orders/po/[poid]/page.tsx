@@ -43,7 +43,7 @@ import { UpdateProductDialog } from "./update-product-dialog";
 import { DeleteProductDialog } from "./delete-product-dialog";
 import { format } from "date-fns";
 import type { PurchaseOrderProduct } from "@/types/purchaseorder";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import {
   usePurchaseOrderDetail,
   useUpdatePurchaseOrder,
@@ -70,8 +70,8 @@ const DEFAULT_BUSINESS_PRODUCT_ID = "00000000-0000-0000-0000-000000000000";
 
 export default function EditPurchaseOrderPage() {
   const { poid } = useParams<{ poid: string }>();
-  const { user, isAuthenticated } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const { isAuthenticated } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
   const router = useRouter();
 
   const {

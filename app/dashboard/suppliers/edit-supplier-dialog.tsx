@@ -16,7 +16,7 @@ import { useEffect } from "react";
 import { SupplierData } from "@/types/suppliers";
 import { toast } from "sonner";
 import { useUpdateSupplier } from "@/server-queries/supplierQueries";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 
 const supplierSchema = z.object({
   name: z.string().trim().min(1, "Supplier name is required"),
@@ -70,8 +70,7 @@ export function EditSupplierDialog({
   });
 
   const updateSupplier = useUpdateSupplier();
-  const { user } = useAuthStore();
-  const businessId = user?.businessId;
+  const businessId = useAuthBusinessId() ?? "";
 
   useEffect(() => {
     if (supplier) {

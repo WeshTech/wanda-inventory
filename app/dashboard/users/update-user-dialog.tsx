@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import toast from "react-hot-toast";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
 import { useGetBusinessRoles } from "@/server-queries/roleQueries";
@@ -51,8 +51,8 @@ export function UpdateUserDialog({
   onOpenChange,
   selectedUser,
 }: UpdateUserDialogProps) {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   const storesQuery = useGetBusinessStores();
   const rolesQuery = useGetBusinessRoles(businessId);

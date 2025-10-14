@@ -1,7 +1,7 @@
 import { CreateStoreFormData } from "@/schemas/stores/createStoreSchema";
 import { createStoreApi } from "@/server/stores/createStore";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import {
   CreateStoreResponse,
   GetBusinessStoresResponse,
@@ -16,11 +16,12 @@ import {
 
 //* Get all the stores
 export const useGetBusinessStores = () => {
-  const { isAuthenticated, user, isLoading: authLoading } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
   return useQuery<GetBusinessStoresResponse, Error>({
-    queryKey: ["getbusinessStores", user?.businessId],
+    queryKey: ["getbusinessStores", businessId],
     queryFn: getBusinessStores,
-    enabled: !authLoading && isAuthenticated && !!user?.businessId,
+    enabled: !authLoading && isAuthenticated && !!businessId,
     staleTime: 60 * 60 * 1000 * 10,
   });
 };

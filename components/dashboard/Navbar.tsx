@@ -14,13 +14,13 @@ import {
 import { Button } from "../ui/button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "../ui/sidebar";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthUser } from "@/stores/authStore";
 import { getInitials } from "@/utils/getInitials";
-import { logoutUser } from "@/server/auth/logout";
+import { useLogoutUser } from "@/server/auth/logout";
 
 const Navbar = () => {
   const { setTheme } = useTheme();
-  const { user } = useAuthStore();
+  const user = useAuthUser();
 
   return (
     <nav className="p-4 flex items-center justify-between sticky top-0 z-50 bg-background border-b">
@@ -65,7 +65,7 @@ const Navbar = () => {
             <Avatar>
               <AvatarImage src="/images/logo.jpg" />
               <AvatarFallback>
-                {getInitials(user?.name || "Wanda Inventory")}
+                {getInitials(user?.businessName || "Wanda Inventory")}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
@@ -82,7 +82,7 @@ const Navbar = () => {
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
-              onClick={logoutUser} //
+              onClick={useLogoutUser} //
             >
               <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
               Logout

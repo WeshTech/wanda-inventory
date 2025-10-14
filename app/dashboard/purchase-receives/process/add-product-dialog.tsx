@@ -34,7 +34,7 @@ import {
 } from "@/schemas/purchase-receipts/addPurchaseReceiptSchema";
 import { useSearchBusinessProducts } from "@/server-queries/inventoryQueries";
 import type { BusinessProductResult } from "@/types/inventory";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 
 interface ProductDialogProps {
   open: boolean;
@@ -67,8 +67,7 @@ export function ProductDialog({
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  const { user } = useAuthStore();
-  const businessId = user?.businessId || "";
+  const businessId = useAuthBusinessId() || "";
 
   const { data, isLoading } = useSearchBusinessProducts(
     businessId,

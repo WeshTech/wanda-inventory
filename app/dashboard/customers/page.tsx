@@ -34,7 +34,7 @@ import { AddCustomerDialog } from "./add-customer-dialog";
 import { EditCustomerDialog } from "./edit-customer-dialog";
 import { SimplePagination } from "./simple-pagination";
 
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { BusinessCustomerData } from "@/types/customers";
 import {
   useGetBusinessCustomers,
@@ -45,14 +45,14 @@ import { CustomersListSkeleton } from "./customer-list-skeleton";
 import { DeleteNotAllowedDialog } from "./delete-confitmation-dialog";
 
 export default function CustomersPage() {
-  const { user, isLoading: authLoading } = useAuthStore();
-  const businessId = user?.businessId ?? "";
+  const { isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId();
 
   const {
     data: customersResponse,
     isLoading: customersLoading,
     error: customersError,
-  } = useGetBusinessCustomers(businessId);
+  } = useGetBusinessCustomers(businessId ?? "");
 
   const customers = useMemo(
     () => customersResponse?.data || [],
@@ -64,7 +64,7 @@ export default function CustomersPage() {
     data: statsResponse,
     isLoading: statsLoading,
     error: statsError,
-  } = useGetBusinessCustomerStats(businessId);
+  } = useGetBusinessCustomerStats(businessId ?? "");
 
   // Local UI states
   const [searchTerm, setSearchTerm] = useState("");

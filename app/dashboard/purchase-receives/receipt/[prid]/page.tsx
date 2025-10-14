@@ -37,7 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import {
   useGetPurchaseReceiptById,
   useUpdatePurchaseReceipt,
@@ -76,8 +76,8 @@ type UpdateReceiptFormData = z.infer<typeof UpdateReceiptFormSchema>;
 export default function UpdateReceiptPage() {
   const params = useParams();
   const purchaseReceiptId = params.prid as string;
-  const { user, isLoading: isAuthLoading } = useAuthStore();
-  const businessId = user?.businessId;
+  const { isLoading: isAuthLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   const {
     data,

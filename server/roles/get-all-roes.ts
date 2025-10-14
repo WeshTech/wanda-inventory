@@ -4,8 +4,8 @@ import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
 export const getBusinessRoles = async (): Promise<BusinessRolesResponse> => {
-  const { user, isLoading } = useAuthStore.getState();
-  const businessId = user?.businessId;
+  const { isLoading } = useAuthStore.getState();
+  const businessId = useAuthBusinessId() ?? "";
 
   if (!businessId) {
     if (isLoading) {
