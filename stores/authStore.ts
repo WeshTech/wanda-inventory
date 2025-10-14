@@ -1,50 +1,53 @@
-import { UserLoginResponse } from "@/types/auth/user-login-response";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { ContextResponse } from "@/types/context";
 
 interface AuthState {
-  user: UserLoginResponse | null;
+  contextResponse: ContextResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  setUser: (user: UserLoginResponse) => void;
-  clearUser: () => void;
+
+  // Actions
+  setContextResponse: (contextResponse: ContextResponse) => void;
+  clearContext: () => void;
   setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
+      contextResponse: null,
       isAuthenticated: false,
       isLoading: true,
 
-      setUser: (user) => set({ user, isAuthenticated: true, isLoading: false }),
-      clearUser: () =>
-        set({ user: null, isAuthenticated: false, isLoading: false }),
+      setContextResponse: (contextResponse) => {
+        // Store the full backend response
+        set({
+          contextResponse,
+          isAuthenticated: contextResponse.success && !!contextResponse.data,
+          isLoading: false,
+        });
+      },
+
+      clearContext: () =>
+        set({
+          contextResponse: null,
+          isAuthenticated: false,
+          isLoading: false,
+        }),
+
       setLoading: (loading) => set({ isLoading: loading }),
     }),
     {
-      name: "auth-storage",
+      name: "auth-context-storage",
       storage: createJSONStorage(() => localStorage),
-      // Only persist non-sensitive user data
+
+      // ✅ Persist everything exactly as returned from the backend
       partialize: (state) => ({
-        user: state.user
-          ? {
-              business: state.user.business,
-              businessId: state.user.businessId,
-              constituency: state.user.constituency,
-              county: state.user.county,
-              createdAt: state.user.createdAt,
-              email: state.user.email,
-              name: state.user.name,
-              phoneNumber: state.user.phoneNumber,
-              role: state.user.role,
-              ward: state.user.ward,
-            }
-          : null,
+        contextResponse: state.contextResponse,
         isAuthenticated: state.isAuthenticated,
       }),
-      // Keep loading true until server verification completes
+
       onRehydrateStorage: () => {
         return (state, error) => {
           if (error) {
@@ -52,10 +55,9 @@ export const useAuthStore = create<AuthState>()(
             useAuthStore.getState().setLoading(false);
             return;
           }
-          // State restored, but keep loading true until /me verification
           console.log(
-            "Auth state restored from storage:",
-            state?.user?.email || "no user"
+            "Auth context restored for:",
+            state?.contextResponse?.data?.user?.email || "no user"
           );
         };
       },

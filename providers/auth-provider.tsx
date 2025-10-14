@@ -12,19 +12,19 @@ export default function ClientAuthInitializer({
   children,
 }: ClientAuthInitializerProps) {
   const { data, isLoading, isError } = useCurrentUserQuery();
-  const { setUser, clearUser, setLoading } = useAuthStore();
+  const { setContextResponse, clearContext, setLoading } = useAuthStore();
 
   useEffect(() => {
     setLoading(isLoading);
 
     if (!isLoading) {
-      if (data && !isError) {
-        setUser(data);
+      if (data && !isError && data.success) {
+        setContextResponse(data);
       } else {
-        clearUser();
+        clearContext();
       }
     }
-  }, [data, isLoading, isError, setUser, clearUser, setLoading]);
+  }, [data, isLoading, isError, setContextResponse, clearContext, setLoading]);
 
   return <>{children}</>;
 }

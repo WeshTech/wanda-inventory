@@ -18,7 +18,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export const useBusinessUsers = (businessId: string | undefined) => {
   const { isAuthenticated, isLoading } = useAuthStore();
   return useQuery<BusinessUsersResponse, Error>({
-    queryKey: ["getbusinessUsers", businessId],
+    queryKey: ["getbusinessusers", businessId],
     queryFn: () => {
       if (!businessId) {
         throw new Error("Business ID is required");
@@ -52,7 +52,7 @@ export const useCreateBusinessUser = () => {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["getBusinessUsers", businessId],
+          queryKey: ["getbusinessusers", businessId],
         }),
         queryClient.invalidateQueries({
           queryKey: ["getInvitedBusinessUsers", businessId],

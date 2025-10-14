@@ -2,22 +2,17 @@ import { loginSchema } from "@/schemas/loginSchema";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 import z from "zod";
+import { useAuthStore } from "@/stores/authStore";
+import type { ContextResponse } from "@/types/context";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginUser = async (formData: LoginFormValues) => {
-  const validatedFields = loginSchema.safeParse(formData);
-
-  if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.issues
-      .map((err) => err.message)
-      .join(", ");
-    return { success: false, message: `Validation Failed: ${errorMessages}` };
-  }
-
-  const { email, password } = validatedFields.data;
+  const { email, password } = formData;
+  const { setContextResponse, clearContext } = useAuthStore.getState();
 
   try {
+    // Step 1: Attempt login
     const response = await axiosApi.post("/auth/login", {
       email: email.toLowerCase(),
       password,
@@ -25,15 +20,37 @@ export const LoginUser = async (formData: LoginFormValues) => {
 
     console.log("Login response:", response);
 
-    if (response.status === 200 && response.data.user) {
-      console.log("User data:", response.data.user);
-      return {
-        success: true,
-        message: response.data?.message || "Login successful",
-        data: response.data,
-      };
+    if (response.status === 200) {
+      try {
+        const meResponse = await axiosApi.get<ContextResponse>("/auth/me");
+
+        if (meResponse.status === 200 && meResponse.data.success) {
+          setContextResponse(meResponse.data);
+
+          return {
+            success: true,
+            message: meResponse.data.message || "Login successful",
+            data: meResponse.data,
+          };
+        } else {
+          // Context fetch failed after login
+          clearContext();
+          return {
+            success: false,
+            message: "Failed to retrieve user context after login.",
+          };
+        }
+      } catch (contextError) {
+        console.error("Failed to fetch /auth/me:", contextError);
+        clearContext();
+        return {
+          success: false,
+          message: "Login succeeded, but failed to load user context.",
+        };
+      }
     }
 
+    // Fallback for unexpected login response
     return {
       success: false,
       message: response.data?.message || "Login failed. Please try again.",
@@ -41,23 +58,23 @@ export const LoginUser = async (formData: LoginFormValues) => {
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>;
 
+    //  Handle server responses
     if (axiosError.response) {
       if (axiosError.response.status === 401) {
         return {
           success: false,
           message:
             axiosError.response.data?.message ||
-            "Invalid Credentials or Account blocked",
+            "Invalid credentials or account blocked.",
         };
       }
 
-      // Handle "logged in another device" error
       if (axiosError.response.status === 403) {
         return {
           success: false,
           message:
             axiosError.response.data?.message ||
-            "Sorry, you are logged in another device",
+            "Sorry, you are logged in on another device.",
         };
       }
 
@@ -69,6 +86,7 @@ export const LoginUser = async (formData: LoginFormValues) => {
       };
     }
 
+    //  Network or unknown error
     return {
       success: false,
       message:
