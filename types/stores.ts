@@ -44,3 +44,17 @@ export interface CreateStoreResponse {
     createdAt: string;
   };
 }
+
+//store info
+export type StoreInfo = {
+  storeId: string;
+  storeName: string;
+  ward: string;
+};
+
+//store respone
+export type StoresInfoResponse = {
+  success: boolean;
+  message: string;
+  data: StoreInfo | StoreInfo[] | null;
+};

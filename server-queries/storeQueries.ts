@@ -1,7 +1,9 @@
 import { CreateStoreFormData } from "@/schemas/stores/createStoreSchema";
 import { createStoreApi } from "@/server/stores/createStore";
+import { getStoreInfoApi } from "@/server/stores/get-stores-info";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+import { GetStoreSaleProductsResult } from "@/types/sales";
 import {
   CreateStoreResponse,
   GetBusinessStoresResponse,
@@ -64,5 +66,15 @@ export const useCreateStore = (): UseMutationResult<
       // Always refetch after mutation
       queryClient.invalidateQueries({ queryKey: ["getbusinessStores"] });
     },
+  });
+};
+
+//get store info
+export const useStoreInfoQuery = (businessId: string, storeIds: string[]) => {
+  return useQuery<GetStoreSaleProductsResult, Error>({
+    queryKey: ["storeInfo", businessId, storeIds],
+    queryFn: () => getStoreInfoApi(businessId, storeIds),
+    enabled: !!businessId && !!storeIds,
+    staleTime: 10 * 60 * 60 * 1000,
   });
 };

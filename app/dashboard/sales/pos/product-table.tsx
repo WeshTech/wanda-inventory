@@ -23,6 +23,13 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { DataTablePagination } from "./data-table-pagination"; // Import the pagination component
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Product {
   id: string;
@@ -143,15 +150,29 @@ export function ProductTable({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search by serial NO or product name"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 pr-4 py-2 rounded-md w-full"
-        />
+      <div className="relative mb-4 flex gap-2">
+        <div className="flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search by serial NO or product name"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9 pr-4 py-2 rounded-md w-full"
+          />
+        </div>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="electronics">Electronics</SelectItem>
+            <SelectItem value="clothing">Clothing</SelectItem>
+            <SelectItem value="books">Books</SelectItem>
+            <SelectItem value="home">Home & Garden</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex-1 overflow-auto border rounded-lg">
         <Table>
