@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import type {
   ContextResponse,
   ContextData,
@@ -11,7 +12,6 @@ interface AuthState {
   contextResponse: ContextResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-
   // Actions
   setContextResponse: (contextResponse: ContextResponse) => void;
   clearContext: () => void;
@@ -44,7 +44,6 @@ export const useAuthStore = create<AuthState>()(
       contextResponse: null,
       isAuthenticated: false,
       isLoading: true,
-
       setContextResponse: (contextResponse) => {
         set({
           contextResponse,
@@ -52,14 +51,12 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
         });
       },
-
       clearContext: () =>
         set({
           contextResponse: null,
           isAuthenticated: false,
           isLoading: false,
         }),
-
       setLoading: (loading) => set({ isLoading: loading }),
     }),
     {
@@ -87,19 +84,25 @@ export const useAuthStore = create<AuthState>()(
 
 // Return the entire data object
 export const useAuthContext = (): ContextData | null =>
-  useAuthStore((state) => state.contextResponse?.data ?? null);
+  useAuthStore(useShallow((state) => state.contextResponse?.data ?? null));
 
 // Extract the user object (email, role, businessName)
 export const useAuthUser = () =>
-  useAuthStore((state) => state.contextResponse?.data?.user ?? null);
+  useAuthStore(
+    useShallow((state) => state.contextResponse?.data?.user ?? null)
+  );
 
 // Extract the permissions object
 export const useAuthPermissions = (): ContextPermissions | null =>
-  useAuthStore((state) => state.contextResponse?.data?.permissions ?? null);
+  useAuthStore(
+    useShallow((state) => state.contextResponse?.data?.permissions ?? null)
+  );
 
 // Extract store access array
 export const useAuthStoreAccess = (): string[] =>
-  useAuthStore((state) => state.contextResponse?.data?.storeAccess ?? []);
+  useAuthStore(
+    useShallow((state) => state.contextResponse?.data?.storeAccess ?? [])
+  );
 
 // Extract the business ID
 export const useAuthBusinessId = (): string | null =>

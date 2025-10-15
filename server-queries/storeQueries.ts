@@ -3,11 +3,11 @@ import { createStoreApi } from "@/server/stores/createStore";
 import { getStoreInfoApi } from "@/server/stores/get-stores-info";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
-import { GetStoreSaleProductsResult } from "@/types/sales";
 import {
   CreateStoreResponse,
   GetBusinessStoresResponse,
   Store,
+  StoresInfoResponse,
 } from "@/types/stores";
 import {
   useMutation,
@@ -71,8 +71,8 @@ export const useCreateStore = (): UseMutationResult<
 
 //get store info
 export const useStoreInfoQuery = (businessId: string, storeIds: string[]) => {
-  return useQuery<GetStoreSaleProductsResult, Error>({
-    queryKey: ["storeInfo", businessId, storeIds],
+  return useQuery<StoresInfoResponse, Error>({
+    queryKey: ["storesInfo", businessId, storeIds],
     queryFn: () => getStoreInfoApi(businessId, storeIds),
     enabled: !!businessId && !!storeIds,
     staleTime: 10 * 60 * 60 * 1000,

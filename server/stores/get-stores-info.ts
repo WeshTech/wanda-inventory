@@ -1,16 +1,16 @@
-import { GetStoreSaleProductsResult } from "@/types/sales";
+import { StoresInfoResponse } from "@/types/stores";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
 export const getStoreInfoApi = async (
   businessId: string,
   storeIds: string[]
-): Promise<GetStoreSaleProductsResult> => {
+): Promise<StoresInfoResponse> => {
   try {
-    const response = await axiosApi.post<GetStoreSaleProductsResult>(
-      `/stores/info`,
-      { storeIds, businessId }
-    );
+    const response = await axiosApi.post<StoresInfoResponse>(`/stores/info`, {
+      storeIds,
+      businessId,
+    });
 
     if (response.data?.success) {
       return {
