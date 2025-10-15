@@ -21,6 +21,7 @@ import { useLogoutUser } from "@/server/auth/logout";
 const Navbar = () => {
   const { setTheme } = useTheme();
   const user = useAuthUser();
+  const logoutUser = useLogoutUser();
 
   return (
     <nav className="p-4 flex items-center justify-between sticky top-0 z-50 bg-background border-b">
@@ -82,7 +83,7 @@ const Navbar = () => {
             </DropdownMenuItem>
             <DropdownMenuItem
               variant="destructive"
-              onClick={useLogoutUser} //
+              onClick={logoutUser} //
             >
               <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
               Logout

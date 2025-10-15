@@ -2,11 +2,9 @@
 
 import { useAuthStore } from "@/stores/authStore";
 import { axiosApi } from "@/utils/axios";
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 export function useLogoutUser() {
-  const router = useRouter();
   const { clearContext } = useAuthStore();
 
   const logoutUser = useCallback(async () => {
@@ -15,9 +13,9 @@ export function useLogoutUser() {
     } catch {
     } finally {
       clearContext();
-      router.replace("/auth/login");
+      window.location.replace("/auth/login");
     }
-  }, [clearContext, router]);
+  }, [clearContext]);
 
   return logoutUser;
 }

@@ -5,6 +5,7 @@ import type {
   ContextData,
   ContextPermissions,
 } from "@/types/context";
+import { AES, enc } from "crypto-js";
 
 interface AuthState {
   contextResponse: ContextResponse | null;
@@ -17,7 +18,26 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-//  Zustand store
+// Custom encrypted storage wrapper around localStorage
+const encryptedStorage = {
+  getItem: (name: string) => {
+    const encrypted = localStorage.getItem(name);
+    if (!encrypted) return null;
+    try {
+      const decrypted = AES.decrypt(encrypted, "secret-key").toString(enc.Utf8);
+      return decrypted;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name: string, value: string) => {
+    const encrypted = AES.encrypt(value, "secret-key").toString();
+    localStorage.setItem(name, encrypted);
+  },
+  removeItem: (name: string) => localStorage.removeItem(name),
+};
+
+// Zustand store
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -44,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-context-storage",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => encryptedStorage),
       partialize: (state) => ({
         contextResponse: state.contextResponse,
         isAuthenticated: state.isAuthenticated,
