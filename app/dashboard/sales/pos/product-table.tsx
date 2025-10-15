@@ -360,7 +360,9 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
 
                     <Button
                       variant="default"
-                      onClick={() => router.push("/dashboard/inventory")}
+                      onClick={() =>
+                        router.push("/dashboard/inventory/products")
+                      }
                     >
                       Add Store Product
                     </Button>

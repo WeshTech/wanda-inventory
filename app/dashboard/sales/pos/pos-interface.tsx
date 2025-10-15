@@ -93,20 +93,7 @@ export default function POSInterface() {
       serialNumber: string;
     }>
   >([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm) {
-      return products;
-    }
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.serialNumber.toLowerCase().includes(lowerCaseSearchTerm)
-    );
-  }, [products, searchTerm]);
 
   const addToCart = useCallback((productToAdd: (typeof MOCK_PRODUCTS)[0]) => {
     setCartItems((prevCartItems) => {
@@ -231,16 +218,7 @@ export default function POSInterface() {
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Left Side: Product Table */}
         <div className="w-full md:w-3/5 p-4 md:p-6 border-r border-gray-200 dark:border-gray-800 overflow-auto">
-          <ProductTable
-            products={filteredProducts}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onAddToCart={addToCart}
-            availableStock={products.reduce(
-              (acc, p) => ({ ...acc, [p.id]: p.stock }),
-              {}
-            )}
-          />
+          <ProductTable onAddToCart={addToCart} />
         </div>
 
         {/* Right Side: Customer Cart */}
