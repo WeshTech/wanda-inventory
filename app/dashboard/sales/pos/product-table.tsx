@@ -38,11 +38,12 @@ import {
 } from "@/stores/authStore";
 import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 import { useStoreSalesProducts } from "@/server-queries/salesQueries";
-import { StoreSaleProduct } from "@/types/sales";
+import { useSearchStoreSalesProducts } from "@/server-queries/salesQueries";
+import { SearchStoreSaleProduct, StoreSaleProduct } from "@/types/sales";
 import Loader from "@/components/ui/loading-spiner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-
+import { useDebounce } from "@/hooks/use-debounce";
 interface Product {
   id: string;
   image: string;
@@ -96,7 +97,10 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
     }
   }, [stores, storesLoading, isAuthenticated, authLoading, selectedStoreId]);
 
-  // Fetch products for the selected store only
+  // Debounce the search term (500ms)
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Fetch ALL products for the selected store (no search)
   const { data: productsData, isLoading: productsLoading } =
     useStoreSalesProducts(
       businessId ?? "",
@@ -106,8 +110,19 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
       userId
     );
 
-  // Transform products data
-  const products: Product[] = useMemo(() => {
+  // Fetch SEARCHED products using the new hook
+  const { data: searchProductsData, isLoading: searchLoading } =
+    useSearchStoreSalesProducts(
+      businessId ?? "",
+      selectedStoreId && selectedStoreId !== "all"
+        ? selectedStoreId
+        : stores[0]?.storeId ?? "",
+      userId,
+      debouncedSearchTerm
+    );
+
+  // Transform ALL products data (for when no search)
+  const allProducts: Product[] = useMemo(() => {
     if (
       authLoading ||
       storesLoading ||
@@ -117,11 +132,11 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
     )
       return [];
 
-    const allProducts: StoreSaleProduct[] = productsData.data ?? [];
+    const rawProducts: StoreSaleProduct[] = productsData.data ?? [];
 
     // Transform to Product format
     const productMap = new Map<string, Product>();
-    allProducts.forEach((p) => {
+    rawProducts.forEach((p) => {
       const id = p.productCode ?? "";
       if (productMap.has(id)) {
         const existing = productMap.get(id)!;
@@ -148,16 +163,64 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
     isAuthenticated,
   ]);
 
-  const loading =
-    authLoading || storesLoading || productsLoading || !isAuthenticated;
+  // Transform SEARCHED products data
+  const searchedProducts: Product[] = useMemo(() => {
+    if (
+      authLoading ||
+      storesLoading ||
+      searchLoading ||
+      !isAuthenticated ||
+      !searchProductsData?.success ||
+      !debouncedSearchTerm
+    )
+      return [];
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(
-      (product) =>
-        product.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [products, searchTerm]);
+    const rawSearchProducts: SearchStoreSaleProduct[] =
+      searchProductsData.data ?? [];
+
+    // Transform to Product format
+    const productMap = new Map<string, Product>();
+    rawSearchProducts.forEach((p) => {
+      const id = p.productCode ?? "";
+      if (productMap.has(id)) {
+        const existing = productMap.get(id)!;
+        existing.stock += p.quantity;
+      } else {
+        productMap.set(id, {
+          id: p.productId,
+          image: p.imgUrl ?? "/images/noimagefound.jpg",
+          serialNumber: p.productCode ?? "",
+          name: p.productName ?? "",
+          category: p.category ?? "",
+          stock: p.quantity,
+          price: p.price,
+        });
+      }
+    });
+
+    return Array.from(productMap.values());
+  }, [
+    searchProductsData,
+    authLoading,
+    storesLoading,
+    searchLoading,
+    isAuthenticated,
+    debouncedSearchTerm,
+  ]);
+
+  // Determine which products to show
+  const tableProducts = useMemo(() => {
+    if (debouncedSearchTerm) {
+      return searchedProducts;
+    }
+    return allProducts;
+  }, [allProducts, searchedProducts, debouncedSearchTerm]);
+
+  const loading =
+    authLoading ||
+    storesLoading ||
+    (debouncedSearchTerm ? searchLoading : productsLoading) ||
+    !isAuthenticated;
 
   const columns: ColumnDef<Product>[] = useMemo(
     () => [
@@ -166,7 +229,7 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
         header: "Image",
         cell: ({ row }) => (
           <Image
-            src={row.original.image || "//images/noimagefound.jpg"}
+            src={row.original.image || "/images/noimagefound.jpg"}
             alt={row.original.name}
             width={48}
             height={48}
@@ -217,7 +280,6 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
           return <div className="text-right">{formatted}</div>;
         },
       },
-
       {
         id: "actions",
         header: "Action",
@@ -241,7 +303,7 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
   );
 
   const table = useReactTable({
-    data: filteredProducts,
+    data: tableProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -317,7 +379,13 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  <Loader text="Loading products..." />
+                  <Loader
+                    text={
+                      debouncedSearchTerm
+                        ? "Searching products..."
+                        : "Loading products..."
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
@@ -346,26 +414,34 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
                   <div className="flex flex-col items-center justify-center space-y-3 py-6">
                     <Avatar className="w-24 h-24 border-0">
                       <AvatarImage
-                        src="/images/nostorefound.jpg"
-                        alt="No store found"
+                        src={
+                          debouncedSearchTerm
+                            ? "/images/nosearchresult.jpg"
+                            : "/images/nostorefound.jpg"
+                        }
+                        alt="No products found"
                       />
                       <AvatarFallback className="text-sm text-muted-foreground">
-                        No Image
+                        {debouncedSearchTerm ? "No Results" : "No Image"}
                       </AvatarFallback>
                     </Avatar>
 
                     <p className="text-sm text-muted-foreground">
-                      No stock products found in the specified store.
+                      {debouncedSearchTerm
+                        ? `No products found matching "${searchTerm}"`
+                        : "No stock products found in the specified store."}
                     </p>
 
-                    <Button
-                      variant="default"
-                      onClick={() =>
-                        router.push("/dashboard/inventory/products")
-                      }
-                    >
-                      Add Store Product
-                    </Button>
+                    {!debouncedSearchTerm && (
+                      <Button
+                        variant="default"
+                        onClick={() =>
+                          router.push("/dashboard/inventory/products")
+                        }
+                      >
+                        Add Store Product
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
