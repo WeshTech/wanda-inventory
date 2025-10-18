@@ -12,6 +12,6 @@ export const useStoreSalesProducts = (
     queryKey: ["storesalesproducts", businessId, storeId, userId],
     queryFn: () => getStoreSalesProductsApi(businessId, storeId, userId),
     enabled: !!businessId && !!storeId && !!userId,
-    staleTime: 5 * 60 * 60 * 1000,
+    staleTime: 1000,
   });
 };

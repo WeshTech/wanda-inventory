@@ -1,5 +1,6 @@
 // single sale product
 export type StoreSaleProduct = {
+  productId: string;
   imgUrl: string | null;
   productCode: string | null;
   productName: string | null;

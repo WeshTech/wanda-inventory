@@ -128,7 +128,7 @@ export function ProductTable({ onAddToCart }: ProductTableProps) {
         existing.stock += p.quantity;
       } else {
         productMap.set(id, {
-          id,
+          id: p.productId,
           image: p.imgUrl ?? "/images/noimagefound.jpg",
           serialNumber: p.productCode ?? "",
           name: p.productName ?? "",
