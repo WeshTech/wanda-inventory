@@ -22,9 +22,9 @@ interface CustomerCartProps {
   onScan: (serialNumber: string) => void;
   onUpdateQuantity: (productId: string, delta: number) => void;
   onRemoveItem: (productId: string) => void;
+  onUpdatePrice: (productId: string, newPrice: number) => void;
   totalCost: number;
   onCheckout: () => void;
-  availableStock: { [key: string]: number };
 }
 
 export function CustomerCart({
@@ -32,15 +32,19 @@ export function CustomerCart({
   onScan,
   onUpdateQuantity,
   onRemoveItem,
+  onUpdatePrice,
   totalCost,
   onCheckout,
-  availableStock,
 }: CustomerCartProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       onScan(e.currentTarget.value);
-      e.currentTarget.value = ""; // Clear input after scan
+      e.currentTarget.value = "";
     }
+  };
+
+  const handleCheckout = () => {
+    onCheckout();
   };
 
   return (
@@ -64,71 +68,162 @@ export function CustomerCart({
             Your cart is empty. Scan or add products!
           </p>
         ) : (
-          cartItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm"
-            >
-              <Image
-                src={item.image || "/placeholder.svg"}
-                alt={item.name}
-                width={64}
-                height={64}
-                className="rounded-md object-cover flex-shrink-0"
-              />
-              <div className="flex-1 grid gap-1">
-                <h3 className="font-medium">{item.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {item.price.toLocaleString("en-KE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  / item
-                </p>
-                <p className="text-sm font-semibold text-secondary">
-                  Total: KES{" "}
-                  {(item.price * item.quantity).toLocaleString("en-KE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
+          <>
+            {cartItems[0] && (
+              <div
+                key={cartItems[0].id}
+                className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm"
+              >
+                <Image
+                  src={cartItems[0].image || "/placeholder.svg"}
+                  alt={cartItems[0].name}
+                  width={64}
+                  height={64}
+                  className="rounded-md object-cover flex-shrink-0"
+                />
+                <div className="flex-1 grid gap-1">
+                  <h3 className="font-medium">{cartItems[0].name}</h3>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      defaultValue={cartItems[0].price}
+                      onChange={(e) =>
+                        onUpdatePrice(
+                          cartItems[0].id,
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      className="w-24 h-8 text-sm"
+                      step="0.01"
+                      min="0"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      KES / item
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-secondary">
+                    Total: KES{" "}
+                    {(
+                      cartItems[0].price * cartItems[0].quantity
+                    ).toLocaleString("en-KE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-transparent"
+                    onClick={() => onUpdateQuantity(cartItems[0].id, -1)}
+                    disabled={cartItems[0].quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="font-medium w-6 text-center">
+                    {cartItems[0].quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-transparent"
+                    onClick={() => onUpdateQuantity(cartItems[0].id, 1)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-600"
+                    onClick={() => onRemoveItem(cartItems[0].id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 bg-transparent"
-                  onClick={() => onUpdateQuantity(item.id, -1)}
-                  disabled={item.quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                  <span className="sr-only">Subtract quantity</span>
-                </Button>
-                <span className="font-medium w-6 text-center">
-                  {item.quantity}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 bg-transparent"
-                  onClick={() => onUpdateQuantity(item.id, 1)}
-                  disabled={availableStock[item.id] <= 0}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">Add quantity</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-red-500 hover:text-red-600"
-                  onClick={() => onRemoveItem(item.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Remove item</span>
-                </Button>
+            )}
+            {cartItems[1] && (
+              <div
+                key={cartItems[1].id}
+                className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm"
+              >
+                <Image
+                  src={cartItems[1].image || "/placeholder.svg"}
+                  alt={cartItems[1].name}
+                  width={64}
+                  height={64}
+                  className="rounded-md object-cover flex-shrink-0"
+                />
+                <div className="flex-1 grid gap-1">
+                  <h3 className="font-medium">{cartItems[1].name}</h3>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      defaultValue={cartItems[1].price}
+                      onChange={(e) =>
+                        onUpdatePrice(
+                          cartItems[1].id,
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      className="w-24 h-8 text-sm"
+                      step="0.01"
+                      min="0"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      KES / item
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-secondary">
+                    Total: KES{" "}
+                    {(
+                      cartItems[1].price * cartItems[1].quantity
+                    ).toLocaleString("en-KE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-transparent"
+                    onClick={() => onUpdateQuantity(cartItems[1].id, -1)}
+                    disabled={cartItems[1].quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="font-medium w-6 text-center">
+                    {cartItems[1].quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-transparent"
+                    onClick={() => onUpdateQuantity(cartItems[1].id, 1)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-600"
+                    onClick={() => onRemoveItem(cartItems[1].id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))
+            )}
+            {cartItems[2] && (
+              <div
+                key={cartItems[2].id}
+                className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm"
+              ></div>
+            )}
+          </>
         )}
       </div>
 
@@ -142,13 +237,13 @@ export function CustomerCart({
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
-        </span>{" "}
+        </span>
       </div>
 
       <Button
         size="lg"
         className="w-full flex items-center gap-2"
-        onClick={onCheckout}
+        onClick={handleCheckout}
         disabled={cartItems.length === 0}
       >
         <ShoppingCart className="h-5 w-5" />

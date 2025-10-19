@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -33,10 +33,8 @@ import {
 import {
   useAuthBusinessId,
   useAuthStore,
-  useAuthStoreAccess,
   useAuthUser,
 } from "@/stores/authStore";
-import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 import { useStoreSalesProducts } from "@/server-queries/salesQueries";
 import { useSearchStoreSalesProducts } from "@/server-queries/salesQueries";
 import { SearchStoreSaleProduct, StoreSaleProduct } from "@/types/sales";
@@ -44,6 +42,8 @@ import Loader from "@/components/ui/loading-spiner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/use-debounce";
+import { StoreInfo } from "@/types/stores";
+
 interface Product {
   id: string;
   image: string;
@@ -56,46 +56,30 @@ interface Product {
 
 interface ProductTableProps {
   onAddToCart: (product: Product) => void;
+  selectedStoreId: string;
+  setSelectedStoreId: (id: string) => void;
+  stores: StoreInfo[];
+  storesLoading: boolean;
 }
 
-export function ProductTable({ onAddToCart }: ProductTableProps) {
+export function ProductTable({
+  onAddToCart,
+  selectedStoreId,
+  setSelectedStoreId,
+  stores,
+  storesLoading,
+}: ProductTableProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const router = useRouter();
 
   // Get auth data
   const authLoading = useAuthStore((state) => state.isLoading);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const businessId = useAuthBusinessId();
-  const storeIds = useAuthStoreAccess();
   const user = useAuthUser();
   const userId = user?.userId ?? "";
-
-  const { data: storesData, isLoading: storesLoading } = useStoreInfoQuery(
-    businessId ?? "",
-    storeIds
-  );
-
-  // Extract store info array
-  const stores = useMemo(() => {
-    if (!storesData?.data) return [];
-    return Array.isArray(storesData.data) ? storesData.data : [storesData.data];
-  }, [storesData]);
-
-  // Set initial store to first in array if multiple
-  useEffect(() => {
-    if (
-      stores.length > 0 &&
-      !selectedStoreId &&
-      !storesLoading &&
-      isAuthenticated &&
-      !authLoading
-    ) {
-      setSelectedStoreId(stores[0].storeId);
-    }
-  }, [stores, storesLoading, isAuthenticated, authLoading, selectedStoreId]);
 
   // Debounce the search term (500ms)
   const debouncedSearchTerm = useDebounce(searchTerm, 500);

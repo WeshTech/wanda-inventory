@@ -1,88 +1,18 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ProductTable } from "./product-table";
 import { CustomerCart } from "./customer-cart";
 import { CheckoutModal } from "./checkout-modal";
-
-// Mock product data
-const MOCK_PRODUCTS = [
-  {
-    id: "prod-001",
-    image: "/product1.jpg",
-    serialNumber: "6967028107538",
-    name: "Apple (Red)",
-    category: "Fruits",
-    stock: 10,
-    price: 1.5,
-  },
-  {
-    id: "prod-002",
-    image: "/product2.jpg",
-    serialNumber: "6974208800359",
-    name: "Banana (Yellow)",
-    category: "Fruits",
-    stock: 15,
-    price: 0.75,
-  },
-  {
-    id: "prod-003",
-    image: "/product3.jpg",
-    serialNumber: "6978209900040",
-    name: "Spinach (Fresh)",
-    category: "Vegetables",
-    stock: 8,
-    price: 2.2,
-  },
-  {
-    id: "prod-004",
-    image: "/product4.jpg",
-    serialNumber: "8557501254613",
-    name: "Milk (Whole)",
-    category: "Dairy",
-    stock: 20,
-    price: 3.0,
-  },
-  {
-    id: "prod-005",
-    image: "/product5.jpg",
-    serialNumber: "6203019040133",
-    name: "Bread (Wheat)",
-    category: "Bakery",
-    stock: 12,
-    price: 2.75,
-  },
-  {
-    id: "prod-006",
-    image: "/product6.jpg",
-    serialNumber: "6971536927533",
-    name: "Chicken Breast",
-    category: "Meat",
-    stock: 7,
-    price: 8.99,
-  },
-  {
-    id: "prod-007",
-    image: "/product7.jpg",
-    serialNumber: "6939020440166",
-    name: "Cola (Can)",
-    category: "Beverages",
-    stock: 30,
-    price: 1.25,
-  },
-  {
-    id: "prod-008",
-    image: "/product8.jpg",
-    serialNumber: "6161101536646",
-    name: "Cheddar Cheese",
-    category: "Dairy",
-    stock: 9,
-    price: 5.5,
-  },
-];
+import {
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthStoreAccess,
+  useAuthUser,
+} from "@/stores/authStore";
+import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 
 export default function POSInterface() {
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [cartItems, setCartItems] = useState<
     Array<{
       id: string;
@@ -94,44 +24,74 @@ export default function POSInterface() {
     }>
   >([]);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
 
-  const addToCart = useCallback((productToAdd: (typeof MOCK_PRODUCTS)[0]) => {
-    setCartItems((prevCartItems) => {
-      const existingItemIndex = prevCartItems.findIndex(
-        (item) => item.id === productToAdd.id
-      );
+  const authLoading = useAuthStore((state) => state.isLoading);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const businessId = useAuthBusinessId();
+  const storeIds = useAuthStoreAccess();
+  const user = useAuthUser();
+  const userId = user?.userId ?? "";
 
-      if (existingItemIndex > -1) {
-        // Item already in cart, increment quantity
-        const updatedCartItems = [...prevCartItems];
-        updatedCartItems[existingItemIndex] = {
-          ...updatedCartItems[existingItemIndex],
-          quantity: updatedCartItems[existingItemIndex].quantity + 1,
-        };
-        return updatedCartItems;
-      } else {
-        // New item, add to cart with quantity 1
-        return [
-          ...prevCartItems,
-          {
-            id: productToAdd.id,
-            image: productToAdd.image,
-            name: productToAdd.name,
-            price: productToAdd.price,
-            quantity: 1,
-            serialNumber: productToAdd.serialNumber,
-          },
-        ];
-      }
-    });
+  const { data: storesData, isLoading: storesLoading } = useStoreInfoQuery(
+    businessId ?? "",
+    storeIds
+  );
 
-    // Decrement stock
-    setProducts((prevProducts) =>
-      prevProducts.map((p) =>
-        p.id === productToAdd.id ? { ...p, stock: p.stock - 1 } : p
-      )
-    );
-  }, []);
+  const stores = useMemo(() => {
+    if (!storesData?.data) return [];
+    return Array.isArray(storesData.data) ? storesData.data : [storesData.data];
+  }, [storesData]);
+
+  useEffect(() => {
+    if (
+      stores.length > 0 &&
+      !selectedStoreId &&
+      !storesLoading &&
+      isAuthenticated &&
+      !authLoading
+    ) {
+      setSelectedStoreId(stores[0].storeId);
+    }
+  }, [stores, storesLoading, isAuthenticated, authLoading, selectedStoreId]);
+
+  const addToCart = useCallback(
+    (productToAdd: {
+      id: string;
+      image: string;
+      serialNumber: string;
+      name: string;
+      price: number;
+    }) => {
+      setCartItems((prevCartItems) => {
+        const existingItemIndex = prevCartItems.findIndex(
+          (item) => item.id === productToAdd.id
+        );
+
+        if (existingItemIndex > -1) {
+          const updatedCartItems = [...prevCartItems];
+          updatedCartItems[existingItemIndex] = {
+            ...updatedCartItems[existingItemIndex],
+            quantity: updatedCartItems[existingItemIndex].quantity + 1,
+          };
+          return updatedCartItems;
+        } else {
+          return [
+            ...prevCartItems,
+            {
+              id: productToAdd.id,
+              image: productToAdd.image,
+              name: productToAdd.name,
+              price: productToAdd.price,
+              quantity: 1,
+              serialNumber: productToAdd.serialNumber,
+            },
+          ];
+        }
+      });
+    },
+    []
+  );
 
   const updateCartItemQuantity = useCallback(
     (productId: string, delta: number) => {
@@ -141,59 +101,29 @@ export default function POSInterface() {
             if (item.id === productId) {
               const newQuantity = item.quantity + delta;
               if (newQuantity <= 0) {
-                return null; // Mark for removal
+                return null;
               }
               return { ...item, quantity: newQuantity };
             }
             return item;
           })
-          .filter(Boolean) as typeof cartItems; // Filter out nulls
+          .filter(Boolean) as typeof cartItems;
 
         return updatedCartItems;
       });
-
-      // Update stock based on delta
-      setProducts((prevProducts) =>
-        prevProducts.map((p) =>
-          p.id === productId ? { ...p, stock: p.stock - delta } : p
-        )
-      );
     },
     []
   );
 
   const removeFromCart = useCallback((productId: string) => {
     setCartItems((prevCartItems) => {
-      const itemToRemove = prevCartItems.find((item) => item.id === productId);
-      if (itemToRemove) {
-        // Increment stock back
-        setProducts((prevProducts) =>
-          prevProducts.map((p) =>
-            p.id === productId
-              ? { ...p, stock: p.stock + itemToRemove.quantity }
-              : p
-          )
-        );
-      }
       return prevCartItems.filter((item) => item.id !== productId);
     });
   }, []);
 
-  const handleScan = useCallback(
-    (scannedSerialNumber: string) => {
-      const product = products.find(
-        (p) =>
-          p.serialNumber.toLowerCase() === scannedSerialNumber.toLowerCase() &&
-          p.stock > 0
-      );
-      if (product) {
-        addToCart(product);
-      } else {
-        alert("Product not found or out of stock!");
-      }
-    },
-    [products, addToCart]
-  );
+  const handleScan = useCallback((scannedSerialNumber: string) => {
+    alert(`Scanned: ${scannedSerialNumber}\n(Implement product lookup here)`);
+  }, []);
 
   const calculateTotalCartCost = useMemo(() => {
     return cartItems.reduce(
@@ -202,38 +132,69 @@ export default function POSInterface() {
     );
   }, [cartItems]);
 
+  const handleUpdatePrice = useCallback(
+    (productId: string, newPrice: number) => {
+      setCartItems((prevCartItems) =>
+        prevCartItems.map((item) =>
+          item.id === productId ? { ...item, price: newPrice } : item
+        )
+      );
+    },
+    []
+  );
+
   const handleCheckout = useCallback(() => {
     setIsCheckoutModalOpen(true);
   }, []);
 
-  const handlePaymentComplete = useCallback(() => {
-    // Here you would typically process the payment and clear the cart
-    setCartItems([]);
-    setIsCheckoutModalOpen(false);
-    alert("Payment successful! Cart cleared.");
-  }, []);
+  const handlePaymentComplete = useCallback(
+    (customerName: string) => {
+      if (cartItems.length > 0 && selectedStoreId) {
+        const submissionData = {
+          businessId,
+          storeId: selectedStoreId,
+          userId,
+          customerName, // ✅ ADDED: Customer name in submission
+          products: cartItems.map((item) => ({
+            productId: item.id,
+            serialNumber: item.serialNumber,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          totalAmount: calculateTotalCartCost,
+        };
+        console.log("🚀 SALE SUBMISSION:", submissionData);
+      }
+
+      setCartItems([]);
+      setIsCheckoutModalOpen(false);
+      alert("Payment successful! Cart cleared.");
+    },
+    [cartItems, selectedStoreId, businessId, userId, calculateTotalCartCost]
+  );
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-950">
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left Side: Product Table */}
         <div className="w-full md:w-3/5 p-4 md:p-6 border-r border-gray-200 dark:border-gray-800 overflow-auto">
-          <ProductTable onAddToCart={addToCart} />
+          <ProductTable
+            onAddToCart={addToCart}
+            selectedStoreId={selectedStoreId}
+            setSelectedStoreId={setSelectedStoreId}
+            stores={stores}
+            storesLoading={storesLoading}
+          />
         </div>
 
-        {/* Right Side: Customer Cart */}
         <div className="w-full md:w-2/5 p-4 md:p-6 flex flex-col bg-white dark:bg-gray-900 overflow-auto">
           <CustomerCart
             cartItems={cartItems}
             onScan={handleScan}
             onUpdateQuantity={updateCartItemQuantity}
             onRemoveItem={removeFromCart}
+            onUpdatePrice={handleUpdatePrice}
             totalCost={calculateTotalCartCost}
             onCheckout={handleCheckout}
-            availableStock={products.reduce(
-              (acc, p) => ({ ...acc, [p.id]: p.stock }),
-              {}
-            )}
           />
         </div>
       </div>
