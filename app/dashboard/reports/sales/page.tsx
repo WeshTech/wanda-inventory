@@ -1,10 +1,6 @@
 "use client";
 
-import { RevenueAreaChart } from "./revenue-line-chart";
-import { SalesBarChart } from "./sales-bar-chart";
-import { SalesCategoriesChart } from "./sales-category-chart";
 import { SalesDataTable } from "./sales-data-table";
-import { SalesStatsCards } from "./sales-stats-cards";
 
 export default function SalesReportPage() {
   return (
@@ -18,22 +14,6 @@ export default function SalesReportPage() {
           <p className="text-sm sm:text-base text-muted-foreground">
             Comprehensive overview of your sales performance and analytics
           </p>
-        </div>
-
-        {/* Statistics Cards */}
-        <SalesStatsCards />
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-1">
-            <SalesBarChart />
-          </div>
-          <div className="lg:col-span-1">
-            <RevenueAreaChart />
-          </div>
-          <div className="lg:col-span-1">
-            <SalesCategoriesChart />
-          </div>
         </div>
 
         {/* Sales Data Table */}

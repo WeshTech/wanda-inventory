@@ -11,22 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-
-interface SalesRecord {
-  invoiceNo: string;
-  store: string;
-  customerName: string;
-  totalAmount: number;
-  paymentStatus: "paid" | "credit";
-  paymentMethod: "mpesa" | "cash" | "card" | "other";
-  servedBy: string;
-  date: string;
-}
+import { SaleData } from "@/types/sales";
 
 interface DeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  record: SalesRecord | null;
+  record: SaleData | null;
 }
 
 export function DeleteDialog({
@@ -44,7 +34,7 @@ export function DeleteDialog({
     // Simulate API call
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("Deleted record:", record.invoiceNo);
+      console.log("Deleted record:", record.invoiceNumber);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to delete record:", error);
@@ -73,11 +63,11 @@ export function DeleteDialog({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="font-medium">Invoice:</span>
-              <span>{record.invoiceNo}</span>
+              <span>{record.invoiceNumber}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Customer:</span>
-              <span>{record.customerName}</span>
+              <span>{record.CustomerName}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Amount:</span>
@@ -85,7 +75,7 @@ export function DeleteDialog({
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Date:</span>
-              <span>{new Date(record.date).toLocaleDateString()}</span>
+              <span>{new Date(record.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
         </div>

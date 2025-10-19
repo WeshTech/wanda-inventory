@@ -63,3 +63,21 @@ export type CreateSaleFormData = {
   totalAmount: number;
   products: productData[];
 };
+
+// sale data type
+export type SaleData = {
+  saleId: string;
+  invoiceNumber: number;
+  store: string;
+  CustomerName: string;
+  servedBy: string;
+  totalAmount: number;
+  createdAt: string;
+};
+
+// get sales response type
+export type GetSalesResponse = {
+  success: boolean;
+  message: string;
+  data: SaleData[] | null;
+};

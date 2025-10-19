@@ -1,9 +1,11 @@
 import { createSaleApi } from "@/server/sales/create-sale";
+import { getAllSalesApi } from "@/server/sales/get-all-sales";
 import { getStoreSalesProductsApi } from "@/server/sales/get-sale-store-products";
 import { searchStoreSalesProductsApi } from "@/server/sales/search-sale-products";
 import {
   CreateSaleFormData,
   CreateSaleResponse,
+  GetSalesResponse,
   GetStoreSaleProductsResult,
   SearchStoreSaleProductsResponse,
 } from "@/types/sales";
@@ -52,3 +54,17 @@ export function useCreateSale() {
     mutationFn: createSaleApi,
   });
 }
+
+//get sales
+export const useGetAllSales = (
+  businessId: string,
+  storeId: string,
+  userId: string
+) => {
+  return useQuery<GetSalesResponse, Error>({
+    queryKey: ["getstoresales", businessId, storeId, userId],
+    queryFn: () => getAllSalesApi(businessId, storeId, userId),
+    enabled: !!(businessId && storeId && userId),
+    staleTime: 5 * 60 * 1000,
+  });
+};
