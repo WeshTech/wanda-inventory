@@ -1,10 +1,13 @@
+import { createSaleApi } from "@/server/sales/create-sale";
 import { getStoreSalesProductsApi } from "@/server/sales/get-sale-store-products";
 import { searchStoreSalesProductsApi } from "@/server/sales/search-sale-products";
 import {
+  CreateSaleFormData,
+  CreateSaleResponse,
   GetStoreSaleProductsResult,
   SearchStoreSaleProductsResponse,
 } from "@/types/sales";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 //get store sale products
 export const useStoreSalesProducts = (
@@ -42,3 +45,10 @@ export const useSearchStoreSalesProducts = (
     staleTime: 100,
   });
 };
+
+//create sale hook
+export function useCreateSale() {
+  return useMutation<CreateSaleResponse, Error, CreateSaleFormData>({
+    mutationFn: createSaleApi,
+  });
+}

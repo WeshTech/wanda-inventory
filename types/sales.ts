@@ -33,3 +33,33 @@ export type SearchStoreSaleProductsResponse = {
   message: string;
   data: SearchStoreSaleProduct[] | null;
 };
+
+// create sale response types
+export type CreateSaleResponseData = {
+  saleId: string;
+  totalAmount: number;
+  createdAt: string;
+};
+
+// create sale response
+export type CreateSaleResponse = {
+  success: boolean;
+  message: string;
+  data: CreateSaleResponseData | null;
+};
+
+export type productData = {
+  productId: string;
+  serialNumber?: string;
+  quantity: number;
+  price: number;
+};
+
+export type CreateSaleFormData = {
+  businessId: string;
+  storeId: string;
+  userId: string;
+  customerName: string;
+  totalAmount: number;
+  products: productData[];
+};

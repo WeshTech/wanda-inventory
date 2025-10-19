@@ -11,6 +11,10 @@ import {
   useAuthUser,
 } from "@/stores/authStore";
 import { useStoreInfoQuery } from "@/server-queries/storeQueries";
+import { CreateSaleFormData } from "@/types/sales";
+import { toast } from "react-hot-toast";
+import { toast as sonnerToast } from "sonner";
+import { useCreateSale } from "@/server-queries/salesQueries";
 
 export default function POSInterface() {
   const [cartItems, setCartItems] = useState<
@@ -26,9 +30,11 @@ export default function POSInterface() {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
 
+  const createSaleMutation = useCreateSale();
+
   const authLoading = useAuthStore((state) => state.isLoading);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const businessId = useAuthBusinessId();
+  const businessId = useAuthBusinessId() || "";
   const storeIds = useAuthStoreAccess();
   const user = useAuthUser();
   const userId = user?.userId ?? "";
@@ -122,7 +128,7 @@ export default function POSInterface() {
   }, []);
 
   const handleScan = useCallback((scannedSerialNumber: string) => {
-    alert(`Scanned: ${scannedSerialNumber}\n(Implement product lookup here)`);
+    toast(`Scanned: ${scannedSerialNumber}`);
   }, []);
 
   const calculateTotalCartCost = useMemo(() => {
@@ -149,28 +155,47 @@ export default function POSInterface() {
 
   const handlePaymentComplete = useCallback(
     (customerName: string) => {
-      if (cartItems.length > 0 && selectedStoreId) {
-        const submissionData = {
-          businessId,
-          storeId: selectedStoreId,
-          userId,
-          customerName, // ✅ ADDED: Customer name in submission
-          products: cartItems.map((item) => ({
-            productId: item.id,
-            serialNumber: item.serialNumber,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-          totalAmount: calculateTotalCartCost,
-        };
-        console.log("🚀 SALE SUBMISSION:", submissionData);
-      }
+      if (cartItems.length === 0 || !selectedStoreId) return;
 
-      setCartItems([]);
-      setIsCheckoutModalOpen(false);
-      alert("Payment successful! Cart cleared.");
+      const saleData: CreateSaleFormData = {
+        businessId,
+        storeId: selectedStoreId,
+        userId,
+        customerName,
+        totalAmount: calculateTotalCartCost,
+        products: cartItems.map((item) => ({
+          productId: item.id,
+          serialNumber: item.serialNumber,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      };
+
+      const loadingToast = sonnerToast.loading("Processing sale...");
+
+      createSaleMutation.mutate(saleData, {
+        onSuccess: (data) => {
+          sonnerToast.dismiss(loadingToast);
+          toast.success(data.message || "Sale processed successfully");
+
+          // ONLY CLOSE MODAL AND CLEAR CART ON SUCCESS
+          setCartItems([]);
+          setIsCheckoutModalOpen(false);
+        },
+        onError: (error) => {
+          sonnerToast.dismiss(loadingToast);
+          toast.error(error.message || "Failed to process sale");
+        },
+      });
     },
-    [cartItems, selectedStoreId, businessId, userId, calculateTotalCartCost]
+    [
+      cartItems,
+      selectedStoreId,
+      businessId,
+      userId,
+      calculateTotalCartCost,
+      createSaleMutation,
+    ]
   );
 
   return (
