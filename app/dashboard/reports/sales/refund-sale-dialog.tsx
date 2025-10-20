@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw } from "lucide-react";
 
 interface SalesRecord {
-  invoiceNo: string;
+  invoiceNo: string | number;
   store: string;
   customerName: string;
   totalAmount: number;
@@ -46,7 +46,6 @@ export function RefundDialog({
 
     setIsProcessing(true);
 
-    // Simulate API call
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log(
@@ -77,6 +76,22 @@ export function RefundDialog({
 
   if (!record) return null;
 
+  const formatKES = (amount: number) =>
+    new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: "KES",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+
+  const date = new Date(record.date);
+  const year = date.getFullYear();
+  const invoiceNoNum = parseInt(String(record.invoiceNo), 10);
+  const formattedInvoice =
+    !isNaN(invoiceNoNum) && typeof invoiceNoNum === "number"
+      ? `INV-${year}-${String(invoiceNoNum).padStart(3, "0")}`
+      : `INV-${year}-${record.invoiceNo}`;
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -95,7 +110,7 @@ export function RefundDialog({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="font-medium">Invoice:</span>
-              <span>{record.invoiceNo}</span>
+              <span>{formattedInvoice}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Customer:</span>
@@ -103,7 +118,7 @@ export function RefundDialog({
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Original Amount:</span>
-              <span>${record.totalAmount.toFixed(2)}</span>
+              <span>{formatKES(record.totalAmount)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Payment Method:</span>

@@ -65,6 +65,8 @@ import {
 import type { GetSalesResponse, SaleData } from "@/types/sales";
 import Loader from "@/components/ui/loading-spiner";
 import { useGetAllSales } from "@/server-queries/salesQueries";
+import { useStoreInfoQuery } from "@/server-queries/storeQueries";
+import { StoreInfo } from "@/types/stores";
 
 // Table interface for display
 interface TableSaleRecord {
@@ -75,6 +77,13 @@ interface TableSaleRecord {
   totalAmount: number;
   servedBy: string;
   date: string;
+}
+
+// Store option interface for dropdown
+interface StoreOption {
+  storeId: string;
+  storeName: string;
+  ward: string;
 }
 
 // Refund dialog interface
@@ -104,26 +113,53 @@ export function SalesDataTable() {
   const storeAccess = useAuthStoreAccess();
   const authLoading = useAuthStore(useShallow((state) => state.isLoading));
 
+  // Get store info using the hook
+  const { data: storesInfoQuery } = useStoreInfoQuery(businessId, storeAccess);
+
+  // Transform store data for dropdown
+  const storeOptions: StoreOption[] = useMemo(() => {
+    if (!storesInfoQuery?.data) return [];
+    const storesData = Array.isArray(storesInfoQuery.data)
+      ? storesInfoQuery.data
+      : [storesInfoQuery.data];
+    return storesData.map((store: StoreInfo) => ({
+      storeId: store.storeId,
+      storeName: store.storeName,
+      ward: store.ward,
+    }));
+  }, [storesInfoQuery]);
+
+  // Map storeId to store name for table display
+  const storeIdToNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    storeOptions.forEach((store) => {
+      map.set(store.storeId, store.storeName);
+    });
+    return map;
+  }, [storeOptions]);
+
   const storeToFetch = selectedStore === "all" ? storeAccess[0] : selectedStore;
   console.log({ businessId, storeToFetch, userId });
+
   const { data: salesDataQuery, isLoading } = useGetAllSales(
     businessId,
     storeToFetch,
     userId
   );
 
+  // Transform sales data to use store names
   const salesData: TableSaleRecord[] = useMemo(() => {
     const salesDataRaw = (salesDataQuery as GetSalesResponse)?.data || [];
     return salesDataRaw.map((sale) => ({
       saleId: sale.saleId,
       invoiceNo: sale.invoiceNumber.toString(),
-      store: sale.store,
+      store: storeIdToNameMap.get(sale.store) || sale.store, // Use store name
       customerName: sale.CustomerName,
       totalAmount: sale.totalAmount,
       servedBy: sale.servedBy,
       date: sale.createdAt,
     }));
-  }, [salesDataQuery]);
+  }, [salesDataQuery, storeIdToNameMap]);
 
   const columns = useMemo(
     () => [
@@ -137,11 +173,32 @@ export function SalesDataTable() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="font-medium text-center">
-            {row.getValue("invoiceNo")}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const dateVal = row.getValue("date") as string | Date | null;
+          const date = dateVal ? new Date(dateVal) : new Date();
+          const year = date.getFullYear();
+          const rawInvoice = row.getValue("invoiceNo") as
+            | string
+            | number
+            | null;
+          const seqNum =
+            typeof rawInvoice === "number"
+              ? rawInvoice
+              : rawInvoice
+              ? parseInt(rawInvoice, 10)
+              : NaN;
+
+          const isNumericSeq = !Number.isNaN(seqNum);
+
+          const seqStr = isNumericSeq
+            ? String(seqNum).padStart(3, "0")
+            : String(rawInvoice ?? "N/A");
+          const formattedInvoice = `INV-${year}-${seqStr}`;
+
+          return (
+            <div className="font-medium text-center">{formattedInvoice}</div>
+          );
+        },
       }),
       columnHelper.accessor("store", {
         header: ({ column }) => (
@@ -181,11 +238,18 @@ export function SalesDataTable() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="text-center">
-            ${row.getValue<number>("totalAmount").toFixed(2)}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const amount = row.getValue<number>("totalAmount") ?? 0;
+
+          const formatted = new Intl.NumberFormat("en-KE", {
+            style: "currency",
+            currency: "KES",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(amount);
+
+          return <div className="text-center">{formatted}</div>;
+        },
       }),
       columnHelper.accessor("servedBy", {
         header: ({ column }) => (
@@ -211,14 +275,16 @@ export function SalesDataTable() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="text-center">
-            {new Intl.DateTimeFormat("en-KE", {
-              dateStyle: "short",
-              timeZone: "Africa/Nairobi",
-            }).format(new Date(row.getValue("date")))}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const date = new Date(row.getValue("date"));
+          const formattedDate = new Intl.DateTimeFormat("en-KE", {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: "Africa/Nairobi",
+          }).format(date);
+
+          return <div className="text-center">{formattedDate}</div>;
+        },
       }),
       columnHelper.display({
         id: "actions",
@@ -238,44 +304,51 @@ export function SalesDataTable() {
                           `/dashboard/reports/sales/receipt/${record.saleId}`
                         )
                       }
+                      className="transition-colors hover:bg-green-100 hover:text-green-600"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>View</TooltipContent>
                 </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleUpdate(record)}
+                      className="transition-colors hover:bg-green-100 hover:text-green-600"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Update</TooltipContent>
                 </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRefund(record)}
+                      className="transition-colors hover:bg-yellow-100 hover:text-yellow-600"
                     >
-                      <RefreshCw className="h-4 w-4" />
+                      <RefreshCw className="h-4 w-4 text-yellow-500" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Refund</TooltipContent>
                 </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(record)}
+                      className="transition-colors hover:bg-red-100 hover:text-red-600"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Delete</TooltipContent>
@@ -338,13 +411,17 @@ export function SalesDataTable() {
     const refundRecord: RefundSalesRecord = {
       ...record,
       paymentStatus: "paid",
-      paymentMethod: "mpesa",
+      paymentMethod: "cash",
     };
     setSelectedRecordRefund(refundRecord);
     setRefundDialogOpen(true);
   };
 
-  const isLoadingData = authLoading || isLoading;
+  const handleStoreChange = (value: string) => {
+    setSelectedStore(value);
+  };
+
+  const isLoadingData = authLoading || isLoading || !storesInfoQuery;
 
   return (
     <>
@@ -368,15 +445,27 @@ export function SalesDataTable() {
             </div>
 
             <div className="flex w-full flex-wrap items-center justify-end gap-4">
-              <Select value={selectedStore} onValueChange={setSelectedStore}>
-                <SelectTrigger className="w-full md:w-[180px]">
+              <Select value={selectedStore} onValueChange={handleStoreChange}>
+                <SelectTrigger className="w-full md:w-[220px]">
                   <SelectValue placeholder="Filter by store" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Stores</SelectItem>
-                  {storeAccess.map((store) => (
-                    <SelectItem key={store} value={store}>
-                      {store}
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <span>All Stores</span>
+                      <span className="text-xs text-muted-foreground">
+                        View all locations
+                      </span>
+                    </div>
+                  </SelectItem>
+                  {storeOptions.map((store) => (
+                    <SelectItem key={store.storeId} value={store.storeId}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{store.storeName}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {store.ward}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -384,13 +473,14 @@ export function SalesDataTable() {
             </div>
           </div>
 
-          <div className="w-full overflow-x-auto">
+          {/* ✅ EXACT SAME RESPONSIVE STRUCTURE AS YOUR EXAMPLE */}
+          <div className="rounded-lg border shadow-sm overflow-x-auto max-w-[calc(100vw-2rem)] lg:max-w-full">
             <Table>
-              <TableHeader className="sticky top-0 bg-background z-10">
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className="text-center">
+                      <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -407,14 +497,38 @@ export function SalesDataTable() {
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
-                      className="h-24 text-center"
+                      className="h-24 text-center text-muted-foreground"
                     >
                       <Loader text="Loading sales data..." />
                     </TableCell>
                   </TableRow>
-                ) : table.getRowModel().rows.length ? (
+                ) : salesData.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-64 text-center text-muted-foreground"
+                    >
+                      <div className="flex flex-col items-center gap-4">
+                        <Avatar className="h-24 w-24">
+                          <AvatarImage src="/images/nostorefound.jpg" />
+                          <AvatarFallback>NS</AvatarFallback>
+                        </Avatar>
+                        <p className="text-lg font-medium">
+                          No sales found for this Store
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Create your first sale transaction or change store
+                          filter.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id} className="text-center">
                           {flexRender(
@@ -429,21 +543,32 @@ export function SalesDataTable() {
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
-                      className="h-24 flex items-center justify-center"
+                      className="h-64 text-center text-muted-foreground"
                     >
-                      <Avatar>
-                        <AvatarImage src="/images/nostorefound.jpg" />
-                        <AvatarFallback>NS</AvatarFallback>
-                      </Avatar>
+                      <div className="flex flex-col items-center gap-4">
+                        <Avatar className="h-24 w-24">
+                          <AvatarImage src="/images/nostorefound.jpg" />
+                          <AvatarFallback>NS</AvatarFallback>
+                        </Avatar>
+                        <p className="text-base font-medium">
+                          No sales match the applied filters
+                        </p>
+                        <Button
+                          onClick={() => setGlobalFilter("")}
+                          variant="outline"
+                        >
+                          <Search className="mr-2 h-4 w-4" />
+                          Clear Filters
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
-          <div className="mt-4">
-            <DataTablePagination table={table} />
-          </div>
+
+          <DataTablePagination table={table} />
         </CardContent>
       </Card>
 

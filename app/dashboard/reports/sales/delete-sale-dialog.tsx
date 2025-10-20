@@ -31,8 +31,8 @@ export function DeleteDialog({
 
     setIsDeleting(true);
 
-    // Simulate API call
     try {
+      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
       console.log("Deleted record:", record.invoiceNumber);
       onOpenChange(false);
@@ -45,6 +45,28 @@ export function DeleteDialog({
 
   if (!record) return null;
 
+  const formatKES = (amount: number) =>
+    new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: "KES",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+
+  const date = new Date(record.createdAt);
+  const year = date.getFullYear();
+  const invoiceNum = parseInt(String(record.invoiceNumber), 10);
+  const formattedInvoice =
+    !isNaN(invoiceNum) && typeof invoiceNum === "number"
+      ? `INV-${year}-${String(invoiceNum).padStart(3, "0")}`
+      : `INV-${year}-${record.invoiceNumber}`;
+
+  const formattedDate = new Intl.DateTimeFormat("en-KE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Africa/Nairobi",
+  }).format(date);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -55,7 +77,7 @@ export function DeleteDialog({
           </DialogTitle>
           <DialogDescription>
             Are you sure you want to delete this sales record? This action
-            cannot be undone.
+            <strong> cannot be undone</strong>.
           </DialogDescription>
         </DialogHeader>
 
@@ -63,7 +85,7 @@ export function DeleteDialog({
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="font-medium">Invoice:</span>
-              <span>{record.invoiceNumber}</span>
+              <span>{formattedInvoice}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Customer:</span>
@@ -71,11 +93,11 @@ export function DeleteDialog({
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Amount:</span>
-              <span>${record.totalAmount.toFixed(2)}</span>
+              <span>{formatKES(record.totalAmount)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Date:</span>
-              <span>{new Date(record.createdAt).toLocaleDateString()}</span>
+              <span>{formattedDate}</span>
             </div>
           </div>
         </div>
