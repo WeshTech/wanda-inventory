@@ -1,10 +1,12 @@
 import { createSaleApi } from "@/server/sales/create-sale";
 import { getAllSalesApi } from "@/server/sales/get-all-sales";
+import { getSaleByIdApi } from "@/server/sales/get-sale-by-id";
 import { getStoreSalesProductsApi } from "@/server/sales/get-sale-store-products";
 import { searchStoreSalesProductsApi } from "@/server/sales/search-sale-products";
 import {
   CreateSaleFormData,
   CreateSaleResponse,
+  GetSaleByIdResponse,
   GetSalesResponse,
   GetStoreSaleProductsResult,
   SearchStoreSaleProductsResponse,
@@ -65,6 +67,20 @@ export const useGetAllSales = (
     queryKey: ["getstoresales", businessId, storeId, userId],
     queryFn: () => getAllSalesApi(businessId, storeId, userId),
     enabled: !!(businessId && storeId && userId),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+//get sale by id
+export const useGetSaleById = (
+  businessId: string,
+  userId: string,
+  saleId: string
+) => {
+  return useQuery<GetSaleByIdResponse, Error>({
+    queryKey: ["getsalebyid", businessId, userId, saleId],
+    queryFn: () => getSaleByIdApi(businessId, userId, saleId),
+    enabled: !!(businessId && userId && saleId),
     staleTime: 5 * 60 * 1000,
   });
 };

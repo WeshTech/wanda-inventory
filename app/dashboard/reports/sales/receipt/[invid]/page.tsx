@@ -1,430 +1,438 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import {
-  Building2,
-  Printer,
-  Calendar,
-  User,
-  MapPin,
-  CreditCard,
-  CheckCircle,
-  Clock,
-  Send,
-} from "lucide-react";
-import toast from "react-hot-toast";
+import { Printer, Download } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useAuthBusinessId, useAuthUser } from "@/stores/authStore";
+import { useGetSaleById } from "@/server-queries/salesQueries";
+import { CreativeLoading } from "./invoiceLoading";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import InvoicePDFDocument from "@/components/CustomerInvoiceDocument";
 
-// CSS for layout and responsive design
 const styles = `
-  .invoice-fields {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .invoice-field {
-    flex: 1;
-    min-width: 120px;
-  }
-
-  /* Stack fields vertically on small screens */
-  @media (max-width: 768px) {
-    .invoice-fields {
-      flex-direction: column;
-      gap: 1rem;
-    }
-  }
-
-  /* Print styles */
   @media print {
     .no-print {
       display: none;
     }
-    .container {
-      padding: 0;
+    body {
       margin: 0;
+      padding: 0;
     }
-    .card {
-      box-shadow: none;
-      border: none;
+    .invoice-container {
+      padding: 20mm;
     }
-    .table {
-      width: 100%;
-    }
+  }
+
+  .invoice-container {
+    background: white;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 15mm;
+    font-family: 'Arial', sans-serif;
+  }
+
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+
+.invoice-table th {
+    background: #f5f5f5;
+    padding: 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    border-bottom: 2px solid #333;
+  }
+
+  .invoice-table td {
+    padding: 8px 10px;
+    font-size: 10px;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .invoice-table tbody tr:last-child td {
+    border-bottom: 2px solid #333;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+  }
+
+  .info-item {
+    font-size: 10px;
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 2px;
+  }
+
+  .info-value {
+    color: #000;
+  }
+
+  .totals-section {
+    margin-top: 20px;
+    margin-left: auto;
+    width: 300px;
+  }
+
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 10px;
+  }
+
+  .totals-row.final {
+    border-top: 2px solid #333;
+    padding-top: 10px;
+    margin-top: 5px;
+    font-weight: bold;
+    font-size: 12px;
+  }
+
+  .text-right {
+    text-align: right;
   }
 `;
 
-interface InvoiceItem {
-  productCode: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-interface InvoiceData {
-  invoiceNo: string;
-  store: string;
-  customerName: string;
-  totalAmount: number;
-  paymentStatus: "paid" | "pending" | "overdue";
-  paymentMethod: "cash" | "mpesa" | "card" | "other";
-  servedBy: string;
-  date: string;
-  items: InvoiceItem[];
-}
-
 export default function CustomerInvoicePage() {
-  const [email, setEmail] = useState("");
-  const [isEmailSending, setIsEmailSending] = useState(false);
+  const params = useParams();
+  const { invid } = params;
 
-  // Sample invoice data
-  const invoiceData: InvoiceData = {
-    invoiceNo: "INV-2025-010",
-    store: "Main Branch",
-    customerName: "Mia King",
-    totalAmount: 1800.0,
-    paymentStatus: "paid",
-    paymentMethod: "cash",
-    servedBy: "Emma Clark",
-    date: "2025-09-09",
-    items: [
-      {
-        productCode: "8901030895029",
-        productName: "Samsung Galaxy Earbuds Pro",
-        quantity: 1,
-        unitPrice: 850.0,
-        total: 850.0,
-      },
-      {
-        productCode: "8901030895036",
-        productName: "Wireless Charging Pad",
-        quantity: 2,
-        unitPrice: 475.0,
-        total: 950.0,
-      },
-    ],
-  };
+  const businessId = useAuthBusinessId();
+  const user = useAuthUser();
+  const userId = user?.userId ?? "";
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const isAuthLoading = !user || !businessId;
+  const isAuthError = !user || !businessId;
 
-  const handleEmailSend = async () => {
-    if (!email) {
-      toast.error(`Email required`);
-      return;
-    }
+  const {
+    data: saleResponse,
+    isLoading: isDataLoading,
+    error,
+    isError,
+  } = useGetSaleById(businessId || "", userId, invid as string);
 
-    setIsEmailSending(true);
+  const isLoading = isDataLoading || isAuthLoading;
+  const hasError = isError || isAuthError;
 
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+  const invoiceData =
+    !isLoading && !hasError && saleResponse?.success
+      ? (() => {
+          const dateValue =
+            saleResponse.data?.createdAt ||
+            new Date().toISOString().split("T")[0];
+          const year = new Date(dateValue).getFullYear();
 
-      toast.success(`Sent`);
+          return {
+            invoiceNo: `INV-${year}-${saleResponse.data?.invoiceNumber
+              ?.toString()
+              .padStart(4, "0")}`,
+            store: saleResponse.data?.store || "Main Branch",
+            customerName: saleResponse.data?.customerName || "Customer",
+            totalAmount: saleResponse.data?.totalAmount || 0,
+            paymentStatus: "PAID",
+            paymentMethod: "CASH",
+            servedBy: saleResponse.data?.servedBy || "Staff",
+            date: dateValue,
+            items: saleResponse.data?.items || [],
+          };
+        })()
+      : null;
 
-      setEmail("");
-    } catch (error) {
-      toast.error(`Operation failed: ${error}`);
-    } finally {
-      setIsEmailSending(false);
-    }
-  };
+  const errorMessage = isAuthError
+    ? "Please log in to view this invoice"
+    : error?.message || "Error loading invoice";
 
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case "paid":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "overdue":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  const handlePrint = () => window.print();
 
-  const getPaymentMethodColor = (method: string) => {
-    switch (method) {
-      case "mpesa":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "cash":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "card":
-        return "bg-purple-100 text-purple-800 border-blue-200";
-      case "other":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  const subtotal = invoiceData?.totalAmount || 0;
+  const taxRate = 0.0;
+  const taxAmount = subtotal * taxRate;
+  const total = subtotal + taxAmount;
 
-  const getPaymentStatusIcon = (status: string) => {
-    switch (status) {
-      case "paid":
-        return <CheckCircle className="h-4 w-4" />;
-      case "pending":
-        return <Clock className="h-4 w-4" />;
-      case "overdue":
-        return <Clock className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <CreativeLoading
+          message={
+            isAuthLoading
+              ? "Checking your session..."
+              : "Preparing your Invoice"
+          }
+          subMessage={
+            isAuthLoading
+              ? "Just a moment while we verify your access..."
+              : "Just a moment while we get everything ready"
+          }
+          size="lg"
+          showDocument={true}
+          showParticles={true}
+        />
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="container mx-auto px-6 py-12 text-center">
+        <div className="text-red-500 mb-4">
+          <p className="text-lg font-semibold">Error loading invoice</p>
+          <p className="text-sm mt-2">{errorMessage}</p>
+        </div>
+        <Button onClick={() => window.location.reload()} className="mt-4">
+          Retry
+        </Button>
+        {isAuthError && (
+          <p className="text-sm text-muted-foreground mt-2">
+            <a href="/login" className="underline hover:no-underline">
+              Click here to login
+            </a>
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (!invoiceData) {
+    return (
+      <div className="container mx-auto px-6 py-12 text-center">
+        <p className="text-muted-foreground">Invoice not found</p>
+        <Button
+          onClick={() => window.history.back()}
+          variant="link"
+          className="mt-2"
+        >
+          Go Back
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
       <style>{styles}</style>
-      <div className="bg-background print:bg-white">
-        {/* Action Bar - Hidden in print */}
-        <div className="bg-card border-b no-print">
+      <div className="bg-gray-50 min-h-screen">
+        {/* Action Bar */}
+        <div className="bg-white border-b no-print sticky top-0 z-10">
           <div className="container mx-auto px-6 py-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Label htmlFor="email" className="text-sm font-medium">
-                  Send to Email:
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="customer@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-64"
-                />
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleEmailSend}
-                  disabled={isEmailSending}
-                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            <div className="flex gap-3">
+              <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Invoice
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <PDFDownloadLink
+                  document={<InvoicePDFDocument saleData={invoiceData} />}
+                  fileName={`${invoiceData.invoiceNo}.pdf`}
                 >
-                  <Send className="h-4 w-4 mr-2" />
-                  {isEmailSending ? "Sending..." : "Send Email"}
-                </Button>
-                <Button
-                  onClick={handlePrint}
-                  variant="outline"
-                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent"
-                >
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print Invoice
-                </Button>
-              </div>
+                  {({ loading }) => (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      {loading ? "Preparing PDF..." : "Download PDF"}
+                    </>
+                  )}
+                </PDFDownloadLink>
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* Invoice Content */}
-        <div className="container mx-auto px-6 py-4 print:px-0 print:py-2">
-          <div className="max-w-4xl mx-auto">
-            {/* Header Section */}
-            <div className="text-center mb-6">
-              <div className="flex justify-center mb-3">
-                <Avatar className="h-16 w-16 border-2 border-primary">
-                  <AvatarImage src="/modern-business-logo-with-tc-letters.jpg" />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                    TC
-                  </AvatarFallback>
-                </Avatar>
+        {/* Invoice Document */}
+        <div className="invoice-container">
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: "30px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "10px",
+              }}
+            >
+              <Avatar className="h-16 w-16">
+                <AvatarImage src="/modern-business-logo-with-tc-letters.jpg" />
+                <AvatarFallback
+                  style={{ fontSize: "20px", fontWeight: "bold" }}
+                >
+                  TC
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <h1
+              style={{ fontSize: "20px", fontWeight: "bold", margin: "5px 0" }}
+            >
+              TechCorp Solutions Ltd
+            </h1>
+            <p style={{ fontSize: "10px", color: "#666" }}>
+              Professional Technology Services
+            </p>
+            <p style={{ fontSize: "9px", color: "#666", marginTop: "5px" }}>
+              contact@techcorp.co.ke | +254 XXX XXX XXX
+            </p>
+          </div>
+
+          <hr
+            style={{
+              border: "none",
+              borderTop: "2px solid #333",
+              margin: "20px 0",
+            }}
+          />
+
+          {/* Invoice Title */}
+          <div style={{ textAlign: "center", margin: "20px 0" }}>
+            <h2
+              style={{
+                fontSize: "16px",
+                fontWeight: "bold",
+                letterSpacing: "1px",
+              }}
+            >
+              CUSTOMER INVOICE
+            </h2>
+          </div>
+
+          {/* Invoice Information Grid */}
+          <div className="info-grid">
+            <div className="info-item">
+              <div className="info-label">Invoice Number:</div>
+              <div className="info-value">{invoiceData.invoiceNo}</div>
+            </div>
+            <div className="info-item">
+              <div className="info-label">Date:</div>
+              <div className="info-value">
+                {new Date(invoiceData.date).toLocaleDateString("en-KE", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
               </div>
-              <h1 className="text-2xl font-bold text-foreground">
-                TechCorp Solutions Ltd
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Professional Technology Services
-              </p>
             </div>
-
-            {/* Invoice Details Card */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-xl text-center text-foreground">
-                  Customer Invoice
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="invoice-fields">
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Invoice Number
-                    </Label>
-                    <p className="text-base flex items-center gap-1">
-                      {invoiceData.invoiceNo}
-                    </p>
-                  </div>
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Customer Name
-                    </Label>
-                    <p className="text-base flex items-center gap-1">
-                      <User className="h-4 w-4 text-primary" />
-                      {invoiceData.customerName}
-                    </p>
-                  </div>
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Store Location
-                    </Label>
-                    <p className="text-base flex items-center gap-1">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      {invoiceData.store}
-                    </p>
-                  </div>
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Date
-                    </Label>
-                    <p className="text-base flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      {new Date(invoiceData.date).toLocaleDateString("en-KE", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Payment Status
-                    </Label>
-                    <Badge
-                      className={`${getPaymentStatusColor(
-                        invoiceData.paymentStatus
-                      )} flex items-center gap-1 w-fit`}
-                    >
-                      {getPaymentStatusIcon(invoiceData.paymentStatus)}
-                      {invoiceData.paymentStatus.toUpperCase()}
-                    </Badge>
-                  </div>
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Payment Method
-                    </Label>
-                    <Badge
-                      className={`${getPaymentMethodColor(
-                        invoiceData.paymentMethod
-                      )} flex items-center gap-1 w-fit`}
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      {invoiceData.paymentMethod.toUpperCase()}
-                    </Badge>
-                  </div>
-                  <div className="invoice-field">
-                    <Label className="text-xs font-semibold text-muted-foreground">
-                      Served By
-                    </Label>
-                    <p className="text-base flex items-center gap-1">
-                      <Building2 className="h-4 w-4 text-primary" />
-                      {invoiceData.servedBy}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Items Table */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg text-foreground">
-                  Purchase Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full table">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="text-left p-3 font-semibold text-sm">
-                          Product Code
-                        </th>
-                        <th className="text-left p-3 font-semibold text-sm">
-                          Product Name
-                        </th>
-                        <th className="text-center p-3 font-semibold text-sm">
-                          Quantity
-                        </th>
-                        <th className="text-right p-3 font-semibold text-sm">
-                          Unit Price (KSh)
-                        </th>
-                        <th className="text-right p-3 font-semibold text-sm">
-                          Total (KSh)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoiceData.items.map((item, index) => (
-                        <tr key={index} className="border-b hover:bg-muted/50">
-                          <td className="p-3 font-mono text-sm">
-                            {item.productCode}
-                          </td>
-                          <td className="p-3 text-sm">{item.productName}</td>
-                          <td className="p-3 text-center text-sm">
-                            {item.quantity}
-                          </td>
-                          <td className="p-3 text-right text-sm">
-                            {item.unitPrice.toLocaleString("en-KE", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </td>
-                          <td className="p-3 text-right font-semibold text-sm">
-                            {item.total.toLocaleString("en-KE", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Total Section */}
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex justify-end">
-                  <div className="w-full max-w-sm">
-                    <Separator className="mb-3" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-foreground">
-                        TOTAL AMOUNT:
-                      </span>
-                      <span className="text-xl font-bold text-secondary">
-                        KSh{" "}
-                        {invoiceData.totalAmount.toLocaleString("en-KE", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 text-right">
-                      *Amount in Kenyan Shillings (KSh)
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Footer */}
-            <div className="text-center text-muted-foreground">
-              <p className="text-sm">Thank you for your business!</p>
-              <p className="text-xs mt-1">
-                For any inquiries, please contact us at contact@techcorp.co.ke
-              </p>
+            <div className="info-item">
+              <div className="info-label">Customer Name:</div>
+              <div className="info-value">{invoiceData.customerName}</div>
             </div>
+            <div className="info-item">
+              <div className="info-label">Store Location:</div>
+              <div className="info-value">{invoiceData.store}</div>
+            </div>
+            <div className="info-item">
+              <div className="info-label">Payment Status:</div>
+              <div className="info-value">{invoiceData.paymentStatus}</div>
+            </div>
+            <div className="info-item">
+              <div className="info-label">Payment Method:</div>
+              <div className="info-value">{invoiceData.paymentMethod}</div>
+            </div>
+            <div className="info-item">
+              <div className="info-label">Served By:</div>
+              <div className="info-value">{invoiceData.servedBy}</div>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <table className="invoice-table">
+            <thead>
+              <tr>
+                <th>Product Code</th>
+                <th>Product Name</th>
+                <th className="text-right">Qty</th>
+                <th className="text-right">Unit Price (KSh)</th>
+                <th className="text-right">Total (KSh)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoiceData.items.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.productCode}</td>
+                  <td>{item.productName || "N/A"}</td>
+                  <td className="text-right">{item.quantity}</td>
+                  <td className="text-right">
+                    {item.price.toLocaleString("en-KE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                  <td className="text-right" style={{ fontWeight: "600" }}>
+                    {item.total.toLocaleString("en-KE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Totals Section */}
+          <div className="totals-section">
+            <div className="totals-row">
+              <span>Subtotal:</span>
+              <span>
+                KSh{" "}
+                {subtotal.toLocaleString("en-KE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="totals-row">
+              <span>Tax (0.00%):</span>
+              <span>
+                KSh{" "}
+                {taxAmount.toLocaleString("en-KE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="totals-row final">
+              <span>TOTAL:</span>
+              <span>
+                KSh{" "}
+                {total.toLocaleString("en-KE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            style={{
+              marginTop: "40px",
+              textAlign: "center",
+              fontSize: "9px",
+              color: "#666",
+            }}
+          >
+            <p style={{ marginBottom: "5px" }}>Thank you for your business!</p>
+            <p>
+              For any inquiries, please contact us at contact@techcorp.co.ke
+            </p>
+            <p style={{ marginTop: "15px", fontSize: "8px" }}>
+              This is a computer-generated invoice and does not require a
+              signature.
+            </p>
           </div>
         </div>
       </div>

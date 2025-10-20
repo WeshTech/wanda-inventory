@@ -81,3 +81,30 @@ export type GetSalesResponse = {
   message: string;
   data: SaleData[] | null;
 };
+
+//sale item type
+export type SaleItem = {
+  productCode: string;
+  productName: string | null;
+  quantity: number;
+  price: number;
+  total: number;
+};
+
+// sale detail data type
+export type SaleDetailData = {
+  invoiceNumber: number;
+  store: string;
+  customerName: string;
+  servedBy: string;
+  totalAmount: number;
+  createdAt: string;
+  items: SaleItem[];
+};
+
+// get sale by id response type
+export type GetSaleByIdResponse = {
+  success: boolean;
+  message: string;
+  data: SaleDetailData | null;
+};
