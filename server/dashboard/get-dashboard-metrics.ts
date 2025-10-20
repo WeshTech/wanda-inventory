@@ -4,8 +4,8 @@ import { AxiosError } from "axios";
 
 export const getDashboardMetricsApi = async (
   businessId: string,
-  storeId?: string | null,
-  monthsBack?: number | null
+  storeId?: string,
+  monthsBack?: number
 ): Promise<DashboardMetricsResponse> => {
   try {
     console.log("Fetching dashboard metrics for:", {

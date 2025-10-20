@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import AppAreaChart from "@/components/dashboard/AppAreaChart";
 import AppBarChart from "@/components/dashboard/AppBarChart";
 import Cards from "@/components/dashboard/Cards";
@@ -12,8 +15,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BarChart3, RefreshCw, Download, Calendar, Store } from "lucide-react";
+import { useAuthBusinessId, useAuthStoreAccess } from "@/stores/authStore";
+import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 
 const HomePage = () => {
+  const businessId = useAuthBusinessId() || "";
+  const storeIds = useAuthStoreAccess();
+  const { data: storesResponse } = useStoreInfoQuery(businessId, storeIds);
+  const stores = Array.isArray(storesResponse?.data)
+    ? storesResponse?.data
+    : storesResponse?.data
+    ? [storesResponse.data]
+    : [];
+  const [selectedStore, setSelectedStore] = useState<string | undefined>();
+  const [selectedPeriod, setSelectedPeriod] = useState<number>();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border/50">
@@ -37,29 +53,41 @@ const HomePage = () => {
             <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
               {/* Filter Controls */}
               <div className="flex flex-col lg:flex-row xs:flex-row gap-2 lg:gap-3">
-                <Select defaultValue="all">
+                <Select value={selectedStore} onValueChange={setSelectedStore}>
                   <SelectTrigger className="w-full xs:w-[150px] lg:w-[180px] bg-background/50 border-border/50">
                     <Store className="w-4 h-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Store" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Stores</SelectItem>
-                    <SelectItem value="store1">Main Store</SelectItem>
-                    <SelectItem value="store2">Warehouse A</SelectItem>
-                    <SelectItem value="store3">Warehouse B</SelectItem>
+                    {stores.map((store) => (
+                      <SelectItem key={store.storeId} value={store.storeId}>
+                        {store.storeName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select defaultValue="monthly">
+                <Select
+                  value={
+                    selectedPeriod !== undefined
+                      ? String(selectedPeriod)
+                      : undefined
+                  }
+                  onValueChange={(value) =>
+                    setSelectedPeriod(value ? Number(value) : undefined)
+                  }
+                >
                   <SelectTrigger className="w-full xs:w-[150px] lg:w-[180px] bg-background/50 border-border/50">
                     <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Period" />
                   </SelectTrigger>
+
                   <SelectContent>
-                    <SelectItem value="daily">Last 7 Days</SelectItem>
-                    <SelectItem value="weekly">Last 4 Weeks</SelectItem>
-                    <SelectItem value="monthly">Last 6 Months</SelectItem>
-                    <SelectItem value="yearly">Last 2 Years</SelectItem>
+                    <SelectItem value="1">Last 1 Month</SelectItem>
+                    <SelectItem value="2">Last 2 Months</SelectItem>
+                    <SelectItem value="3">Last 3 Months</SelectItem>
+                    <SelectItem value="4">Last 4 Months</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -101,7 +129,12 @@ const HomePage = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <Cards />
+            <Cards
+              selectedStore={
+                selectedStore === "all" ? undefined : selectedStore
+              }
+              selectedPeriod={selectedPeriod}
+            />
           </div>
         </section>
 

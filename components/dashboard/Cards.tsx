@@ -9,10 +9,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DollarSign, Package, ShoppingCart, Warehouse } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton"; // Make sure you have shadcn/ui Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { useDashboardMetrics } from "@/server-queries/dashboardQueries";
 import { ToKenyanShillings } from "@/utils/toKenyanShillings";
+
+// Props interface - optional props
+interface DashboardCardsProps {
+  selectedStore?: string | null;
+  selectedPeriod?: number | null;
+}
 
 // Skeleton Card Component
 function SkeletonCard() {
@@ -33,7 +39,7 @@ function SkeletonCard() {
   );
 }
 
-// Metric Card Component (same as yours)
+// Metric Card Component
 interface MetricCardProps {
   title: string;
   value: string;
@@ -76,14 +82,21 @@ function MetricCard({
   );
 }
 
-export default function DashboardCards() {
+export default function DashboardCards({
+  selectedStore,
+  selectedPeriod,
+}: DashboardCardsProps) {
   const businessId = useAuthBusinessId() || "";
+
+  // Pass null if undefined
+  const storeIdForQuery = selectedStore ?? undefined;
+  const periodForQuery = selectedPeriod ?? undefined;
 
   const {
     data: metricsResponse,
     isLoading,
     error,
-  } = useDashboardMetrics(businessId);
+  } = useDashboardMetrics(businessId, storeIdForQuery, periodForQuery);
 
   // Auth loading state
   const { isLoading: authLoading } = useAuthStore();
@@ -91,15 +104,13 @@ export default function DashboardCards() {
   // Combined loading state
   const isLoadingState = authLoading || isLoading;
 
-  // Format metrics data or use fallback
   const metrics = useMemo(() => {
-    if (!metricsResponse?.success || !metricsResponse.data) {
-      // Return fallback metrics if no data
+    if (!metricsResponse?.data || !metricsResponse.success) {
       return [
         {
           title: "Total Revenue",
-          value: "$0.00",
-          description: "Revenue this month",
+          value: "KSh 0",
+          description: getPeriodDescription(selectedPeriod),
           icon: <DollarSign className="h-4 w-4 text-green-600" />,
           trend: { value: "0%", isPositive: false },
           gradient: "bg-gradient-to-br from-green-500 to-emerald-600",
@@ -107,7 +118,7 @@ export default function DashboardCards() {
         {
           title: "Total Sales",
           value: "0",
-          description: "Sales this month",
+          description: getPeriodDescription(selectedPeriod),
           icon: <ShoppingCart className="h-4 w-4 text-blue-600" />,
           trend: { value: "0%", isPositive: false },
           gradient: "bg-gradient-to-br from-blue-500 to-indigo-600",
@@ -134,27 +145,31 @@ export default function DashboardCards() {
     const { totalRevenue, totalSales, totalProducts, lowStockProducts } =
       metricsResponse.data;
 
-    // Simple trend calculations (you can enhance this with actual historical data)
+    const safeRevenue = totalRevenue ?? 0;
+    const safeSales = totalSales ?? 0;
+    const safeProducts = totalProducts ?? 0;
+    const safeLowStock = lowStockProducts ?? 0;
+
     return [
       {
         title: "Total Revenue",
-        value: `${ToKenyanShillings(totalRevenue)}`,
-        description: "Revenue this month",
+        value: `${ToKenyanShillings(safeRevenue)}`,
+        description: getPeriodDescription(selectedPeriod),
         icon: <DollarSign className="h-4 w-4 text-green-600" />,
-        trend: { value: "+12.5%", isPositive: true }, // Replace with real trend data
+        trend: { value: "+12.5%", isPositive: true },
         gradient: "bg-gradient-to-br from-green-500 to-emerald-600",
       },
       {
         title: "Total Sales",
-        value: ToKenyanShillings(totalSales),
-        description: "Sales this month",
+        value: ToKenyanShillings(safeSales),
+        description: getPeriodDescription(selectedPeriod),
         icon: <ShoppingCart className="h-4 w-4 text-blue-600" />,
         trend: { value: "+8.3%", isPositive: true },
         gradient: "bg-gradient-to-br from-blue-500 to-indigo-600",
       },
       {
         title: "Total Products",
-        value: totalProducts.toLocaleString(),
+        value: safeProducts.toLocaleString(),
         description: "Products in inventory",
         icon: <Package className="h-4 w-4 text-purple-600" />,
         trend: { value: "+2.1%", isPositive: true },
@@ -162,16 +177,20 @@ export default function DashboardCards() {
       },
       {
         title: "Low Stock Products",
-        value: lowStockProducts.toLocaleString(),
+        value: safeLowStock.toLocaleString(),
         description: "Items need restocking",
         icon: <Warehouse className="h-4 w-4 text-red-600" />,
         trend: { value: "-5.2%", isPositive: false },
         gradient: "bg-gradient-to-br from-red-500 to-pink-600",
       },
     ];
-  }, [metricsResponse]);
+  }, [metricsResponse, selectedPeriod]);
 
-  // Error state
+  function getPeriodDescription(period: number | undefined | null): string {
+    if (!period) return "Revenue this month";
+    return `Revenue last ${period} month${period !== 1 ? "s" : ""}`;
+  }
+
   if (error) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 col-span-full">
@@ -198,12 +217,10 @@ export default function DashboardCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 col-span-full">
       {isLoadingState
-        ? // Show skeletons while loading
-          Array(4)
+        ? Array(4)
             .fill(0)
             .map((_, index) => <SkeletonCard key={index} />)
-        : // Show actual metrics
-          metrics.map((metric, index) => (
+        : metrics.map((metric, index) => (
             <MetricCard
               key={index}
               title={metric.title}
