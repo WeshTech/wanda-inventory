@@ -16,14 +16,10 @@ import { BarChart3, RefreshCw, Download, Calendar, Store } from "lucide-react";
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Header Section - Sticky with backdrop blur */}
-      {/* Responsive version that switches at lg breakpoint */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border/50">
         <div className="container mx-auto px-4 lg:px-6 py-3 lg:py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-6">
-            {/* Title Section */}
             <div className="flex items-center space-x-2 lg:space-x-3">
-              {/* Icon container with responsive sizing */}
               <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg lg:rounded-xl flex items-center justify-center shadow-lg">
                 <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
               </div>
