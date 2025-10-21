@@ -27,3 +27,21 @@ export type MonthlyComparisonResponse = {
   message: string;
   data: MonthlyComparison[] | null;
 };
+
+//recent sales type
+export type RecentSalesData = {
+  invoiceNumber: number;
+  customerName: string;
+  sellingPrice: number;
+  saleDate: string;
+  productName: string;
+  paymentMethod: string;
+  status: string;
+};
+
+//recent sales response type
+export type RecentSalesResponse = {
+  success: boolean;
+  message: string;
+  data: RecentSalesData[] | null;
+};

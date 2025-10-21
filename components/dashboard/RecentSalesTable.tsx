@@ -8,15 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -25,103 +16,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
+
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useGetRecentSalesData } from "@/server-queries/dashboardQueries";
+import { RecentSalesData } from "@/types/dashboard";
+import Loader from "../ui/loading-spiner";
 import {
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Download,
-  RefreshCw,
-  TrendingUp,
-} from "lucide-react";
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthUser,
+} from "@/stores/authStore";
 
-interface Sale {
-  id: string;
-  date: string;
-  customer: string;
-  product: string;
-  amount: number;
-  status: "completed" | "pending" | "cancelled";
-  paymentMethod: string;
-}
-
-const salesData: Sale[] = [
-  {
-    id: "INV-001",
-    date: "2024-01-15",
-    customer: "John Doe",
-    product: "Wireless Headphones",
-    amount: 299.99,
-    status: "completed",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "INV-002",
-    date: "2024-01-15",
-    customer: "Sarah Johnson",
-    product: "Smartphone Case",
-    amount: 49.99,
-    status: "pending",
-    paymentMethod: "PayPal",
-  },
-  {
-    id: "INV-003",
-    date: "2024-01-14",
-    customer: "Mike Wilson",
-    product: "Bluetooth Speaker",
-    amount: 159.99,
-    status: "completed",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "INV-004",
-    date: "2024-01-14",
-    customer: "Emily Davis",
-    product: "Laptop Stand",
-    amount: 89.99,
-    status: "cancelled",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    id: "INV-005",
-    date: "2024-01-13",
-    customer: "David Brown",
-    product: "Wireless Mouse",
-    amount: 79.99,
-    status: "completed",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "INV-006",
-    date: "2024-01-13",
-    customer: "Lisa Anderson",
-    product: "USB-C Hub",
-    amount: 129.99,
-    status: "pending",
-    paymentMethod: "PayPal",
-  },
-  {
-    id: "INV-007",
-    date: "2024-01-12",
-    customer: "Robert Taylor",
-    product: "Webcam HD",
-    amount: 199.99,
-    status: "completed",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "INV-008",
-    date: "2024-01-12",
-    customer: "Jennifer White",
-    product: "Keyboard Mechanical",
-    amount: 149.99,
-    status: "completed",
-    paymentMethod: "Bank Transfer",
-  },
-];
-
-const getStatusBadge = (status: Sale["status"]) => {
-  switch (status) {
+const getStatusBadge = (status: string) => {
+  switch (status.toLowerCase()) {
     case "completed":
       return (
         <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
@@ -161,9 +71,24 @@ const formatDate = (dateString: string) => {
 };
 
 export default function RecentSalesTable() {
-  const totalSales = salesData.reduce((sum, sale) => sum + sale.amount, 0);
+  const router = useRouter();
+  const businessId = useAuthBusinessId() || "";
+  const user = useAuthUser() || "";
+  const userId = typeof user === "object" && user !== null ? user.userId : "";
+  const isAuthLoading = useAuthStore((state) => state.isLoading);
+
+  const { data: salesResponse, isLoading: isSalesLoading } =
+    useGetRecentSalesData(businessId, userId);
+
+  const isLoading = isAuthLoading || isSalesLoading;
+  const salesData: RecentSalesData[] = salesResponse?.data || [];
+
+  const totalSales = salesData.reduce(
+    (sum, sale) => sum + sale.sellingPrice,
+    0
+  );
   const completedSales = salesData.filter(
-    (sale) => sale.status === "completed"
+    (sale) => (sale.status || "").toLowerCase() === "completed"
   ).length;
 
   return (
@@ -191,84 +116,70 @@ export default function RecentSalesTable() {
       </CardHeader>
       <CardContent>
         <div className="rounded-lg border border-border/50 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/50">
-                <TableHead className="font-semibold">Invoice ID</TableHead>
-                <TableHead className="font-semibold">Date</TableHead>
-                <TableHead className="font-semibold">Customer</TableHead>
-                <TableHead className="font-semibold">Product</TableHead>
-                <TableHead className="font-semibold">Amount</TableHead>
-                <TableHead className="font-semibold">Payment</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold text-right">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {salesData.map((sale) => (
-                <TableRow
-                  key={sale.id}
-                  className="hover:bg-muted/30 transition-colors duration-200"
-                >
-                  <TableCell className="font-medium text-primary">
-                    {sale.id}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDate(sale.date)}
-                  </TableCell>
-                  <TableCell className="font-medium">{sale.customer}</TableCell>
-                  <TableCell>{sale.product}</TableCell>
-                  <TableCell className="font-semibold">
-                    {formatCurrency(sale.amount)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {sale.paymentMethod}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(sale.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-muted/50"
-                        >
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Sale
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Download className="mr-2 h-4 w-4" />
-                          Download Invoice
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Refund Order
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Sale
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader text="Loading sales" />
+            </div>
+          ) : salesData.length === 0 ? (
+            <div className="flex flex-col justify-center items-center h-64 space-y-4">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src="/images/nostorefound.jpg" alt="No sales" />
+                <AvatarFallback>No Sales</AvatarFallback>
+              </Avatar>
+              <p className="text-muted-foreground text-center">
+                No sale data found, make your first sale
+              </p>
+              <Button
+                onClick={() => router.push("/dashboard/makesale")}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Make a Sale
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/50">
+                  <TableHead className="font-semibold">Invoice ID</TableHead>
+                  <TableHead className="font-semibold">Date</TableHead>
+                  <TableHead className="font-semibold">Customer</TableHead>
+                  <TableHead className="font-semibold">Product</TableHead>
+                  <TableHead className="font-semibold">Amount</TableHead>
+                  <TableHead className="font-semibold">Payment</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {salesData.map((sale) => (
+                  <TableRow
+                    key={sale.invoiceNumber}
+                    className="hover:bg-muted/30 transition-colors duration-200"
+                  >
+                    <TableCell className="font-medium text-primary">
+                      {`INV-${new Date(sale.saleDate).getFullYear()}-${String(
+                        sale.invoiceNumber
+                      ).padStart(4, "0")}`}
+                    </TableCell>
+
+                    <TableCell className="text-muted-foreground">
+                      {formatDate(sale.saleDate)}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {sale.customerName}
+                    </TableCell>
+                    <TableCell>{sale.productName}</TableCell>
+                    <TableCell className="font-semibold">
+                      {formatCurrency(sale.sellingPrice)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {sale.paymentMethod}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       </CardContent>
     </Card>
