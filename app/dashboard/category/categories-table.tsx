@@ -9,15 +9,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  Plus,
-  Upload,
-  Download,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Plus, Upload, Download, Search, Edit, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,14 +21,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -47,6 +31,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AddCategoryDialog } from "./add-category-dialog";
 import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
@@ -92,56 +82,66 @@ const columns: ColumnDef<GetCategoryData>[] = [
       const category = row.original;
 
       return (
-        <AlertDialog>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() =>
-                  navigator.clipboard.writeText(category.categoryId)
-                }
-              >
-                Copy Category ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex items-center gap-2">
-                <Edit className="h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                  <Trash2 className="h-4 w-4" /> Delete
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                category &quot;{category.name}&quot; and remove its data from
-                our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() =>
-                  console.log(`Deleting category: ${category.categoryId}`)
-                }
-                className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled
+                  className="h-8 w-8 disabled:cursor-not-allowed"
+                  onClick={() =>
+                    console.log(`Editing category: ${category.categoryId}`)
+                  }
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="sr-only">Edit</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit Category</TooltipContent>
+            </Tooltip>
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled
+                      className="h-8 w-8 disabled:cursor-not-allowed text-red-600 dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Delete Category</TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the category &quot;{category.name}&quot; and remove its data
+                    from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      console.log(`Deleting category: ${category.categoryId}`)
+                    }
+                    className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </TooltipProvider>
+        </div>
       );
     },
   },
@@ -204,7 +204,8 @@ export function CategoriesTable() {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
+            disabled
+            className="flex-1 sm:flex-none min-w-[100px] bg-transparent dasabled:cursor-not-allowed"
             onClick={handleImport}
           >
             <Upload className="mr-2 h-4 w-4" />
@@ -213,7 +214,8 @@ export function CategoriesTable() {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none min-w-[100px] bg-transparent"
+            disabled
+            className="flex-1 sm:flex-none min-w-[100px] bg-transparent dasabled:cursor-not-allowed"
             onClick={handleExport}
           >
             <Download className="mr-2 h-4 w-4" />

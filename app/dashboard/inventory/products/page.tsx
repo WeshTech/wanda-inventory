@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/form";
 import { ComboBox } from "@/components/ui/combobox";
 import toast from "react-hot-toast";
-import { useAuthBusinessId } from "@/stores/authStore";
 import { useBusinessSuppliersQuery } from "@/server-queries/supplierQueries";
 import { useGetBusinessStores } from "@/server-queries/storeQueries";
 import { useStoreCategories } from "@/server-queries/storeCategoryQueries";
@@ -50,6 +49,7 @@ import {
   useFindProductByBarcode,
 } from "@/server-queries/inventoryQueries";
 import { CreateBusinessProductResponse } from "@/types/inventory";
+import { useAuthBusinessId } from "@/stores/authStore";
 
 // Define types
 export type FoundAtType = "catalogue" | "business";
@@ -72,7 +72,7 @@ export default function AddInventoryPage() {
   const businessId = useAuthBusinessId() ?? "";
 
   const { data: suppliersData } = useBusinessSuppliersQuery(businessId);
-  const { data: storesQuery } = useGetBusinessStores();
+  const { data: storesQuery } = useGetBusinessStores(businessId);
   const { data: categoriesData } = useStoreCategories(businessId);
 
   const suppliers = suppliersData?.data || [];

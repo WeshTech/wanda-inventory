@@ -39,8 +39,9 @@ export function AddCategoryDialog({
   onOpenChange,
 }: AddCategoryDialogProps) {
   const { isLoading: authLoading } = useAuthStore();
-  const businessId = useAuthBusinessId();
-  const { data: storesData, isLoading: storesLoading } = useGetBusinessStores();
+  const businessId = useAuthBusinessId() || "";
+  const { data: storesData, isLoading: storesLoading } =
+    useGetBusinessStores(businessId);
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
