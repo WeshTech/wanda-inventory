@@ -1,5 +1,9 @@
+import { getChartDataAPI } from "@/server/dashboard/get-chart-data";
 import { getDashboardMetricsApi } from "@/server/dashboard/get-dashboard-metrics";
-import { DashboardMetricsResponse } from "@/types/dashboard";
+import {
+  DashboardMetricsResponse,
+  MonthlyComparisonResponse,
+} from "@/types/dashboard";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
 //* Dashboard Metrics Query */
@@ -13,5 +17,15 @@ export const useDashboardMetrics = (
     queryFn: () => getDashboardMetricsApi(businessId, storeId, monthsBack),
     enabled: !!businessId,
     staleTime: 3600 * 1000 * 60 * 2,
+  });
+};
+
+//* Chart Data Query */
+export const useGetChartData = (businessId: string, userId: string) => {
+  return useQuery<MonthlyComparisonResponse>({
+    queryKey: ["getdashboardchartdata", businessId, userId],
+    queryFn: () => getChartDataAPI(businessId, userId),
+    enabled: !!businessId && !!userId,
+    staleTime: 2,
   });
 };

@@ -15,20 +15,45 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BarChart3, RefreshCw, Download, Calendar, Store } from "lucide-react";
-import { useAuthBusinessId, useAuthStoreAccess } from "@/stores/authStore";
+import {
+  useAuthBusinessId,
+  useAuthStoreAccess,
+  useAuthUser,
+} from "@/stores/authStore";
 import { useStoreInfoQuery } from "@/server-queries/storeQueries";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useGetChartData } from "@/server-queries/dashboardQueries";
 
 const HomePage = () => {
   const businessId = useAuthBusinessId() || "";
+  const user = useAuthUser();
+  const userId = user?.userId || "";
   const storeIds = useAuthStoreAccess();
+
   const { data: storesResponse } = useStoreInfoQuery(businessId, storeIds);
   const stores = Array.isArray(storesResponse?.data)
     ? storesResponse?.data
     : storesResponse?.data
     ? [storesResponse.data]
     : [];
+
   const [selectedStore, setSelectedStore] = useState<string | undefined>();
   const [selectedPeriod, setSelectedPeriod] = useState<number>();
+
+  // Fetch chart data
+  const {
+    data: chartDataResponse,
+    isLoading: isChartLoading,
+    isError: isChartError,
+    error: chartError,
+    refetch: refetchChartData,
+  } = useGetChartData(businessId, userId);
+
+  const chartData = chartDataResponse?.data || [];
+
+  const handleRefresh = () => {
+    refetchChartData();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -98,8 +123,14 @@ const HomePage = () => {
                   variant="outline"
                   size="sm"
                   className="flex-1 lg:flex-none bg-background/50 hover:bg-background/70"
+                  onClick={handleRefresh}
+                  disabled={isChartLoading}
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
+                  <RefreshCw
+                    className={`w-4 h-4 mr-2 ${
+                      isChartLoading ? "animate-spin" : ""
+                    }`}
+                  />
                   <span className="hidden xs:inline lg:flex">Refresh</span>
                 </Button>
                 <Button
@@ -118,6 +149,16 @@ const HomePage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8">
+        {/* Error Alert */}
+        {isChartError && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              {chartError?.message ||
+                "Failed to load chart data. Please try again."}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Metrics Cards Section */}
         <section>
           <div className="mb-3 sm:mb-4">
@@ -151,13 +192,13 @@ const HomePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card className="bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-sm border-0 shadow-sm sm:shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="p-4 sm:p-6">
-                <AppBarChart />
+                <AppBarChart data={chartData} isLoading={isChartLoading} />
               </div>
             </Card>
 
             <Card className="bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-sm border-0 shadow-sm sm:shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="p-4 sm:p-6">
-                <AppAreaChart />
+                <AppAreaChart data={chartData} isLoading={isChartLoading} />
               </div>
             </Card>
           </div>

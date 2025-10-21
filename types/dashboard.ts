@@ -12,3 +12,18 @@ export type DashboardMetricsResponse = {
   message: string;
   data: DashboardMetrics | null;
 };
+
+// Monthly comparison metrics
+export type MonthlyComparison = {
+  month: string;
+  monthName: string;
+  revenue: number;
+  sales: number;
+};
+
+// Reusable API response pattern
+export type MonthlyComparisonResponse = {
+  success: boolean;
+  message: string;
+  data: MonthlyComparison[] | null;
+};
