@@ -53,24 +53,20 @@ export default function StoresPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const businessId = useAuthBusinessId() ?? "";
 
-  // Fetch stores data using TanStack Query
   const {
     data: storesData,
     isLoading: queryLoading,
     error: queryError,
-  } = useGetBusinessStores();
+  } = useGetBusinessStores(businessId);
 
-  // Handle auth state
   const { isLoading: authLoading, isAuthenticated } = useAuthStore();
-  const businessId = useAuthBusinessId() ?? "";
 
-  // Sync local loading state with query and auth
   useEffect(() => {
     setLoading(authLoading || queryLoading);
   }, [authLoading, queryLoading]);
 
-  // Sync error state
   useEffect(() => {
     if (queryError) {
       setError(queryError.message);
@@ -81,45 +77,51 @@ export default function StoresPage() {
     }
   }, [queryError, storesData]);
 
-  // Early return for auth loading or unauthenticated state
-  if (authLoading || !isAuthenticated || !businessId) {
+  if (loading || !isAuthenticated || !businessId) {
     return <StoresPageSkeleton />;
   }
 
-  // Filter stores based on search query
-  const filteredStores = storesData?.success
-    ? storesData.data.stores.filter(
-        (store) =>
-          store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          store.ward.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
+  const filteredStores =
+    storesData?.success && storesData.data?.stores
+      ? storesData.data.stores.filter(
+          (store) =>
+            store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            store.ward.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : [];
 
-  // Check if user has no stores at all (empty search and no stores)
   const hasNoStoresAtAll =
     storesData?.success &&
+    storesData.data?.stores &&
     storesData.data.stores.length === 0 &&
     searchQuery === "";
 
-  // Check if filters don't match any stores (search applied but no results)
   const hasFilteredResults =
     storesData?.success &&
+    storesData.data?.stores &&
     storesData.data.stores.length > 0 &&
     filteredStores.length === 0;
 
-  // Calculate stats from API data
-  const totalSales = storesData?.success
-    ? `KES ${storesData.data.totalSales.toLocaleString()}`
-    : "KES 0";
-  const totalStores = storesData?.success ? storesData.data.totalStores : 0;
-  const openStores = storesData?.success
-    ? storesData.data.stores.filter((store) => store.status === "OPENED").length
-    : 0;
-  const closedStores = storesData?.success
-    ? storesData.data.stores.filter((store) => store.status === "CLOSED").length
-    : 0;
+  const totalSales =
+    storesData?.success && storesData.data
+      ? `KES ${storesData.data.totalSales.toLocaleString()}`
+      : "KES 0";
+  const totalStores =
+    storesData?.success && storesData.data ? storesData.data.totalStores : 0;
+  const openStores =
+    storesData?.success && storesData.data?.stores
+      ? storesData.data.stores.filter((store) => store.status === "OPENED")
+          .length
+      : 0;
+  const closedStores =
+    storesData?.success && storesData.data?.stores
+      ? storesData.data.stores.filter((store) => store.status === "CLOSED")
+          .length
+      : 0;
   const topStore =
-    storesData?.success && storesData.data.stores.length > 0
+    storesData?.success &&
+    storesData.data?.stores &&
+    storesData.data.stores.length > 0
       ? storesData.data.stores.reduce((prev, current) =>
           (prev?.sales || 0) > (current.sales || 0) ? prev : current
         )?.name || "No stores"
@@ -131,13 +133,6 @@ export default function StoresPage() {
     startIndex,
     startIndex + itemsPerPage
   );
-
-  // Handle loading state
-  if (loading) {
-    return <StoresPageSkeleton />;
-  }
-
-  // Handle error state
   if (error || !storesData?.success) {
     return (
       <div className="min-h-screen bg-background p-6 bg-gradient-to-br from-red-500/10 via-background to-secondary/10 flex items-center justify-center">
@@ -167,7 +162,6 @@ export default function StoresPage() {
     );
   }
 
-  // Handle no stores created at all - show NoStoresFoundPage
   if (hasNoStoresAtAll) {
     return <NoStoresFoundPage />;
   }
@@ -235,7 +229,7 @@ export default function StoresPage() {
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setCurrentPage(1); // Reset to first page when searching
+                  setCurrentPage(1);
                 }}
                 className="pl-10"
               />
@@ -298,7 +292,7 @@ export default function StoresPage() {
                   key={store.id}
                   className="border border-border bg-card rounded-lg overflow-hidden"
                 >
-                  <CardHeader className="bg-muted/50 p-4  rounded-t-lg m-0">
+                  <CardHeader className="bg-muted/50 p-4 rounded-t-lg m-0">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 bg-primary/10">
@@ -343,7 +337,6 @@ export default function StoresPage() {
                     </div>
                   </CardHeader>
 
-                  {/* Body */}
                   <CardContent className="pt-4 px-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>

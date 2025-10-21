@@ -28,9 +28,6 @@ export type GetBusinessStoresResponse = {
   data: BusinessStoresData | null;
 };
 
-// Union type for queries
-export type GetStoresResult = GetBusinessStoresResponse;
-
 // Response when creating a new store
 export interface CreateStoreResponse {
   success: boolean;

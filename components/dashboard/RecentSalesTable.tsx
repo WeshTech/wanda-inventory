@@ -29,6 +29,7 @@ import {
   useAuthStore,
   useAuthUser,
 } from "@/stores/authStore";
+import { ToKenyanShillings } from "@/utils/toKenyanShillings";
 
 const getStatusBadge = (status: string) => {
   switch (status.toLowerCase()) {
@@ -53,13 +54,6 @@ const getStatusBadge = (status: string) => {
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
-};
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
 };
 
 const formatDate = (dateString: string) => {
@@ -109,7 +103,7 @@ export default function RecentSalesTable() {
               <span className="font-medium">{completedSales} completed</span>
             </div>
             <div className="text-primary font-medium">
-              Total: {formatCurrency(totalSales)}
+              Total: {ToKenyanShillings(totalSales)}
             </div>
           </div>
         </div>
@@ -169,7 +163,7 @@ export default function RecentSalesTable() {
                     </TableCell>
                     <TableCell>{sale.productName}</TableCell>
                     <TableCell className="font-semibold">
-                      {formatCurrency(sale.sellingPrice)}
+                      {ToKenyanShillings(sale.sellingPrice)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {sale.paymentMethod}

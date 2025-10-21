@@ -2,7 +2,7 @@ import { CreateStoreFormData } from "@/schemas/stores/createStoreSchema";
 import { createStoreApi } from "@/server/stores/createStore";
 import { getStoreInfoApi } from "@/server/stores/get-stores-info";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
-import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/authStore";
 import {
   CreateStoreResponse,
   GetBusinessStoresResponse,
@@ -17,12 +17,11 @@ import {
 } from "@tanstack/react-query";
 
 //* Get all the stores
-export const useGetBusinessStores = () => {
+export const useGetBusinessStores = (businessId: string) => {
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const businessId = useAuthBusinessId() ?? "";
   return useQuery<GetBusinessStoresResponse, Error>({
     queryKey: ["getbusinessStores", businessId],
-    queryFn: getBusinessStores,
+    queryFn: () => getBusinessStores(businessId),
     enabled: !authLoading && isAuthenticated && !!businessId,
     staleTime: 60 * 60 * 1000 * 10,
   });
