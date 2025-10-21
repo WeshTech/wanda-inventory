@@ -53,7 +53,7 @@ export function InvitesTable() {
     isLoading: queryLoading,
     isFetching,
     error,
-  } = useInvitedBusinessUsers(businessId ?? "");
+  } = useInvitedBusinessUsers(businessId);
 
   const [globalFilter, setGlobalFilter] = useState("");
 
