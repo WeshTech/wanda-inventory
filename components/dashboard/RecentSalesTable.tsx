@@ -88,7 +88,7 @@ export default function RecentSalesTable() {
     0
   );
   const completedSales = salesData.filter(
-    (sale) => (sale.status || "").toLowerCase() === "completed"
+    (sale) => (sale.status || "").toLowerCase() === "paid"
   ).length;
 
   return (
