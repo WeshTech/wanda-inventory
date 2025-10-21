@@ -34,10 +34,10 @@ export const useCreateBusinessRole = (businessId?: string) => {
 };
 
 //query to get all business roles
-export const useGetBusinessRoles = (businessId?: string) => {
+export const useGetBusinessRoles = (businessId: string) => {
   return useQuery<BusinessRolesResponse, Error>({
     queryKey: ["getBusinessRoles", businessId],
-    queryFn: getBusinessRoles,
+    queryFn: () => getBusinessRoles(businessId),
     enabled: !!businessId,
     staleTime: 60 * 60 * 1000 * 10,
   });

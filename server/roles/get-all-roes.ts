@@ -1,36 +1,19 @@
-import { useAuthStore } from "@/stores/authStore";
 import { BusinessRolesResponse } from "@/types/roles";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
-export const getBusinessRoles = async (): Promise<BusinessRolesResponse> => {
-  const { isLoading } = useAuthStore.getState();
-  const businessId = useAuthBusinessId() ?? "";
-
-  if (!businessId) {
-    if (isLoading) {
-      return {
-        success: false,
-        message: "Authenticating user, please wait...",
-        data: null,
-      };
-    }
-    return {
-      success: false,
-      message: "You must be logged in to extract roles",
-      data: null,
-    };
-  }
-
+export const getBusinessRoles = async (
+  businessId: string
+): Promise<BusinessRolesResponse> => {
   try {
     const response = await axiosApi.get<BusinessRolesResponse>(
       `/roles/business/${businessId}`
     );
 
-    if (response.status === 200 && response.data) {
+    if (response.data.success) {
       return {
         success: true,
-        message: response.data.message,
+        message: response.data.message || "Roles fetched successfully",
         data: response.data.data,
       };
     }
