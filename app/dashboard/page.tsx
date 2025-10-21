@@ -51,6 +51,10 @@ const HomePage = () => {
 
   const chartData = chartDataResponse?.data || [];
 
+  // Combined loading state: auth + chart loading
+  const isAuthLoading = !userId || !businessId || storeIds.length === 0;
+  const isDashboardLoading = isAuthLoading || isChartLoading;
+
   const handleRefresh = () => {
     refetchChartData();
   };
@@ -74,7 +78,7 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Controls Section - switches to row layout on desktop */}
+            {/* Controls Section */}
             <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
               {/* Filter Controls */}
               <div className="flex flex-col lg:flex-row xs:flex-row gap-2 lg:gap-3">
@@ -124,11 +128,11 @@ const HomePage = () => {
                   size="sm"
                   className="flex-1 lg:flex-none bg-background/50 hover:bg-background/70"
                   onClick={handleRefresh}
-                  disabled={isChartLoading}
+                  disabled={isDashboardLoading}
                 >
                   <RefreshCw
                     className={`w-4 h-4 mr-2 ${
-                      isChartLoading ? "animate-spin" : ""
+                      isDashboardLoading ? "animate-spin" : ""
                     }`}
                   />
                   <span className="hidden xs:inline lg:flex">Refresh</span>
@@ -192,13 +196,13 @@ const HomePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card className="bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-sm border-0 shadow-sm sm:shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="p-4 sm:p-6">
-                <AppBarChart data={chartData} isLoading={isChartLoading} />
+                <AppBarChart data={chartData} isLoading={isDashboardLoading} />
               </div>
             </Card>
 
             <Card className="bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-sm border-0 shadow-sm sm:shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="p-4 sm:p-6">
-                <AppAreaChart data={chartData} isLoading={isChartLoading} />
+                <AppAreaChart data={chartData} isLoading={isDashboardLoading} />
               </div>
             </Card>
           </div>
