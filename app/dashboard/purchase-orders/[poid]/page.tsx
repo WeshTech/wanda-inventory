@@ -1,274 +1,345 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useParams } from "next/navigation";
+import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer as Print } from "lucide-react";
+import { ArrowLeft, Download, Printer } from "lucide-react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import Link from "next/link";
-
-// Mock data - replace with actual data fetching
-const mockPurchaseOrder = {
-  id: "PO-2024-001",
-  supplier: "ABC Supplies Ltd",
-  store: "Main Warehouse",
-  status: "approved" as const,
-  dateCreated: "2024-01-15",
-  dateExpected: "2024-01-25",
-  createdBy: "John Smith",
-  products: [
-    {
-      barcode: "1234567890123",
-      name: "Premium Coffee Beans - Arabica",
-      quantity: 50,
-      price: 12.99,
-    },
-    {
-      barcode: "2345678901234",
-      name: "Organic Green Tea Bags",
-      quantity: 100,
-      price: 8.5,
-    },
-    {
-      barcode: "3456789012345",
-      name: "Stainless Steel Water Bottles",
-      quantity: 25,
-      price: 24.99,
-    },
-    {
-      barcode: "4567890123456",
-      name: "Bamboo Cutting Boards",
-      quantity: 15,
-      price: 18.75,
-    },
-    // Add more mock products to reach or exceed 20 for demonstration
-    ...Array.from({ length: 20 }, (_, i) => ({
-      barcode: `999${i}000${i}1234`,
-      name: `Product ${i + 5}`,
-      quantity: 10 + i,
-      price: 10 + i * 2.5,
-    })),
-  ],
-};
+import { cn } from "@/lib/utils";
+import { usePurchaseOrderDetail } from "@/server-queries/purchaseorderQueries";
+import PurchaseOrderPDFDocument from "@/components/PurchaseOrderDocument";
+import Image from "next/image";
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case "pending":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
-    case "approved":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-    case "shipped":
-      return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
-    case "delivered":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
-    case "cancelled":
-      return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
-  }
+  const map: Record<string, string> = {
+    DRAFT: "bg-gray-200 text-gray-700",
+    SUBMITTED: "bg-yellow-100 text-yellow-700",
+    APPROVED: "bg-blue-100 text-blue-700",
+    REJECTED: "bg-red-100 text-red-700",
+    RECEIVED: "bg-green-100 text-green-700",
+    PARTIAL: "bg-purple-100 text-purple-700",
+    CANCELLED: "bg-red-200 text-red-800",
+    CLOSED: "bg-gray-300 text-gray-800",
+  };
+  return map[status] ?? "bg-gray-100 text-gray-700";
 };
 
-export default function PurchaseOrderInvoice() {
-  const subtotal = mockPurchaseOrder.products
-    .slice(0, 20)
-    .reduce((sum, product) => sum + product.quantity * product.price, 0);
-  const tax = subtotal * 0.1; // 10% tax
-  const total = subtotal + tax;
+const companyInfo = {
+  name: "TechCorp Solutions Ltd",
+  tagline: "Procurement & Supply Chain Excellence",
+  email: "contact@techcorp.co.ke",
+  phone: "+254 XXX XXX XXX",
+  logoUrl: "/images/logo.png",
+};
 
-  const handlePrint = () => {
-    window.print();
+export default function PurchaseOrderDetailPage() {
+  const poid = useParams()?.poid as string;
+  const businessId = useAuthBusinessId() ?? "";
+  const isAuthLoading = useAuthStore((state) => state.isLoading);
+
+  const {
+    data: poResponse,
+    isLoading: isPOLoading,
+    isError,
+  } = usePurchaseOrderDetail(businessId, poid);
+
+  const loading = isAuthLoading || isPOLoading;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <p className="text-gray-600 text-sm font-helvetica">
+          Loading Purchase Order...
+        </p>
+      </div>
+    );
+  }
+
+  if (isError || !poResponse?.data) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-white">
+        <p className="text-gray-700 mb-4 font-helvetica text-sm">
+          Failed to load Purchase Order.
+        </p>
+        <Link href="/purchase-orders">
+          <Button
+            variant="outline"
+            className="font-helvetica text-sm border-gray-400 hover:bg-gray-100"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Purchase Orders
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const purchaseOrder = poResponse.data;
+  const products = purchaseOrder.products || [];
+  const subtotal = products.reduce(
+    (sum, item) => sum + item.quantity * item.price,
+    0
+  );
+  const currency = "KSh";
+  const locale = "en-KE";
+
+  const formatCurrency = (amount: number) =>
+    amount.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  const formatDate = (dateString: string | Date | null) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString(locale, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
+  const handlePrint = () => window.print();
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white p-8 md:p-10 font-helvetica print:p-0 mb-6">
+      <div className="max-w-3xl mx-auto bg-white print:shadow-none">
         {/* Header Actions */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/">
-            <Button variant="outline" size="sm">
+        <div className="flex items-center justify-between mb-8 print:hidden">
+          <Link href="/dashboard/purchase-orders">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-400 text-gray-700 hover:bg-gray-100 font-helvetica text-sm"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Purchase Orders
+              Back
             </Button>
           </Link>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Download PDF
+            <Button
+              asChild
+              variant="outline"
+              className="border-gray-400 text-gray-700 hover:bg-primary font-helvetica text-sm"
+            >
+              <PDFDownloadLink
+                document={
+                  <PurchaseOrderPDFDocument orderData={purchaseOrder} />
+                }
+                fileName={`PurchaseOrder-${purchaseOrder.orderNumber}.pdf`}
+              >
+                {({ loading }) => (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    {loading ? "Preparing PDF..." : "Download PDF"}
+                  </>
+                )}
+              </PDFDownloadLink>
             </Button>
-            <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Print className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="border-gray-400 text-gray-700 hover:bg-gray-100 font-helvetica text-sm"
+            >
+              <Printer className="h-4 w-4 mr-2" />
               Print
             </Button>
           </div>
         </div>
 
-        {/* Invoice Card */}
-        <Card className="bg-white dark:bg-gray-900 shadow-lg">
-          <CardHeader className="pb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  Purchase Order
-                </h1>
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                  {mockPurchaseOrder.id}
-                </p>
-              </div>
-              <Badge className={getStatusColor(mockPurchaseOrder.status)}>
-                {mockPurchaseOrder.status.charAt(0).toUpperCase() +
-                  mockPurchaseOrder.status.slice(1)}
-              </Badge>
+        {/* Header */}
+        <div className="text-center mb-6">
+          {companyInfo.logoUrl && (
+            <Image
+              src={companyInfo.logoUrl}
+              alt="Company Logo"
+              className="w-16 h-16 mx-auto mb-2"
+              width={64}
+              height={64}
+            />
+          )}
+          <h1 className="text-xl font-bold text-gray-900">
+            {companyInfo.name}
+          </h1>
+          {companyInfo.tagline && (
+            <p className="text-xs text-gray-600 mt-1">{companyInfo.tagline}</p>
+          )}
+          {(companyInfo.email || companyInfo.phone) && (
+            <p className="text-xs text-gray-600 mt-1">
+              {[companyInfo.email, companyInfo.phone]
+                .filter(Boolean)
+                .join(" | ")}
+            </p>
+          )}
+        </div>
+
+        <Separator className="border-gray-800 border-t-2 my-6" />
+
+        {/* Title and Status */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+            Purchase Order
+          </h2>
+          <Badge
+            className={cn(
+              "uppercase text-xs font-semibold",
+              getStatusColor(purchaseOrder.status)
+            )}
+          >
+            {purchaseOrder.status}
+          </Badge>
+        </div>
+
+        {/* Order Details */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">
+              Order Number
+            </p>
+            <p className="text-sm text-gray-900">{purchaseOrder.orderNumber}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">
+              Supplier
+            </p>
+            <p className="text-sm text-gray-900">
+              {purchaseOrder.supplier || "N/A"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">Store</p>
+            <p className="text-sm text-gray-900">
+              {purchaseOrder.store || "N/A"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">Status</p>
+            <p className="text-sm text-gray-900">{purchaseOrder.status}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">
+              Expected Date
+            </p>
+            <p className="text-sm text-gray-900">
+              {formatDate(purchaseOrder.dateExpected)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">
+              Date Created
+            </p>
+            <p className="text-sm text-gray-900">
+              {formatDate(purchaseOrder.dateCreated)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">
+              Created By
+            </p>
+            <p className="text-sm text-gray-900">{purchaseOrder.createdBy}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-600 uppercase">
+              Auto Generated
+            </p>
+            <p className="text-sm text-gray-900">
+              {purchaseOrder.autoGenerated ? "Yes" : "No"}
+            </p>
+          </div>
+        </div>
+
+        <Separator className="border-gray-300 my-6" />
+
+        {/* Products Table */}
+        <div className="mb-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Products</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100 border-b-2 border-gray-800">
+                  <th className="py-2 px-3 text-center text-xs font-bold uppercase text-gray-600 w-[20%]">
+                    Product ID
+                  </th>
+                  <th className="py-2 px-3 text-center text-xs font-bold uppercase text-gray-600 w-[40%]">
+                    Product Name
+                  </th>
+                  <th className="py-2 px-3 text-center text-xs font-bold uppercase text-gray-600 w-[13%]">
+                    Qty
+                  </th>
+                  <th className="py-2 px-3 text-center text-xs font-bold uppercase text-gray-600 w-[13%]">
+                    Unit Price ({currency})
+                  </th>
+                  <th className="py-2 px-3 text-center text-xs font-bold uppercase text-gray-600 w-[14%]">
+                    Total ({currency})
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((item, i) => (
+                  <tr
+                    key={i}
+                    className={cn(
+                      "border-b",
+                      i === products.length - 1
+                        ? "border-gray-800 border-b-2"
+                        : "border-gray-200"
+                    )}
+                  >
+                    <td className="py-2 px-3 text-sm text-gray-900 text-center font-mono">
+                      {item.barcode || item.businessProductId}
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-900 text-center">
+                      {item.productName || "N/A"}
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-900 text-center">
+                      {item.quantity}
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-900 text-center">
+                      {formatCurrency(item.price)}
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-900 text-center font-semibold">
+                      {formatCurrency(item.quantity * item.price)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Totals */}
+        <div className="flex justify-end mb-8">
+          <div className="w-full max-w-xs space-y-2">
+            <Separator className="border-gray-800 border-t-2" />
+            <div className="flex justify-between text-sm font-bold">
+              <span className="text-gray-900">Total Order Value:</span>
+              <span className="text-gray-900">
+                {currency} {formatCurrency(subtotal)}
+              </span>
             </div>
-          </CardHeader>
+          </div>
+        </div>
 
-          <CardContent className="space-y-8">
-            {/* Purchase Order Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Supplier
-                  </h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    {mockPurchaseOrder.supplier}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Store
-                  </h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    {mockPurchaseOrder.store}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Date Created
-                  </h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    {new Date(
-                      mockPurchaseOrder.dateCreated
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Date Expected
-                  </h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    {new Date(
-                      mockPurchaseOrder.dateExpected
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Created By
-                  </h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    {mockPurchaseOrder.createdBy}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Products Table */}
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Products
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        Barcode
-                      </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        Product Name
-                      </th>
-                      <th className="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        Quantity
-                      </th>
-                      <th className="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        Unit Price
-                      </th>
-                      <th className="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockPurchaseOrder.products
-                      .slice(0, 20)
-                      .map((product, index) => (
-                        <tr
-                          key={index}
-                          className="border-b border-gray-100 dark:border-gray-800"
-                        >
-                          <td className="py-4 px-4 text-gray-600 dark:text-gray-400 font-mono text-sm">
-                            {product.barcode}
-                          </td>
-                          <td className="py-4 px-4 text-gray-900 dark:text-gray-100 font-medium">
-                            {product.name}
-                          </td>
-                          <td className="py-4 px-4 text-right text-gray-900 dark:text-gray-100">
-                            {product.quantity}
-                          </td>
-                          <td className="py-4 px-4 text-right text-gray-900 dark:text-gray-100">
-                            ${product.price.toFixed(2)}
-                          </td>
-                          <td className="py-4 px-4 text-right text-gray-900 dark:text-gray-100 font-semibold">
-                            ${(product.quantity * product.price).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Totals Section */}
-            <div className="flex justify-end">
-              <div className="w-full max-w-sm space-y-3">
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Subtotal:
-                  </span>
-                  <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    ${subtotal.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Tax (10%):
-                  </span>
-                  <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                    ${tax.toFixed(2)}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                    Total:
-                  </span>
-                  <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                    ${total.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-gray-600">
+            This purchase order was generated by {companyInfo.name}
+          </p>
+          {(companyInfo.email || companyInfo.phone) && (
+            <p className="text-xs text-gray-600 mt-1">
+              Contact:{" "}
+              {[companyInfo.email, companyInfo.phone]
+                .filter(Boolean)
+                .join(" | ")}
+            </p>
+          )}
+          <p className="text-xs text-gray-600 mt-2">
+            This is a system-generated document and does not require a
+            signature.
+          </p>
+        </div>
       </div>
     </div>
   );
