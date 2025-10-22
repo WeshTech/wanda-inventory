@@ -38,7 +38,7 @@ import {
   type CreatePurchaseOrderFormData,
   createPurchaseOrderSchema,
 } from "@/schemas/purchaseOrderSchema";
-import { type AddProductFormData } from "@/schemas/purchaseorder/addProductSchema";
+import type { AddProductFormData } from "@/schemas/purchaseorder/addProductSchema";
 import { AddProductDialog } from "./[poid]/add-product-dialog";
 import {
   useAuthBusinessId,
@@ -50,6 +50,7 @@ import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 import { toast as sonnerToast } from "sonner";
 import toast from "react-hot-toast";
 import { useCreatePurchaseOrder } from "@/server-queries/purchaseorderQueries";
+import { ToKenyanShillings } from "@/utils/toKenyanShillings";
 
 type Product = {
   id: string;
@@ -267,375 +268,375 @@ export default function CreatePurchaseOrderPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Purchase Order Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Order Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="supplier"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Supplier *</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            disabled={suppliersLoading || isPending}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={
-                                    suppliersLoading
-                                      ? "Loading suppliers..."
-                                      : "Select supplier"
-                                  }
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {suppliers.map((supplier) => (
-                                <SelectItem
-                                  key={supplier.supplierId}
-                                  value={supplier.supplierId}
-                                >
-                                  {supplier.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="store"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Store *</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            disabled={storesLoading || isPending}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={
-                                    storesLoading
-                                      ? "Loading stores..."
-                                      : "Select store"
-                                  }
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {stores.map((store) => (
-                                <SelectItem
-                                  key={store.storeId}
-                                  value={store.storeId}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span>{store.storeName}</span>
-                                    <span className="text-muted-foreground">
-                                      {store.ward}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            disabled={isPending}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {statusOptions.map((status) => (
-                                <SelectItem
-                                  key={status.value}
-                                  value={status.value}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <Badge
-                                      variant="secondary"
-                                      className={status.color}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-2">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle>Order Details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="flex flex-col gap-3 w-full">
+                        <FormField
+                          control={form.control}
+                          name="supplier"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Supplier *</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                disabled={suppliersLoading || isPending}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-3/4">
+                                    <SelectValue
+                                      placeholder={
+                                        suppliersLoading
+                                          ? "Loading suppliers..."
+                                          : "Select supplier"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {suppliers.map((supplier) => (
+                                    <SelectItem
+                                      key={supplier.supplierId}
+                                      value={supplier.supplierId}
                                     >
-                                      {status.label}
-                                    </Badge>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                      {supplier.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="dateExpected"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Expected Date *</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              {...field}
-                              disabled={isPending}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="store"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Store *</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                disabled={storesLoading || isPending}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-3/4">
+                                    <SelectValue
+                                      placeholder={
+                                        storesLoading
+                                          ? "Loading stores..."
+                                          : "Select store"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {stores.map((store) => (
+                                    <SelectItem
+                                      key={store.storeId}
+                                      value={store.storeId}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span>{store.storeName}</span>
+                                        <span className="text-muted-foreground">
+                                          {store.ward}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="createdBy"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Created By</FormLabel>
-                          <FormControl>
-                            <Input {...field} disabled />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                        <FormField
+                          control={form.control}
+                          name="status"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Status</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                disabled={isPending}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-3/4">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {statusOptions.map((status) => (
+                                    <SelectItem
+                                      key={status.value}
+                                      value={status.value}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Badge
+                                          variant="secondary"
+                                          className={status.color}
+                                        >
+                                          {status.label}
+                                        </Badge>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-              {/* Products Section */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Products ({products.length})</CardTitle>
+                        <FormField
+                          control={form.control}
+                          name="dateExpected"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Expected Date *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  disabled={isPending}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="createdBy"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Created By</FormLabel>
+                              <FormControl>
+                                <Input {...field} disabled />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Side: Order Summary and Quick Actions */}
+              <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Order Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Items:</span>
+                        <span className="font-medium">{products.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Qty:</span>
+                        <span className="font-medium">
+                          {products.reduce((sum, p) => sum + p.quantity, 0)}
+                        </span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span className="font-medium">
+                          {ToKenyanShillings(subtotal)}
+                        </span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between font-semibold text-base">
+                        <span>Total:</span>
+                        <span>{ToKenyanShillings(total)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
                     <Button
                       type="button"
+                      variant="outline"
+                      className="w-full justify-start gap-2 bg-transparent"
                       onClick={() => setShowAddProduct(true)}
-                      className="gap-2"
                       disabled={isPending}
                     >
                       <Plus className="h-4 w-4" />
                       Add Product
                     </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {products.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        No products added yet
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Click Add Product to get started
-                      </p>
-                      {tableError && (
-                        <p className="text-destructive text-sm font-medium">
-                          ⚠️ {tableError}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-12">PRD NO</TableHead>
-                              <TableHead>Product Code</TableHead>
-                              <TableHead>Product Name</TableHead>
-                              <TableHead className="text-right">
-                                Price
-                              </TableHead>
-                              <TableHead className="text-right">
-                                Quantity
-                              </TableHead>
-                              <TableHead className="text-right">
-                                Total
-                              </TableHead>
-                              <TableHead className="w-24 text-center">
-                                Actions
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {products.map((product, index) => (
-                              <TableRow key={product.id}>
-                                <TableCell className="font-medium">
-                                  {index + 1}
-                                </TableCell>
-                                <TableCell className="font-mono text-sm">
-                                  {product.barcode}
-                                </TableCell>
-                                <TableCell className="font-medium">
-                                  {product.name}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  ${product.price.toFixed(2)}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {product.quantity}
-                                </TableCell>
-                                <TableCell className="text-right font-medium">
-                                  ${product.total.toFixed(2)}
-                                </TableCell>
-                                <TableCell>
-                                  <div className="flex gap-2 justify-center">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => openUpdateDialog(product)}
-                                      title="Edit product"
-                                      disabled={isPending}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => openDeleteDialog(product)}
-                                      className="text-destructive hover:text-destructive"
-                                      title="Delete product"
-                                      disabled={isPending}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      {tableError && (
-                        <div className="bg-destructive/10 border border-destructive/30 rounded-md p-3">
-                          <p className="text-destructive text-sm font-medium">
-                            ⚠️ {tableError}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start gap-2 bg-transparent"
+                      disabled={isPending}
+                    >
+                      <Save className="h-4 w-4" />
+                      Save as Draft
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
-            {/* Order Summary */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Items:</span>
-                      <span>{products.length}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Total Quantity:</span>
-                      <span>
-                        {products.reduce((sum, p) => sum + p.quantity, 0)}
-                      </span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between text-sm">
-                      <span>Subtotal:</span>
-                      <span>${subtotal.toFixed(2)}</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-semibold">
-                      <span>Total:</span>
-                      <span>${total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
+            {/* Bottom Row: Products Table - Full Width */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Products ({products.length})</CardTitle>
                   <Button
                     type="button"
-                    variant="outline"
-                    className="w-full justify-start gap-2 bg-transparent"
                     onClick={() => setShowAddProduct(true)}
+                    className="gap-2"
                     disabled={isPending}
                   >
                     <Plus className="h-4 w-4" />
                     Add Product
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start gap-2 bg-transparent"
-                    disabled={isPending}
-                  >
-                    <Save className="h-4 w-4" />
-                    Save as Draft
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {products.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      No products added yet
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Click Add Product to get started
+                    </p>
+                    {tableError && (
+                      <p className="text-destructive text-sm font-medium">
+                        ⚠️ {tableError}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12">PRD NO</TableHead>
+                            <TableHead>Product Code</TableHead>
+                            <TableHead>Product Name</TableHead>
+                            <TableHead className="text-right">Price</TableHead>
+                            <TableHead className="text-right">
+                              Quantity
+                            </TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                            <TableHead className="w-24 text-center">
+                              Actions
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {products.map((product, index) => (
+                            <TableRow key={product.id}>
+                              <TableCell className="font-medium">
+                                {index + 1}
+                              </TableCell>
+                              <TableCell className="font-mono text-sm">
+                                {product.barcode}
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {product.name}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {ToKenyanShillings(product.price)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {product.quantity}
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                {ToKenyanShillings(product.total)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2 justify-center">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openUpdateDialog(product)}
+                                    title="Edit product"
+                                    disabled={isPending}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDeleteDialog(product)}
+                                    className="text-destructive hover:text-destructive"
+                                    title="Delete product"
+                                    disabled={isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    {tableError && (
+                      <div className="bg-destructive/10 border border-destructive/30 rounded-md p-3">
+                        <p className="text-destructive text-sm font-medium">
+                          ⚠️ {tableError}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-
-          <AddProductDialog
-            open={showAddProduct}
-            onOpenChange={setShowAddProduct}
-            onAdd={handleAddProduct}
-          />
-
-          {selectedProduct && (
-            <UpdateProductDialog
-              open={showUpdateProduct}
-              onOpenChange={setShowUpdateProduct}
-              product={selectedProduct}
-              onUpdate={handleUpdateProduct}
-            />
-          )}
-
-          {selectedProduct && (
-            <DeleteProductDialog
-              open={showDeleteProduct}
-              onOpenChange={setShowDeleteProduct}
-              product={selectedProduct}
-              onDelete={handleDeleteProduct}
-            />
-          )}
         </form>
       </Form>
+
+      <AddProductDialog
+        open={showAddProduct}
+        onOpenChange={setShowAddProduct}
+        onAdd={handleAddProduct}
+      />
+
+      {selectedProduct && (
+        <UpdateProductDialog
+          open={showUpdateProduct}
+          onOpenChange={setShowUpdateProduct}
+          product={selectedProduct}
+          onUpdate={handleUpdateProduct}
+        />
+      )}
+
+      {selectedProduct && (
+        <DeleteProductDialog
+          open={showDeleteProduct}
+          onOpenChange={setShowDeleteProduct}
+          product={selectedProduct}
+          onDelete={handleDeleteProduct}
+        />
+      )}
     </div>
   );
 }
