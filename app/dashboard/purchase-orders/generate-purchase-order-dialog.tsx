@@ -31,31 +31,20 @@ import {
   GeneratePurchaseOrderFormData,
   GeneratePurchaseOrderSchema,
 } from "@/schemas/purchaseorder/generatePurchaseorderSchema";
-import { toast } from "sonner";
-import { useAuthBusinessId } from "@/stores/authStore";
+import {
+  useAuthBusinessId,
+  useAuthStoreAccess,
+  useAuthUser,
+} from "@/stores/authStore";
 import { useGeneratePurchaseOrder } from "@/server-queries/purchaseorderQueries";
+import { useBusinessSuppliersQuery } from "@/server-queries/supplierQueries";
+import { useStoreInfoQuery } from "@/server-queries/storeQueries";
+import toast from "react-hot-toast";
 
 interface GeneratePurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Mock data (replace with backend data if needed)
-const suppliers = [
-  "ABC Supplies Co.",
-  "XYZ Electronics",
-  "Global Parts Ltd",
-  "Tech Solutions Inc",
-  "Office Supplies Pro",
-];
-
-const stores = [
-  "Main Store",
-  "Electronics Branch",
-  "Warehouse A",
-  "Office Branch",
-  "Downtown Location",
-];
 
 export function GeneratePurchaseOrderDialog({
   open,
@@ -71,31 +60,48 @@ export function GeneratePurchaseOrderDialog({
   });
 
   const businessId = useAuthBusinessId() ?? "";
+  const storeAccess = useAuthStoreAccess() ?? [];
+  const user = useAuthUser();
+  const userId = user?.userId ?? "";
+
+  const { data: suppliersData, isLoading: isSuppliersLoading } =
+    useBusinessSuppliersQuery(businessId);
+  const { data: storesData, isLoading: isStoresLoading } = useStoreInfoQuery(
+    businessId,
+    storeAccess
+  );
 
   const { mutate, isPending } = useGeneratePurchaseOrder();
 
   const onSubmit = (data: GeneratePurchaseOrderFormData) => {
     if (!businessId) {
-      toast.error("Business ID not found. Please log in again.");
+      toast.error("Business data not found. Please log in again.");
       return;
     }
 
     mutate(
-      { formData: data, businessId },
+      { formData: data, businessId, userId },
       {
         onSuccess: (response) => {
           toast.success(
-            `✅ ${response.message} — PO #${response.data?.purchaseOrderNumber}`
+            ` ${response.message} — PO #${response.data?.purchaseOrderNumber}`
           );
           form.reset();
-          onOpenChange(false); // Close the dialog on success
+          onOpenChange(false);
         },
         onError: (error) => {
-          toast.error(`❌ ${error.message}`);
+          toast.error(` ${error.message}`);
         },
       }
     );
   };
+
+  const suppliers = suppliersData?.data ?? [];
+  const stores = Array.isArray(storesData?.data)
+    ? storesData.data
+    : storesData?.data
+    ? [storesData.data]
+    : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,7 +124,7 @@ export function GeneratePurchaseOrderDialog({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={isPending}
+                    disabled={isPending || isSuppliersLoading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -127,8 +133,11 @@ export function GeneratePurchaseOrderDialog({
                     </FormControl>
                     <SelectContent>
                       {suppliers.map((supplier) => (
-                        <SelectItem key={supplier} value={supplier}>
-                          {supplier}
+                        <SelectItem
+                          key={supplier.supplierId}
+                          value={supplier.supplierId}
+                        >
+                          {supplier.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -147,7 +156,7 @@ export function GeneratePurchaseOrderDialog({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={isPending}
+                    disabled={isPending || isStoresLoading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -156,8 +165,13 @@ export function GeneratePurchaseOrderDialog({
                     </FormControl>
                     <SelectContent>
                       {stores.map((store) => (
-                        <SelectItem key={store} value={store}>
-                          {store}
+                        <SelectItem key={store.storeId} value={store.storeId}>
+                          <div className="flex gap-2 w-full">
+                            <span>{store.storeName}</span>
+                            <span className="text-muted-foreground">
+                              ({store.ward})
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

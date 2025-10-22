@@ -46,13 +46,13 @@ import { DeleteNotAllowedDialog } from "./delete-confitmation-dialog";
 
 export default function CustomersPage() {
   const { isLoading: authLoading } = useAuthStore();
-  const businessId = useAuthBusinessId();
+  const businessId = useAuthBusinessId() || "";
 
   const {
     data: customersResponse,
     isLoading: customersLoading,
     error: customersError,
-  } = useGetBusinessCustomers(businessId ?? "");
+  } = useGetBusinessCustomers(businessId);
 
   const customers = useMemo(
     () => customersResponse?.data || [],

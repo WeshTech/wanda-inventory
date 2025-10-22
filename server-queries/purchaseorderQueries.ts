@@ -22,18 +22,26 @@ import { updatePurchaseorderByIdApi } from "@/server/purchaseorder/update-PO-byI
 export const useGeneratePurchaseOrder = (): UseMutationResult<
   GeneratePurchaseOrderResponse,
   Error,
-  { formData: GeneratePurchaseOrderFormData; businessId: string }
+  {
+    formData: GeneratePurchaseOrderFormData;
+    businessId: string;
+    userId: string;
+  }
 > => {
   const queryClient = useQueryClient();
 
   return useMutation<
     GeneratePurchaseOrderResponse,
     Error,
-    { formData: GeneratePurchaseOrderFormData; businessId: string }
+    {
+      formData: GeneratePurchaseOrderFormData;
+      businessId: string;
+      userId: string;
+    }
   >({
     mutationKey: ["generatepurchaseorder"],
-    mutationFn: ({ formData, businessId }) =>
-      generatePurchaseOrderApi(formData, businessId),
+    mutationFn: ({ formData, businessId, userId }) =>
+      generatePurchaseOrderApi(formData, businessId, userId),
     onSuccess: (_, { businessId }) => {
       queryClient.invalidateQueries({
         queryKey: ["purchaseOrders", businessId],

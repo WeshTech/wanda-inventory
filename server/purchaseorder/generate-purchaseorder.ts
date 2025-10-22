@@ -5,9 +5,10 @@ import { AxiosError } from "axios";
 
 export const generatePurchaseOrderApi = async (
   formData: GeneratePurchaseOrderFormData,
-  businessId: string
+  businessId: string,
+  userId: string
 ): Promise<GeneratePurchaseOrderResponse> => {
-  const submitData = { ...formData, businessId };
+  const submitData = { ...formData, businessId, userId };
   console.log("Submitting data:", submitData);
   try {
     const response = await axiosApi.post<GeneratePurchaseOrderResponse>(
