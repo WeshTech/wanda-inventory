@@ -40,6 +40,7 @@ import { useGeneratePurchaseOrder } from "@/server-queries/purchaseorderQueries"
 import { useBusinessSuppliersQuery } from "@/server-queries/supplierQueries";
 import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 import toast from "react-hot-toast";
+import { toast as sonnerToast } from "sonner";
 
 interface GeneratePurchaseOrderDialogProps {
   open: boolean;
@@ -75,27 +76,37 @@ export function GeneratePurchaseOrderDialog({
 
   const onSubmit = (data: GeneratePurchaseOrderFormData) => {
     if (!businessId) {
-      toast.error("Business data not found. Please log in again.");
+      sonnerToast.error("Business data not found. Please log in again.");
       return;
     }
+
+    // Show a loading toast (returns an ID so we can update it later)
+    const loadingToastId = sonnerToast.loading("Generating purchase order...");
 
     mutate(
       { formData: data, businessId, userId },
       {
         onSuccess: (response) => {
-          toast.success(
-            ` ${response.message} — PO #${response.data?.purchaseOrderNumber}`
-          );
+          // Dismiss loading toast before showing the result
+          sonnerToast.dismiss(loadingToastId);
+
+          const purchaseOrderNumber = response.data?.purchaseOrderNumber;
+          const successMessage = purchaseOrderNumber
+            ? `${response.message} — PO #${purchaseOrderNumber}`
+            : response.message;
+
+          toast.success(successMessage);
+
           form.reset();
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error(` ${error.message}`);
+          sonnerToast.dismiss(loadingToastId);
+          toast.error(error.message || "Failed to generate purchase order.");
         },
       }
     );
   };
-
   const suppliers = suppliersData?.data ?? [];
   const stores = Array.isArray(storesData?.data)
     ? storesData.data

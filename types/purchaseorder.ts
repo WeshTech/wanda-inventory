@@ -88,3 +88,31 @@ export type UpdatePurchaseOrderResponse = {
   message: string;
   data: UpdatePurchaseOrderData | null;
 };
+
+//single product
+export type BusinessProductResult = {
+  businessProductId: string;
+  productName: string | null;
+  productBarcode: string | null;
+  price: number;
+};
+
+// Generic API response wrapper
+export type SearchBusinessProductResponse = {
+  success: boolean;
+  message: string;
+  data: BusinessProductResult[] | null;
+};
+
+//create purchase order data structure
+export interface CreatePurchaseOrderData {
+  purchaseOrderNumber: number;
+  totalProducts: number;
+}
+
+//create purchase order response structure
+export interface CreatePurchaseOrderResponse {
+  success: boolean;
+  message: string;
+  data: CreatePurchaseOrderData | null;
+}

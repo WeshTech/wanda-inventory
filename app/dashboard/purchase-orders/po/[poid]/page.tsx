@@ -38,7 +38,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AddProductDialog } from "./add-product-dialog";
 import { UpdateProductDialog } from "./update-product-dialog";
 import { DeleteProductDialog } from "./delete-product-dialog";
 import { format } from "date-fns";
@@ -49,10 +48,7 @@ import {
   useUpdatePurchaseOrder,
 } from "@/server-queries/purchaseorderQueries";
 import { toast as sonnerToast } from "sonner";
-import {
-  type UpdatePurchaseOrderFormData,
-  updatePurchaseOrderSchema,
-} from "@/schemas/purchaseOrderSchema";
+
 import toast from "react-hot-toast";
 import EditPurchaseOrderPageSkeleton from "./loading";
 

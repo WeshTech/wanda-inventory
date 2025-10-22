@@ -1,13 +1,5 @@
 import z from "zod";
 
-export const productSchema = z.object({
-  id: z.string(),
-  barcode: z.string().min(1, "Barcode is required"),
-  name: z.string().min(1, "Product name is required"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  price: z.number().min(0, "Price cannot be negative"),
-});
-
 export const createPurchaseOrderSchema = z.object({
   supplier: z.string().min(1, "Supplier is required"),
   store: z.string().min(1, "Store is required"),
@@ -23,7 +15,6 @@ export const createPurchaseOrderSchema = z.object({
   ]),
   dateExpected: z.string().min(1, "Expected date is required"),
   createdBy: z.string().min(1, "Created by is required"),
-  products: z.array(productSchema).min(1, "At least one product is required"),
 });
 
 export type CreatePurchaseOrderFormData = z.infer<

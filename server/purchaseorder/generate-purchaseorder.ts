@@ -8,7 +8,13 @@ export const generatePurchaseOrderApi = async (
   businessId: string,
   userId: string
 ): Promise<GeneratePurchaseOrderResponse> => {
-  const submitData = { ...formData, businessId, userId };
+  const submitData = {
+    ...formData,
+    businessId,
+    userId,
+    storeId: formData.store,
+    supplierId: formData.supplier,
+  };
   console.log("Submitting data:", submitData);
   try {
     const response = await axiosApi.post<GeneratePurchaseOrderResponse>(

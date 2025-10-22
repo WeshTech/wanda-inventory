@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,22 +19,27 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ProductFormData, productSchema } from "@/schemas/purchaseOrderSchema";
+import { productSchema } from "@/schemas/purchaseOrderSchema";
 
 interface UpdateProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product: updateProduct;
-  onUpdate: (product: updateProduct) => void;
+  product: Product;
+  onUpdate: (product: Product) => void;
 }
-export interface updateProduct {
-  businessProductId: string;
+
+type Product = {
   id: string;
-  barcode: string | null;
-  name: string | null;
+  businessProductId: string;
+  barcode: string;
+  name: string;
   quantity: number;
   price: number;
-}
+  total: number;
+};
+
+// Form type based on productSchema
+type ProductFormData = z.infer<typeof productSchema>;
 
 export function UpdateProductDialog({
   open,
@@ -44,15 +50,24 @@ export function UpdateProductDialog({
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      barcode: product.barcode || "",
-      name: product.name || "",
+      id: product.id,
+      barcode: product.barcode,
+      name: product.name,
       quantity: product.quantity,
       price: product.price,
     },
   });
 
   const onSubmit = (data: ProductFormData) => {
-    onUpdate({ ...product, ...data });
+    const updatedProduct: Product = {
+      ...product, // Retain businessProductId and id
+      barcode: data.barcode,
+      name: data.name,
+      quantity: data.quantity,
+      price: data.price,
+      total: data.quantity * data.price, // Calculate total
+    };
+    onUpdate(updatedProduct);
   };
 
   return (
@@ -64,6 +79,25 @@ export function UpdateProductDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product ID</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter product ID"
+                      {...field}
+                      className="font-mono"
+                      disabled
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="barcode"

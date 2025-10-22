@@ -70,7 +70,7 @@ export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
   const [globalFilter, setGlobalFilter] = useState("");
 
   const { isLoading: isAuthLoading } = useAuthStore();
-  const businessId = useAuthBusinessId() || "";
+  const businessId = useAuthBusinessId() ?? "";
 
   const {
     data: purchaseOrdersResponse,

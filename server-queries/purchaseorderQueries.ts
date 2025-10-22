@@ -6,17 +6,24 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  CreatePurchaseOrderResponse,
   GeneratePurchaseOrderResponse,
   PurchaseOrderDetailResponse,
   PurchaseOrderResponse,
+  SearchBusinessProductResponse,
   UpdatePurchaseOrderResponse,
 } from "@/types/purchaseorder";
 import { generatePurchaseOrderApi } from "@/server/purchaseorder/generate-purchaseorder";
 import { GeneratePurchaseOrderFormData } from "@/schemas/purchaseorder/generatePurchaseorderSchema";
 import { getPurchaseordersApi } from "@/server/purchaseorder/get-purchaseorder";
 import { getPurchaseorderByIdApi } from "@/server/purchaseorder/get-PO-by-id";
-import { UpdatePurchaseOrderFormData } from "@/schemas/purchaseOrderSchema";
+import {
+  CreatePurchaseOrderFormData,
+  UpdatePurchaseOrderFormData,
+} from "@/schemas/purchaseOrderSchema";
 import { updatePurchaseorderByIdApi } from "@/server/purchaseorder/update-PO-byId";
+import { searchBusinessProductsPOApi } from "@/server/purchaseorder/search-products";
+import { createPurchaseordersApi } from "@/server/purchaseorder/create-PO";
 
 // Hook to generate a purchase order
 export const useGeneratePurchaseOrder = (): UseMutationResult<
@@ -101,6 +108,46 @@ export const useUpdatePurchaseOrder = (businessId: string) => {
       //invalidate the purchase orders list query
       queryClient.invalidateQueries({
         queryKey: ["purchaseOrders", businessId],
+      });
+    },
+  });
+};
+
+//search products for purchase order
+export const useSearchBusinessProductsPO = (
+  businessId: string,
+  userId: string,
+  searchTerm: string
+) => {
+  return useQuery<SearchBusinessProductResponse>({
+    queryKey: ["searchBusinessProductsPO", businessId, userId, searchTerm],
+    queryFn: () => searchBusinessProductsPOApi(businessId, userId, searchTerm),
+    enabled: Boolean(businessId && userId && searchTerm),
+    staleTime: 5,
+  });
+};
+
+// create purchase order
+export const useCreatePurchaseOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    CreatePurchaseOrderResponse,
+    Error,
+    {
+      formData: CreatePurchaseOrderFormData;
+      businessId: string;
+      userId: string;
+    }
+  >({
+    mutationKey: ["createPurchaseOrder"],
+    mutationFn: ({ formData, businessId, userId }) =>
+      createPurchaseordersApi(formData, businessId, userId),
+
+    onSuccess: (_, variables) => {
+      // invalidate the get purchase orders query for the same businessId
+      queryClient.invalidateQueries({
+        queryKey: ["purchaseOrders", variables.businessId],
       });
     },
   });
