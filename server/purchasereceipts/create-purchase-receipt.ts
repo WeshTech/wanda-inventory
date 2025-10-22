@@ -10,13 +10,12 @@ import { AxiosError } from "axios";
 export const createPurchaseReceiptApi = async (
   formData: PurchaseReceiptFormData,
   businessId: string,
-  createdBy: string
+  userId: string
 ): Promise<CreatePRResponse> => {
   const {
     receiptName,
     supplier: supplierId,
     store: storeId,
-    // purchaseOrderId,
     products: formProducts,
   } = formData;
 
@@ -28,8 +27,7 @@ export const createPurchaseReceiptApi = async (
   }));
 
   const submitData: CreatePRDto = {
-    createdBy: "ab5c1e61-20f6-4816-898c-67e9857e76a3",
-    purchaseOrderId: "4fea95df-14f4-4ba2-8901-5ddf6d2ccf63",
+    createdBy: userId,
     businessId,
     receiptName,
     supplierId,

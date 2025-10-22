@@ -17,13 +17,11 @@ import { generatePurchaseOrderApi } from "@/server/purchaseorder/generate-purcha
 import { GeneratePurchaseOrderFormData } from "@/schemas/purchaseorder/generatePurchaseorderSchema";
 import { getPurchaseordersApi } from "@/server/purchaseorder/get-purchaseorder";
 import { getPurchaseorderByIdApi } from "@/server/purchaseorder/get-PO-by-id";
-import {
-  CreatePurchaseOrderFormData,
-  UpdatePurchaseOrderFormData,
-} from "@/schemas/purchaseOrderSchema";
+import { CreatePurchaseOrderFormData } from "@/schemas/purchaseOrderSchema";
 import { updatePurchaseorderByIdApi } from "@/server/purchaseorder/update-PO-byId";
 import { searchBusinessProductsPOApi } from "@/server/purchaseorder/search-products";
 import { createPurchaseordersApi } from "@/server/purchaseorder/create-PO";
+import { UpdatePurchaseOrderFormData } from "@/schemas/purchaseorder/updatePOSchema";
 
 // Hook to generate a purchase order
 export const useGeneratePurchaseOrder = (): UseMutationResult<

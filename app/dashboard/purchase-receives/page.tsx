@@ -16,59 +16,6 @@ import { Plus, Search } from "lucide-react";
 import { PurchaseReceiptsTable } from "./purchase-receipt-table";
 import { DeleteReceiptDialog } from "./delete-receipt-dialog";
 
-const mockReceipts = [
-  {
-    id: "1",
-    receiptNo: "PR-2024-001",
-    receiptName: "Office Supplies Purchase",
-    supplier: "Stationery World Ltd",
-    store: "Main Branch",
-    totalAmount: 15750.5,
-    status: "received" as const,
-    date: "2024-01-15",
-  },
-  {
-    id: "2",
-    receiptNo: "PR-2024-002",
-    receiptName: "Computer Equipment",
-    supplier: "Tech Solutions Kenya",
-    store: "IT Department",
-    totalAmount: 125000.0,
-    status: "pending" as const,
-    date: "2024-01-16",
-  },
-  {
-    id: "3",
-    receiptNo: "PR-2024-003",
-    receiptName: "Cleaning Supplies",
-    supplier: "Clean Pro Services",
-    store: "Main Branch",
-    totalAmount: 8500.75,
-    status: "received" as const,
-    date: "2024-01-17",
-  },
-  {
-    id: "4",
-    receiptNo: "PR-2024-004",
-    receiptName: "Marketing Materials",
-    supplier: "Print Masters Ltd",
-    store: "Marketing Dept",
-    totalAmount: 22300.0,
-    status: "pending" as const,
-    date: "2024-01-18",
-  },
-  {
-    id: "5",
-    receiptNo: "PR-2024-005",
-    receiptName: "Furniture Purchase",
-    supplier: "Office Furniture Co",
-    store: "Main Branch",
-    totalAmount: 85000.0,
-    status: "received" as const,
-    date: "2024-01-19",
-  },
-];
-
 const stores = ["All Stores", "Main Branch", "IT Department", "Marketing Dept"];
 
 export default function PurchaseReceiptsPage() {
@@ -78,23 +25,6 @@ export default function PurchaseReceiptsPage() {
   const [storeFilter, setStoreFilter] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [receiptToDelete, setReceiptToDelete] = useState<string | null>(null);
-
-  const filteredReceipts = mockReceipts.filter((receipt) => {
-    const matchesSearch =
-      receipt.receiptNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      receipt.receiptName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      receipt.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      receipt.store.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" || receipt.status === statusFilter;
-    const matchesStore =
-      storeFilter === "all" ||
-      storeFilter === "All Stores" ||
-      receipt.store === storeFilter;
-
-    return matchesSearch && matchesStatus && matchesStore;
-  });
 
   const handleDeleteReceipt = (receiptId: string) => {
     setReceiptToDelete(receiptId);
@@ -181,10 +111,7 @@ export default function PurchaseReceiptsPage() {
               </div>
             </div>
 
-            <PurchaseReceiptsTable
-              receipts={filteredReceipts}
-              onDeleteReceipt={handleDeleteReceipt}
-            />
+            <PurchaseReceiptsTable onDeleteReceipt={handleDeleteReceipt} />
           </CardContent>
         </Card>
 
@@ -192,12 +119,6 @@ export default function PurchaseReceiptsPage() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           onConfirm={confirmDelete}
-          receiptNo={
-            receiptToDelete
-              ? mockReceipts.find((r) => r.id === receiptToDelete)?.receiptNo ||
-                undefined
-              : undefined
-          }
         />
       </div>
     </div>

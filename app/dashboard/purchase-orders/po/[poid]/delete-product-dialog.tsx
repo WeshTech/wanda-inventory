@@ -51,7 +51,7 @@ export function DeleteProductDialog({
               <strong>Quantity:</strong> {product.quantity}
             </div>
             <div>
-              <strong>Price:</strong> ${product.price.toFixed(2)}
+              <strong>Price:</strong> KES {product.price.toFixed(2)}
             </div>
           </div>
         </div>

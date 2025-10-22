@@ -12,21 +12,21 @@ import { getPurchaseReceiptsApi } from "@/server/purchasereceipts/get-all-PRs";
 import { getPurchaseReceiptByIdApi } from "@/server/purchasereceipts/get-PR-byId";
 import { updatePurchaseReceiptApi } from "@/server/purchasereceipts/update-PR";
 
-// ------------------------------------
 // Create Purchase Receipt Mutation
-// ------------------------------------
 interface CreatePurchaseReceiptParams {
   formData: PurchaseReceiptFormData;
   businessId: string;
-  createdBy: string;
+  userId: string;
 }
 
 export const useCreatePurchaseReceipt = () => {
   const queryClient = useQueryClient();
 
   return useMutation<CreatePRResponse, Error, CreatePurchaseReceiptParams>({
-    mutationFn: ({ formData, businessId, createdBy }) =>
-      createPurchaseReceiptApi(formData, businessId, createdBy),
+    mutationKey: ["createPurchaseReceipt"],
+    mutationFn: async ({ formData, businessId, userId }) => {
+      return await createPurchaseReceiptApi(formData, businessId, userId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchaseReceipts"] });
     },

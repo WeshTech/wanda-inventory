@@ -242,7 +242,9 @@ export default function CustomerInvoicePage() {
               >
                 <PDFDownloadLink
                   document={<InvoicePDFDocument saleData={invoiceData} />}
-                  fileName={`${invoiceData.invoiceNo}.pdf`}
+                  fileName={`${new Date(invoiceData.date).getFullYear()}-${
+                    invoiceData.invoiceNo
+                  }.pdf`}
                 >
                   {({ loading }) => (
                     <>
