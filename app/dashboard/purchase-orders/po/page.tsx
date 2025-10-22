@@ -32,14 +32,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UpdateProductDialog } from "./[poid]/update-product-dialog";
+import { UpdateProductDialog } from "./update-product-dialog";
 import { DeleteProductDialog } from "./[poid]/delete-product-dialog";
 import {
   type CreatePurchaseOrderFormData,
   createPurchaseOrderSchema,
 } from "@/schemas/purchaseOrderSchema";
 import type { AddProductFormData } from "@/schemas/purchaseorder/addProductSchema";
-import { AddProductDialog } from "./[poid]/add-product-dialog";
+import { AddProductDialog } from "./add-product-dialog";
 import {
   useAuthBusinessId,
   useAuthStoreAccess,

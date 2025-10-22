@@ -108,6 +108,7 @@ export function UpdateProductDialog({
                     <Input
                       placeholder="Enter barcode"
                       {...field}
+                      readOnly
                       className="font-mono"
                     />
                   </FormControl>
@@ -123,7 +124,11 @@ export function UpdateProductDialog({
                 <FormItem>
                   <FormLabel>Product Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter product name" {...field} />
+                    <Input
+                      placeholder="Enter product name"
+                      readOnly
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

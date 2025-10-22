@@ -38,7 +38,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UpdateProductDialog } from "./update-product-dialog";
 import { DeleteProductDialog } from "./delete-product-dialog";
 import { format } from "date-fns";
 import type { PurchaseOrderProduct } from "@/types/purchaseorder";
@@ -51,6 +50,12 @@ import { toast as sonnerToast } from "sonner";
 
 import toast from "react-hot-toast";
 import EditPurchaseOrderPageSkeleton from "./loading";
+import {
+  UpdatePurchaseOrderFormData,
+  updatePurchaseOrderSchema,
+} from "@/schemas/purchaseorder/updatePOSchema";
+import { AddProductDialog } from "./add-prod-dialog";
+import { UpdateProductDialog } from "./update-prod-dialog";
 
 interface Product {
   id: string;
@@ -59,6 +64,7 @@ interface Product {
   name: string | null;
   quantity: number;
   price: number;
+  total: number;
   isModified?: boolean;
 }
 
@@ -84,7 +90,6 @@ export default function EditPurchaseOrderPage() {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Initialize the mutation hook with businessId
   const { mutate: updatePurchaseOrder, isPending: isMutating } =
     useUpdatePurchaseOrder(businessId);
 
@@ -117,6 +122,7 @@ export default function EditPurchaseOrderPage() {
           name: p.productName,
           quantity: p.quantity,
           price: p.price,
+          total: p.quantity * p.price,
           isModified: false,
         })
       );
@@ -207,7 +213,8 @@ export default function EditPurchaseOrderPage() {
             ? original.quantity !== updatedProduct.quantity ||
               original.price !== updatedProduct.price ||
               original.barcode !== updatedProduct.barcode ||
-              original.name !== updatedProduct.name
+              original.name !== updatedProduct.name ||
+              original.total !== updatedProduct.total
             : true;
 
           return { ...updatedProduct, isModified };
@@ -225,10 +232,7 @@ export default function EditPurchaseOrderPage() {
     setSelectedProduct(null);
   };
 
-  const subtotal = products.reduce(
-    (sum, product) => sum + product.quantity * product.price,
-    0
-  );
+  const subtotal = products.reduce((sum, product) => sum + product.total, 0);
   const tax = 0;
   const total = subtotal + tax;
 
@@ -256,7 +260,7 @@ export default function EditPurchaseOrderPage() {
           onClick={form.handleSubmit(onSubmit)}
           className="shrink-0 gap-2"
           size="lg"
-          disabled={isMutating} // Disable Save button during mutation
+          disabled={isMutating}
         >
           <Save className="h-4 w-4" />
           Save Changes
@@ -265,7 +269,6 @@ export default function EditPurchaseOrderPage() {
 
       <Form {...form}>
         <form className="grid gap-6">
-          {/* Purchase Order Details Card */}
           <Card>
             <CardHeader>
               <CardTitle>Purchase Order Details</CardTitle>
@@ -368,7 +371,6 @@ export default function EditPurchaseOrderPage() {
             </CardContent>
           </Card>
 
-          {/* Products Section */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Products</CardTitle>
@@ -376,7 +378,7 @@ export default function EditPurchaseOrderPage() {
                 type="button"
                 onClick={() => setShowAddDialog(true)}
                 className="gap-2"
-                disabled={isMutating} // Disable Add Product button during mutation
+                disabled={isMutating}
               >
                 <Plus className="h-4 w-4" />
                 Add Product
@@ -434,8 +436,7 @@ export default function EditPurchaseOrderPage() {
                                 KES {product.price.toFixed(2)}
                               </TableCell>
                               <TableCell className="text-center font-medium">
-                                KES{" "}
-                                {(product.quantity * product.price).toFixed(2)}
+                                KES {product.total.toFixed(2)}
                               </TableCell>
                               <TableCell className="flex gap-2 justify-center">
                                 <TooltipProvider>
@@ -491,7 +492,6 @@ export default function EditPurchaseOrderPage() {
                 </Table>
               </div>
 
-              {/* Totals Section */}
               <div className="mt-6 flex justify-end">
                 <div className="w-full max-w-sm space-y-2">
                   <div className="flex justify-between text-sm">
@@ -513,7 +513,6 @@ export default function EditPurchaseOrderPage() {
         </form>
       </Form>
 
-      {/* Dialogs */}
       <AddProductDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
