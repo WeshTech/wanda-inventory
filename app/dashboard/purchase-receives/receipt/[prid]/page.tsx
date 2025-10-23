@@ -83,7 +83,7 @@ export default function UpdateReceiptPage() {
     data,
     isLoading: isDataLoading,
     error,
-  } = useGetPurchaseReceiptById(businessId ?? "", purchaseReceiptId);
+  } = useGetPurchaseReceiptById(businessId, purchaseReceiptId);
 
   // Import and use the mutation hook
   const updateReceiptMutation = useUpdatePurchaseReceipt();

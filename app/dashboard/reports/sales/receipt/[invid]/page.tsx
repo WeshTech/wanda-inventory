@@ -167,7 +167,7 @@ export default function CustomerInvoicePage() {
         <CreativeLoading
           message={
             isAuthLoading
-              ? "Checking your session..."
+              ? "Performing a quick security check..."
               : "Preparing your Invoice"
           }
           subMessage={

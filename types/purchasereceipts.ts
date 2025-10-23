@@ -49,7 +49,7 @@ export type GetPurchaseReceiptsResponse = {
   data: PurchaseReceiptData[] | null;
 };
 
-//single product
+// single product line
 export type PurchaseReceiptProduct = {
   businessProductId: string;
   productId: string | null;
@@ -68,6 +68,7 @@ export type IndividualPurchaseReceiptData = {
   receiptName: string;
   supplierName: string;
   storeName: string;
+  dateReceived: string;
   status: "RECEIVED" | "REJECTED";
   products: PurchaseReceiptProduct[];
 };

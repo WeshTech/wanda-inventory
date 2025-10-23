@@ -55,7 +55,7 @@ export const useGetPurchaseReceiptById = (
   return useQuery<GetPurchaseReceiptResponse, Error>({
     queryKey: ["getPurchaseReceiptById", businessId, purchasereceiptId],
     queryFn: () => getPurchaseReceiptByIdApi(businessId, purchasereceiptId),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 3,
     enabled: !!businessId && !!purchasereceiptId,
   });
 };
