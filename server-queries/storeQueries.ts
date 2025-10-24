@@ -1,9 +1,11 @@
 import { CreateStoreFormData } from "@/schemas/stores/createStoreSchema";
 import { createStoreApi } from "@/server/stores/createStore";
+import { getBusinessStoreInfoApi } from "@/server/stores/get-business-store-info";
 import { getStoreInfoApi } from "@/server/stores/get-stores-info";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
 import { useAuthStore } from "@/stores/authStore";
 import {
+  BusinessStoreResponse,
   CreateStoreResponse,
   GetBusinessStoresResponse,
   Store,
@@ -75,5 +77,15 @@ export const useStoreInfoQuery = (businessId: string, storeIds: string[]) => {
     queryFn: () => getStoreInfoApi(businessId, storeIds),
     enabled: !!businessId && !!storeIds,
     staleTime: 10 * 60 * 60 * 1000,
+  });
+};
+
+//get business store info
+export const useBusinessStoreInfo = (businessId: string) => {
+  return useQuery<BusinessStoreResponse, Error>({
+    queryKey: ["businessStoreInfo", businessId],
+    queryFn: () => getBusinessStoreInfoApi(businessId),
+    enabled: !!businessId,
+    staleTime: 10 * 60 * 1000,
   });
 };

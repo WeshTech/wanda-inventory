@@ -30,7 +30,10 @@ import {
 import { X, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useSearchStoreProducts } from "@/server-queries/storeProductQueries";
-import { useGetBusinessStores } from "@/server-queries/storeQueries";
+import {
+  useBusinessStoreInfo,
+  useStoreInfoQuery,
+} from "@/server-queries/storeQueries";
 import toast from "react-hot-toast";
 import type { SingleTransferFormData } from "@/types/transfers";
 import { useCreateSingleTransfer } from "@/server-queries/transferQueries";
@@ -38,20 +41,29 @@ import {
   transferFormSchema,
   TransferFormValues,
 } from "@/schemas/transfers/singleTransferSchema";
+import {
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthStoreAccess,
+  useAuthUser,
+} from "@/stores/authStore";
 
 interface CreateTransferDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const BUSINESS_ID = "68ce994dfba92cd4362e1abd";
-const BUSINESS_USER_ID = "0bb76180-080d-4cd4-af6e-a8a6d772f477";
-const STORE_ID = "527c51bf-3a90-4873-86c4-f33dc4f60cb5";
-
 export function CreateTransferDialog({
   open,
   onOpenChange,
 }: CreateTransferDialogProps) {
+  const businessId = useAuthBusinessId() ?? "";
+  const storeAccess = useAuthStoreAccess();
+  const user = useAuthUser();
+  const businessUserId =
+    typeof user === "object" && user !== null ? user.userId : "";
+  const isAuthLoading = useAuthStore((s) => s.isLoading);
+
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedProductImage, setSelectedProductImage] = useState<
     string | undefined
@@ -71,39 +83,57 @@ export function CreateTransferDialog({
     },
   });
 
-  const { data: businessStoresData, isLoading: isLoadingStores } =
-    useGetBusinessStores();
+  // Business-level stores (for the "to store" dropdown)
+  const { data: businessStoresData, isLoading: isLoadingBusinessStores } =
+    useBusinessStoreInfo(businessId ?? "");
 
-  const stores = useMemo(() => {
-    return (
-      businessStoresData?.data?.stores?.map((store) => ({
-        value: store.id,
-        label: store.name,
-      })) || []
+  const businessStores: { storeId: string; storeName: string; ward: string }[] =
+    useMemo(
+      () =>
+        (Array.isArray(businessStoresData?.data)
+          ? businessStoresData?.data
+          : businessStoresData?.data
+          ? [businessStoresData.data]
+          : []) || [],
+      [businessStoresData?.data]
     );
-  }, [businessStoresData]);
 
-  const { mutate: createTransfer, isPending: isSubmitting } =
-    useCreateSingleTransfer();
+  // Accessible stores (for the "from store" dropdown)
+  const accessibleStoreIds = storeAccess || [];
+  const { data: accessibleStoresData, isLoading: isLoadingAccessibleStores } =
+    useStoreInfoQuery(businessId, accessibleStoreIds);
 
-  const searchTerm = form.watch("searchTerm");
-  const productCode = form.watch("productCode");
-  const productName = form.watch("productName");
-  const fromStore = form.watch("fromStore");
-  const toStore = form.watch("toStore");
+  const accessibleStores: {
+    storeId: string;
+    storeName: string;
+    ward: string;
+  }[] = useMemo(
+    () =>
+      (Array.isArray(accessibleStoresData?.data)
+        ? accessibleStoresData?.data
+        : accessibleStoresData?.data
+        ? [accessibleStoresData.data]
+        : []) || [],
+    [accessibleStoresData?.data]
+  );
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // Determine which storeId to use for product search: prefer selected fromStore, otherwise first store in storeAccess
+  const selectedFromStore = form.watch("fromStore");
+  const searchTermValue = form.watch("searchTerm");
 
+  const defaultSearchStoreId = useMemo(() => {
+    if (selectedFromStore) return selectedFromStore;
+    if (storeAccess && storeAccess.length > 0) return storeAccess[0];
+    return businessStores[0]?.storeId ?? "";
+  }, [selectedFromStore, storeAccess, businessStores]);
+
+  // Search products (storeId is dynamic)
   const { data: searchResults, isLoading: isSearching } =
     useSearchStoreProducts({
-      businessId: BUSINESS_ID,
-      businessUserId: BUSINESS_USER_ID,
-      storeId: STORE_ID,
+      isLoading: isAuthLoading,
+      businessId: businessId,
+      businessUserId: businessUserId,
+      storeId: defaultSearchStoreId,
       searchTerm: debouncedSearchTerm,
     });
 
@@ -113,6 +143,15 @@ export function CreateTransferDialog({
   );
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTermValue || "");
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTermValue]);
+
+  useEffect(() => {
+    const productCode = form.getValues("productCode");
+    const productName = form.getValues("productName");
     if (productCode || productName) {
       const selectedProduct = products.find(
         (p) => p.productCode === productCode || p.productName === productName
@@ -123,7 +162,7 @@ export function CreateTransferDialog({
       setSelectedProductImage(undefined);
       form.setValue("storeProductId", "");
     }
-  }, [productCode, productName, products, form]);
+  }, [products, form]);
 
   const handleProductCodeChange = (value: string) => {
     const product = products.find((p) => p.productCode === value);
@@ -148,6 +187,9 @@ export function CreateTransferDialog({
     setSelectedProductImage(undefined);
   };
 
+  const { mutate: createTransfer, isPending: isSubmitting } =
+    useCreateSingleTransfer();
+
   const onSubmit = (data: TransferFormValues) => {
     const toastId = toast.loading("Creating transfer...");
 
@@ -165,8 +207,8 @@ export function CreateTransferDialog({
     createTransfer(
       {
         formData: transferData,
-        businessId: BUSINESS_ID,
-        businessUserId: BUSINESS_USER_ID,
+        businessId: businessId ?? "",
+        businessUserId: businessUserId ?? "",
       },
       {
         onSuccess: (response) => {
@@ -184,6 +226,14 @@ export function CreateTransferDialog({
       }
     );
   };
+
+  // Combined loading state to prevent flicker
+  const isLoadingAny =
+    isAuthLoading ||
+    isLoadingBusinessStores ||
+    isLoadingAccessibleStores ||
+    isSearching ||
+    isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -226,7 +276,7 @@ export function CreateTransferDialog({
                         {...field}
                         maxLength={50}
                         className="pl-9"
-                        disabled={isSubmitting}
+                        disabled={isLoadingAny}
                       />
                       {isSearching && (
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
@@ -265,7 +315,7 @@ export function CreateTransferDialog({
                         <Select
                           value={field.value}
                           onValueChange={handleProductCodeChange}
-                          disabled={products.length === 0 || isSubmitting}
+                          disabled={products.length === 0 || isLoadingAny}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -298,7 +348,7 @@ export function CreateTransferDialog({
                         <Select
                           value={field.value}
                           onValueChange={handleProductNameChange}
-                          disabled={products.length === 0 || isSubmitting}
+                          disabled={products.length === 0 || isLoadingAny}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -332,8 +382,8 @@ export function CreateTransferDialog({
                         <FormLabel>From Store *</FormLabel>
                         <Select
                           value={field.value}
-                          onValueChange={field.onChange}
-                          disabled={isLoadingStores || isSubmitting}
+                          onValueChange={(val) => field.onChange(val)}
+                          disabled={isLoadingAny}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -341,16 +391,21 @@ export function CreateTransferDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {stores
-                              .filter((store) => store.value !== toStore)
-                              .map((store) => (
-                                <SelectItem
-                                  key={store.value}
-                                  value={store.value}
-                                >
-                                  {store.label}
-                                </SelectItem>
-                              ))}
+                            {accessibleStores.map((store) => (
+                              <SelectItem
+                                key={store.storeId}
+                                value={store.storeId}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="truncate">
+                                    {store.storeName}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground truncate">
+                                    {store.ward}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -367,7 +422,7 @@ export function CreateTransferDialog({
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
-                          disabled={isLoadingStores || isSubmitting}
+                          disabled={isLoadingAny}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -375,14 +430,21 @@ export function CreateTransferDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {stores
-                              .filter((store) => store.value !== fromStore)
+                            {businessStores
+                              .filter((s) => s.storeId !== selectedFromStore)
                               .map((store) => (
                                 <SelectItem
-                                  key={store.value}
-                                  value={store.value}
+                                  key={store.storeId}
+                                  value={store.storeId}
                                 >
-                                  {store.label}
+                                  <div className="flex items-center gap-2">
+                                    <span className="truncate">
+                                      {store.storeName}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      {store.ward}
+                                    </span>
+                                  </div>
                                 </SelectItem>
                               ))}
                           </SelectContent>

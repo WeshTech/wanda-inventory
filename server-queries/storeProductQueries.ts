@@ -3,6 +3,7 @@ import { SearchStoreProductResponse } from "@/types/storeProducts";
 import { searchStoreProductApi } from "@/server/storeProducts/search-strore-product";
 
 interface SearchStoreProductsParams {
+  isLoading: boolean;
   businessId: string;
   businessUserId: string;
   storeId: string;
@@ -10,6 +11,7 @@ interface SearchStoreProductsParams {
 }
 
 export const useSearchStoreProducts = ({
+  isLoading,
   businessId,
   businessUserId,
   storeId,
@@ -17,7 +19,7 @@ export const useSearchStoreProducts = ({
 }: SearchStoreProductsParams) => {
   return useQuery<SearchStoreProductResponse, Error>({
     queryKey: [
-      "storeProducts",
+      "searchstoreProducts",
       businessId,
       businessUserId,
       storeId,
@@ -25,7 +27,12 @@ export const useSearchStoreProducts = ({
     ],
     queryFn: () =>
       searchStoreProductApi(businessId, businessUserId, storeId, searchTerm),
-    enabled: !!businessId && !!businessUserId && !!storeId && !!searchTerm,
+    enabled:
+      !isLoading &&
+      !!businessId &&
+      !!businessUserId &&
+      !!storeId &&
+      !!searchTerm,
     staleTime: 20 * 60 * 1000,
   });
 };

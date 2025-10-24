@@ -55,3 +55,17 @@ export type StoresInfoResponse = {
   message: string;
   data: StoreInfo | StoreInfo[] | null;
 };
+
+//business store Info
+export type BusinessStoreData = {
+  storeId: string;
+  storeName: string;
+  ward: string;
+};
+
+//store respone
+export type BusinessStoreResponse = {
+  success: boolean;
+  message: string;
+  data: BusinessStoreData | BusinessStoreData[] | null;
+};

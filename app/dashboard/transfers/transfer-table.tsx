@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowUpDown, ArrowUp, ArrowDown, PlusCircle } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
@@ -276,17 +276,6 @@ export function TransfersTable() {
             <br />
             Create your first transfer
           </div>
-          <Button
-            variant="default"
-            className="flex items-center gap-2"
-            onClick={() => {
-              // Add navigation or action to create a new transfer
-              console.log("Navigate to create transfer");
-            }}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create Transfer
-          </Button>
         </div>
       ) : (
         <>
