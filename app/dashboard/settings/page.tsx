@@ -30,58 +30,125 @@ import {
   Lock,
   Wallet,
   Crown,
-  Edit3,
-  Save,
   Camera,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-  businessProfileSchema,
-  BusinessProfileFormData,
-} from "@/schemas/businessProfileSchema";
 import { Badge } from "@/components/ui/badge";
 import { FullscreenImage } from "./coverImage";
+import { useAuthBusinessId, useAuthUser } from "@/stores/authStore"; // Adjust path
 
-interface BusinessProfile {
-  businessName: string;
-  email: string;
-  ownerName: string;
-  category: string;
-  county: string;
-  constituency: string;
-  ward: string;
-  subscription: "BASIC" | "PROFESSIONAL" | "ADVANCED" | "ENTERPRISE";
-  walletBalance: number;
-}
+// Create a minimal schema for password change only
+// schemas/passwordChangeSchema.ts
+import { z } from "zod";
+import { useBusinessInfo } from "@/server-queries/settingsQueries";
 
-export default function BusinessProfilePage() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<BusinessProfile>({
-    businessName: "TechCorp Solutions Ltd",
-    email: "contact@techcorp.co.ke",
-    ownerName: "John Kamau",
-    category: "Technology Services",
-    county: "Nairobi",
-    constituency: "Westlands",
-    ward: "Parklands",
-    subscription: "PROFESSIONAL",
-    walletBalance: 45750.5,
+export const passwordChangeSchema = z
+  .object({
+    oldPassword: z.string().min(1, "Old password is required"),
+    newPassword: z
+      .string()
+      .min(6, "New password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
 
-  const form = useForm<BusinessProfileFormData>({
-    resolver: zodResolver(businessProfileSchema),
+export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
+
+export default function BusinessProfilePage() {
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Get IDs from auth store
+  const businessId = useAuthBusinessId();
+  const user = useAuthUser();
+  const userId = typeof user === "object" && user !== null ? user.userId : "";
+
+  // Fetch business info
+  const {
+    data: businessResponse,
+    isLoading,
+    error,
+  } = useBusinessInfo({
+    businessId: businessId ?? "",
+    userId: userId ?? "",
+  });
+
+  const businessInfo = businessResponse?.data;
+
+  // Form setup - only for password
+  const form = useForm<PasswordChangeFormData>({
+    resolver: zodResolver(passwordChangeSchema),
     defaultValues: {
-      businessName: profile.businessName,
-      email: profile.email,
-      ownerName: profile.ownerName,
-      category: profile.category,
       oldPassword: "",
       newPassword: "",
       confirmPassword: "",
     },
   });
 
-  const subscriptionDetails = {
+  const onSubmit: SubmitHandler<PasswordChangeFormData> = async (data) => {
+    try {
+      // TODO: Replace with real API call
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (data.oldPassword !== "oldpassword") {
+            // Mock old password
+            reject(new Error("Incorrect old password"));
+          } else {
+            resolve(true);
+          }
+        }, 1000);
+      });
+
+      toast.success("Password changed successfully");
+      setIsChangingPassword(false);
+      form.reset();
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to change password"
+      );
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error || !businessInfo) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">
+              Failed to load business information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              {error?.message || "Please try again later."}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-KE", {
+      year: "numeric",
+      month: "long",
+    });
+  };
+
+  const subscriptionMap: Record<
+    string,
+    { color: string; description: string }
+  > = {
     BASIC: {
       color: "bg-gray-500",
       description: "Essential features for small businesses",
@@ -95,52 +162,14 @@ export default function BusinessProfilePage() {
       description: "Premium features for established companies",
     },
     ENTERPRISE: {
-      color: "bg-gold-600",
+      color: "bg-yellow-600",
       description: "Full suite for large organizations",
     },
   };
 
-  const onSubmit: SubmitHandler<BusinessProfileFormData> = async (data) => {
-    try {
-      // Simulate API call to validate old password and update profile
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Mock validation: Assume old password is "oldpassword" for demo
-          if (data.oldPassword && data.oldPassword !== "oldpassword") {
-            reject(new Error("Invalid old password"));
-          } else {
-            resolve(true);
-          }
-        }, 1000);
-      });
-
-      // Update profile state
-      setProfile((prev) => ({
-        ...prev,
-        businessName: data.businessName,
-        email: data.email,
-        ownerName: data.ownerName,
-        category: data.category,
-      }));
-
-      toast.success("Profile updated successfully");
-      setIsEditing(false);
-      form.reset({
-        businessName: data.businessName,
-        email: data.email,
-        ownerName: data.ownerName,
-        category: data.category,
-        oldPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (error) {
-      toast.error(
-        `Update failed: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
+  const planInfo = subscriptionMap[businessInfo.currentPlan] || {
+    color: "bg-gray-500",
+    description: "Unknown plan",
   };
 
   return (
@@ -156,48 +185,29 @@ export default function BusinessProfilePage() {
             <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
               <AvatarImage src="/modern-business-logo-with-tc-letters.jpg" />
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
-                TC
+                {businessInfo.businessName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <Button
               size="sm"
               variant="secondary"
               className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-              disabled={!isEditing}
+              disabled
             >
               <Camera className="h-4 w-4" />
             </Button>
           </div>
           <div className="text-white mb-2">
             <h1 className="text-3xl font-bold text-balance">
-              {profile.businessName}
+              {businessInfo.businessName}
             </h1>
-            <p className="text-white/80 text-lg">{profile.category}</p>
+            <p className="text-white/80 text-lg">{businessInfo.category}</p>
           </div>
-        </div>
-
-        {/* Edit Toggle Button */}
-        <div className="absolute top-6 right-6">
-          <Button
-            onClick={() => {
-              setIsEditing(!isEditing);
-              if (isEditing) form.reset();
-            }}
-            variant={isEditing ? "secondary" : "outline"}
-            className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
-          >
-            {isEditing ? (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </>
-            ) : (
-              <>
-                <Edit3 className="h-4 w-4 mr-2" />
-                Edit Profile
-              </>
-            )}
-          </Button>
         </div>
       </div>
 
@@ -217,124 +227,83 @@ export default function BusinessProfilePage() {
                     Business Information
                   </CardTitle>
                   <CardDescription>
-                    Manage your business details and contact information
+                    Your business details are managed securely
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="businessName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Business Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={!isEditing}
-                              className={!isEditing ? "bg-muted" : ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-1">
+                      <FormLabel>Business Name</FormLabel>
+                      <Input
+                        value={businessInfo.businessName}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                {...field}
-                                type="email"
-                                disabled={!isEditing}
-                                className={`pl-10 ${
-                                  !isEditing ? "bg-muted" : ""
-                                }`}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-1">
+                      <FormLabel>Email Address</FormLabel>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          value={businessInfo.email}
+                          disabled
+                          className="pl-10 bg-muted"
+                        />
+                      </div>
+                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="ownerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Owner Name</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                {...field}
-                                disabled={!isEditing}
-                                className={`pl-10 ${
-                                  !isEditing ? "bg-muted" : ""
-                                }`}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-1">
+                      <FormLabel>Owner Name</FormLabel>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          value={businessInfo.ownerName}
+                          disabled
+                          className="pl-10 bg-muted"
+                        />
+                      </div>
+                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={!isEditing}
-                              className={!isEditing ? "bg-muted" : ""}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-1">
+                      <FormLabel>Category</FormLabel>
+                      <Input
+                        value={businessInfo.category}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
                   </div>
 
                   <Separator />
 
-                  {/* Location Information (Non-editable) */}
+                  {/* Location Information */}
                   <div>
                     <h4 className="font-medium mb-3 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary" />
                       Location Details
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <FormLabel>County</FormLabel>
                         <Input
-                          value={profile.county}
+                          value={businessInfo.county}
                           disabled
                           className="bg-muted"
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <FormLabel>Constituency</FormLabel>
                         <Input
-                          value={profile.constituency}
+                          value={businessInfo.constituency}
                           disabled
                           className="bg-muted"
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <FormLabel>Ward</FormLabel>
                         <Input
-                          value={profile.ward}
+                          value={businessInfo.ward}
                           disabled
                           className="bg-muted"
                         />
@@ -342,14 +311,24 @@ export default function BusinessProfilePage() {
                     </div>
                   </div>
 
-                  {isEditing && (
+                  {/* Password Change Section */}
+                  {!isChangingPassword ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsChangingPassword(true)}
+                      className="w-full"
+                    >
+                      <Lock className="h-4 w-4 mr-2" />
+                      Change Password
+                    </Button>
+                  ) : (
                     <>
                       <Separator />
-                      {/* Password Section */}
                       <div>
                         <h4 className="font-medium mb-3 flex items-center gap-2">
                           <Lock className="h-4 w-4 text-primary" />
-                          Update Password
+                          Change Password
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <FormField
@@ -357,12 +336,12 @@ export default function BusinessProfilePage() {
                             name="oldPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Old Password</FormLabel>
+                                <FormLabel>Current Password</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
                                     type="password"
-                                    placeholder="Enter old password"
+                                    placeholder="••••••••"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -379,7 +358,7 @@ export default function BusinessProfilePage() {
                                   <Input
                                     {...field}
                                     type="password"
-                                    placeholder="Enter new password"
+                                    placeholder="••••••••"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -396,7 +375,7 @@ export default function BusinessProfilePage() {
                                   <Input
                                     {...field}
                                     type="password"
-                                    placeholder="Confirm new password"
+                                    placeholder="••••••••"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -404,28 +383,24 @@ export default function BusinessProfilePage() {
                             )}
                           />
                         </div>
+                        <div className="flex gap-3 pt-4">
+                          <Button type="submit" className="flex-1">
+                            Update Password
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setIsChangingPassword(false);
+                              form.reset();
+                            }}
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
                     </>
-                  )}
-
-                  {isEditing && (
-                    <div className="flex gap-3 pt-4">
-                      <Button type="submit" className="flex-1">
-                        <Save className="h-4 w-4 mr-2" />
-                        Save Changes
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setIsEditing(false);
-                          form.reset();
-                        }}
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -443,25 +418,20 @@ export default function BusinessProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center space-y-4">
-                    {/* Current Plan */}
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Current Plan
                       </p>
                       <Badge
                         variant="secondary"
-                        className="px-4 py-1 text-md rounded-full"
+                        className={`px-4 py-1 text-md rounded-full ${planInfo.color} text-white`}
                       >
-                        {profile.subscription}
+                        {businessInfo.currentPlan}
                       </Badge>
                     </div>
-
-                    {/* Description */}
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {subscriptionDetails[profile.subscription].description}
+                      {planInfo.description}
                     </p>
-
-                    {/* Action */}
                     <Button variant="default" className="w-full font-medium">
                       Upgrade Plan
                     </Button>
@@ -473,7 +443,7 @@ export default function BusinessProfilePage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-center gap-2">
-                    <Wallet className="h-5 w-5 text-primary " />
+                    <Wallet className="h-5 w-5 text-primary" />
                     Wallet Balance
                   </CardTitle>
                 </CardHeader>
@@ -482,7 +452,7 @@ export default function BusinessProfilePage() {
                     <div>
                       <p className="text-xl font-bold text-primary">
                         KSh{" "}
-                        {profile.walletBalance.toLocaleString("en-KE", {
+                        {businessInfo.walletBalance.toLocaleString("en-KE", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
@@ -491,14 +461,6 @@ export default function BusinessProfilePage() {
                         Available Balance
                       </p>
                     </div>
-                    {/* <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" size="sm">
-                        Add Funds
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Withdraw
-                      </Button>
-                    </div> */}
                   </div>
                 </CardContent>
               </Card>
@@ -506,26 +468,22 @@ export default function BusinessProfilePage() {
               {/* Quick Stats Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick Stats</CardTitle>
+                  <CardTitle>Account Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">
-                      Profile Completion
-                    </span>
-                    <span className="font-semibold text-secondary">95%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Last Login
-                    </span>
-                    <span className="font-semibold">Today</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
                       Member Since
                     </span>
-                    <span className="font-semibold">Jan 2024</span>
+                    <span className="font-semibold">
+                      {formatDate(businessInfo.memberSince)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Business ID
+                    </span>
+                    <span className="font-mono text-xs">{businessId}</span>
                   </div>
                 </CardContent>
               </Card>
