@@ -35,6 +35,12 @@ import {
   ArrowLeftRight,
   User2,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "../ui/tooltip";
 
 import { useAuthUser } from "@/stores/authStore";
 import { usePathname } from "next/navigation";
@@ -52,176 +58,221 @@ export const AppSidebar = () => {
   };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="h-12 w-full">
-              <Link href="/">
-                <Image
-                  src="/images/logo.jpg"
-                  alt="logo"
-                  width={2500}
-                  height={2500}
-                  className="rounded-full h-8 w-8"
-                />
-                <p>
-                  {user?.businessName ? user.businessName : "Wanda Inventory"}
-                </p>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarSeparator />
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Application
-          </SidebarGroupLabel>{" "}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {sidebarItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className={cn(
-                      "transition-all duration-200",
-                      isActivePath(item.url) &&
-                        "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
-                    )}
-                  >
-                    <Link href={item.url}>
-                      <item.icon
-                        className={cn(
-                          "transition-colors duration-200",
-                          isActivePath(item.url) && "text-primary-foreground"
+    <TooltipProvider>
+      <Sidebar collapsible="icon">
+        <SidebarHeader className="">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="h-12 w-full">
+                <Link href="/">
+                  <Image
+                    src="/images/logo.jpg"
+                    alt="logo"
+                    width={2500}
+                    height={2500}
+                    className="rounded-full h-8 w-8"
+                  />
+                  <p>
+                    {user?.businessName ? user.businessName : "Wanda Inventory"}
+                  </p>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarSeparator />
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Application
+            </SidebarGroupLabel>{" "}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {sidebarItems.map((item) => (
+                  <Tooltip key={item.title}>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          className={cn(
+                            "transition-all duration-200",
+                            isActivePath(item.url) &&
+                              "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
+                          )}
+                        >
+                          <Link href={item.url}>
+                            <item.icon
+                              className={cn(
+                                "transition-colors duration-200",
+                                isActivePath(item.url) &&
+                                  "text-primary-foreground"
+                              )}
+                            />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                        {item.title === "Inbox" && (
+                          <SidebarMenuBadge
+                            className={cn(
+                              isActivePath(item.url) &&
+                                "bg-secondary text-secondary-foreground"
+                            )}
+                          >
+                            24
+                          </SidebarMenuBadge>
                         )}
-                      />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                  {item.title === "Inbox" && (
-                    <SidebarMenuBadge
-                      className={cn(
-                        isActivePath(item.url) &&
-                          "bg-secondary text-secondary-foreground"
-                      )}
-                    >
-                      24
-                    </SidebarMenuBadge>
-                  )}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      </SidebarMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="ml-2">
+                      {item.title}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-        {/* Reports */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Reports
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild id="sidebar-reports-sales">
-                      <Link href="/dashboard/reports/sales">
-                        <ShoppingCart className="h-4 w-4" />
+          {/* Reports */}
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Reports
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuSub>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            id="sidebar-reports-sales"
+                          >
+                            <Link href="/dashboard/reports/sales">
+                              <ShoppingCart className="h-4 w-4" />
+                              Sales report
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="ml-2">
                         Sales report
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
+                      </TooltipContent>
+                    </Tooltip>
 
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      asChild
-                      id="sidebar-reports-access-logs"
-                    >
-                      <Link href="/dashboard/reports/access-logs">
-                        <FileText className="h-4 w-4" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            id="sidebar-reports-access-logs"
+                          >
+                            <Link href="/dashboard/reports/access-logs">
+                              <FileText className="h-4 w-4" />
+                              Access Log reports
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="ml-2">
                         Access Log reports
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      asChild
-                      id="sidebar-reports-transfer-reports"
-                    >
-                      <Link href="/dashboard/reports/transfer-reports">
-                        <ArrowLeftRight className="h-4 w-4" />
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            id="sidebar-reports-transfer-reports"
+                          >
+                            <Link href="/dashboard/reports/transfer-reports">
+                              <ArrowLeftRight className="h-4 w-4" />
+                              Transfer Reports
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="ml-2">
                         Transfer Reports
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      </TooltipContent>
+                    </Tooltip>
+                  </SidebarMenuSub>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-        {/* Anaytics */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Analytics
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton asChild id="sidebar-analytics-sales">
-                      <Link href="/dashboard/analytics/sales">
-                        <ShoppingCart className="h-4 w-4" />
+          {/* Anaytics */}
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Analytics
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuSub>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            id="sidebar-analytics-sales"
+                          >
+                            <Link href="/dashboard/analytics/sales">
+                              <ShoppingCart className="h-4 w-4" />
+                              Sales analysis
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="ml-2">
                         Sales analysis
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+                      </TooltipContent>
+                    </Tooltip>
+                  </SidebarMenuSub>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
 
-      {/* footer */}
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="hover:bg-accent hover:text-accent-foreground">
-                  <User2 /> {user?.businessName || "John Doe"}{" "}
-                  <ChevronUp className="ml-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
-                  <User className="h-[1.2rem] w-[1.2rem] mr-2" />
-                  Account
-                </DropdownMenuItem>
+        {/* footer */}
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton className="hover:bg-accent hover:text-accent-foreground">
+                    <User2 /> {user?.businessName || "John Doe"}{" "}
+                    <ChevronUp className="ml-auto" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
+                    <User className="h-[1.2rem] w-[1.2rem] mr-2" />
+                    Account
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
-                  <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
-                  Settings
-                </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
+                    <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
+                    Settings
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={useLogoutUser}
-                  className="hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={useLogoutUser}
+                    className="hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+    </TooltipProvider>
   );
 };
