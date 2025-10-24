@@ -7,6 +7,9 @@ import { Nunito } from "next/font/google";
 import ToastProvider from "@/components/providers/toast-provider";
 import { Toaster } from "sonner";
 import { TanstackProvider } from "@/providers/tanstack-provider";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -30,6 +33,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${nunito.className} antialiased flex`}>
+        <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

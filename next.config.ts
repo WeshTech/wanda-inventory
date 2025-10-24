@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.dummyjson.com",
       },
+      {
+        protocol: "https",
+        hostname: "gx46v4d8zc.ufs.sh",
+      },
     ],
   },
 };

@@ -50,6 +50,7 @@ import {
 } from "@/server-queries/inventoryQueries";
 import { CreateBusinessProductResponse } from "@/types/inventory";
 import { useAuthBusinessId } from "@/stores/authStore";
+import { UploadButton } from "@/utils/uploadthing";
 
 // Define types
 export type FoundAtType = "catalogue" | "business";
@@ -103,6 +104,7 @@ export default function AddInventoryPage() {
   const [queryEnabled, setQueryEnabled] = useState(false);
   const [productData, setProductData] =
     useState<FindProductByBarcodeResponse | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<InventoryFormData>({
     resolver: zodResolver(inventorySchema),
@@ -226,7 +228,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="barcode"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Barcode</FormLabel>
@@ -310,7 +312,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="name"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Product Name</FormLabel>
@@ -330,7 +332,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="brand"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Brand</FormLabel>
@@ -350,7 +352,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="unit"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Unit</FormLabel>
@@ -380,7 +382,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="supplier"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Supplier</FormLabel>
@@ -412,7 +414,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="store"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Store</FormLabel>
@@ -444,7 +446,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="category"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Category</FormLabel>
@@ -477,7 +479,7 @@ export default function AddInventoryPage() {
                       <FormField
                         control={form.control}
                         name="sellingPrice"
-                        disabled={isPending}
+                        disabled={isPending || isUploading}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Selling Price</FormLabel>
@@ -503,7 +505,7 @@ export default function AddInventoryPage() {
                       <FormField
                         control={form.control}
                         name="minStockLevel"
-                        disabled={isPending}
+                        disabled={isPending || isUploading}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Minimum Stock Level</FormLabel>
@@ -530,7 +532,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="image"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={() => (
                         <FormItem>
                           <FormLabel className="mx-auto">
@@ -538,9 +540,10 @@ export default function AddInventoryPage() {
                           </FormLabel>
                           <FormControl>
                             <div className="flex flex-col items-center space-y-4">
+                              {/* Image preview box */}
                               <div className="relative w-48 h-48 border-2 border-dashed border-border rounded-lg overflow-hidden">
                                 <Image
-                                  src={productImage || "/placeholder.svg"}
+                                  src={productImage || "/imagenotset.jpg"}
                                   alt="Product preview"
                                   fill
                                   className="object-cover rounded-lg"
@@ -549,20 +552,64 @@ export default function AddInventoryPage() {
                                   }
                                 />
                               </div>
-                              <Input
-                                type="file"
-                                disabled={isPending}
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const url = URL.createObjectURL(file);
-                                    setProductImage(url);
-                                    form.setValue("image", url);
-                                  }
-                                }}
-                                className="max-w-48"
-                              />
+
+                              {/* Upload Button from UploadThing */}
+                              <div className="w-full flex flex-col items-center space-y-2">
+                                <UploadButton
+                                  endpoint="imageUploader"
+                                  content={{
+                                    button({ ready }) {
+                                      return ready
+                                        ? "Upload Image"
+                                        : "Uploading...";
+                                    },
+                                    allowedContent: "Image (4MB max)",
+                                  }}
+                                  onUploadBegin={() => setIsUploading(true)}
+                                  onClientUploadComplete={(res) => {
+                                    setIsUploading(false);
+                                    if (res?.[0]?.ufsUrl) {
+                                      const uploadedUrl = res[0].ufsUrl;
+                                      setProductImage(uploadedUrl);
+                                      form.setValue("image", uploadedUrl);
+                                      toast.success(
+                                        "Image uploaded successfully!"
+                                      );
+                                    } else {
+                                      toast.error(
+                                        "Upload succeeded but no URL returned."
+                                      );
+                                    }
+                                  }}
+                                  onUploadError={(error) => {
+                                    setIsUploading(false);
+                                    toast.error(
+                                      `Upload failed: ${error.message}`
+                                    );
+                                  }}
+                                  appearance={{
+                                    button:
+                                      "bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50",
+                                    container: "w-full flex justify-center",
+                                  }}
+                                  disabled={isPending || isUploading}
+                                />
+
+                                {/* Optional: Clear button */}
+                                {/* {productImage !== "/imagenotset.jpg" && (
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      setProductImage("/imagenotset.jpg");
+                                      form.setValue("image", "");
+                                    }}
+                                  >
+                                    Remove Image
+                                  </Button>
+                                )} */}
+                              </div>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -574,7 +621,7 @@ export default function AddInventoryPage() {
                     <FormField
                       control={form.control}
                       name="description"
-                      disabled={isPending}
+                      disabled={isPending || isUploading}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Description</FormLabel>
@@ -598,7 +645,7 @@ export default function AddInventoryPage() {
                   <Button
                     type="submit"
                     className="px-8 disabled:cursor-not-allowed"
-                    disabled={isPending}
+                    disabled={isPending || isUploading}
                   >
                     {isPending ? "Adding Product..." : "Add Product"}
                   </Button>
