@@ -32,8 +32,6 @@ import {
   Settings,
   ShoppingCart,
   User,
-  FileText,
-  ArrowLeftRight,
   User2,
 } from "lucide-react";
 import {
@@ -188,7 +186,7 @@ export const AppSidebar = () => {
                       </SidebarMenuSubItem>
                     )}
 
-                    {isCollapsed ? (
+                    {/* {isCollapsed ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarMenuSubItem>
@@ -252,7 +250,7 @@ export const AppSidebar = () => {
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                    )}
+                    )} */}
                   </SidebarMenuSub>
                 </SidebarMenuItem>
               </SidebarMenu>
