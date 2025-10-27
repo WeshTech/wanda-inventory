@@ -16,7 +16,7 @@ import {
   CategoryFormData,
   categorySchema,
 } from "@/schemas/storeCategorySchema";
-import { toast } from "sonner"; // Standardized to use Sonner
+import { toast } from "sonner";
 import { useCreateStoreCategory } from "@/server-queries/storeCategoryQueries";
 import {
   Select,
@@ -25,9 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetBusinessStores } from "@/server-queries/storeQueries";
-import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+import { useStoreInfoQuery } from "@/server-queries/storeQueries";
+import {
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthStoreAccess,
+} from "@/stores/authStore";
 import Loader from "@/components/ui/loading-spiner";
+import { StoreInfo } from "@/types/stores";
 
 interface AddCategoryDialogProps {
   open: boolean;
@@ -39,9 +44,12 @@ export function AddCategoryDialog({
   onOpenChange,
 }: AddCategoryDialogProps) {
   const { isLoading: authLoading } = useAuthStore();
+  const storeIds = useAuthStoreAccess();
   const businessId = useAuthBusinessId() || "";
-  const { data: storesData, isLoading: storesLoading } =
-    useGetBusinessStores(businessId);
+  const { data: storesData, isLoading: storesLoading } = useStoreInfoQuery(
+    businessId,
+    storeIds
+  );
 
   const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
@@ -69,6 +77,13 @@ export function AddCategoryDialog({
       },
     });
   };
+
+  // Safely normalize `data` into an array of StoreInfo
+  const storesArray: StoreInfo[] = storesData?.data
+    ? Array.isArray(storesData.data)
+      ? storesData.data
+      : [storesData.data]
+    : [];
 
   if (authLoading) {
     return (
@@ -127,18 +142,16 @@ export function AddCategoryDialog({
               }}
               value={form.watch("store")}
               disabled={
-                storesLoading ||
-                !storesData?.data?.stores?.length ||
-                !businessId
+                storesLoading || storesArray.length === 0 || !businessId
               }
             >
               <SelectTrigger id="categoryStore" className="w-full sm:w-3/4">
                 <SelectValue placeholder="Select store..." />
               </SelectTrigger>
               <SelectContent>
-                {storesData?.data?.stores?.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    {store.name}{" "}
+                {storesArray.map((store) => (
+                  <SelectItem key={store.storeId} value={store.storeId}>
+                    {store.storeName}{" "}
                     <span className="text-sm text-muted-foreground">
                       ({store.ward})
                     </span>
@@ -151,7 +164,7 @@ export function AddCategoryDialog({
                 {form.formState.errors.store.message}
               </p>
             )}
-            {storesData?.data?.stores?.length === 0 && (
+            {storesArray.length === 0 && !storesLoading && (
               <p className="text-sm text-destructive">No stores available</p>
             )}
           </div>

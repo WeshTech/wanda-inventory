@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -43,8 +43,9 @@ import Loader from "@/components/ui/loading-spiner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { X } from "lucide-react";
 import { useStoreCategories } from "@/server-queries/storeCategoryQueries";
-import { GetCategoryData } from "@/types/storeCategory";
+import type { GetCategoryData } from "@/types/storeCategory";
 import { DataTablePagination } from "@/components/dashboard/TablePagination";
+import { toast } from "sonner";
 
 const columns: ColumnDef<GetCategoryData>[] = [
   {
@@ -149,13 +150,13 @@ const columns: ColumnDef<GetCategoryData>[] = [
 
 export function CategoriesTable() {
   const { isLoading: isAuthLoading } = useAuthStore();
-  const businessId = useAuthBusinessId();
+  const businessId = useAuthBusinessId() ?? "";
   const {
     data,
     isLoading: queryLoading,
     isFetching,
     error,
-  } = useStoreCategories(businessId ?? "");
+  } = useStoreCategories(businessId);
 
   const [globalFilter, setGlobalFilter] = useState("");
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
@@ -175,17 +176,19 @@ export function CategoriesTable() {
     },
   });
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     // Implement export logic
-  };
+    toast.success("Feature coming soon");
+  }, []);
 
-  const handleImport = () => {
+  const handleImport = useCallback(() => {
     // Implement import logic
-  };
+    toast.success("Feature coming soon");
+  }, []);
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
     setGlobalFilter("");
-  };
+  }, []);
 
   return (
     <div className="grid gap-4 p-2">

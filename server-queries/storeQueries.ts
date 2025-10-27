@@ -3,7 +3,6 @@ import { createStoreApi } from "@/server/stores/createStore";
 import { getBusinessStoreInfoApi } from "@/server/stores/get-business-store-info";
 import { getStoreInfoApi } from "@/server/stores/get-stores-info";
 import { getBusinessStores } from "@/server/stores/getBusinessStores";
-import { useAuthStore } from "@/stores/authStore";
 import {
   BusinessStoreResponse,
   CreateStoreResponse,
@@ -20,11 +19,10 @@ import {
 
 //* Get all the stores
 export const useGetBusinessStores = (businessId: string) => {
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
   return useQuery<GetBusinessStoresResponse, Error>({
     queryKey: ["getbusinessStores", businessId],
     queryFn: () => getBusinessStores(businessId),
-    enabled: !authLoading && isAuthenticated && !!businessId,
+    enabled: !!businessId,
     staleTime: 60 * 60 * 1000 * 10,
   });
 };
