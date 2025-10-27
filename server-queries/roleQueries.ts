@@ -78,7 +78,7 @@ export const useUpdateBusinessRole = (
         });
       }
       queryClient.invalidateQueries({
-        queryKey: ["getRoleById", variables.roleId],
+        queryKey: ["getRoleById", businessId, variables.roleId],
       });
     },
     ...options,

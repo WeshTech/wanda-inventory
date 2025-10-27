@@ -12,7 +12,6 @@ export const updateBusinessRoleApi = async (
   const flatPermissions: Record<string, boolean> = {};
   Object.entries(permissions).forEach(([module, actions]) => {
     const moduleKey = module.charAt(0).toUpperCase() + module.slice(1);
-    // Explicitly include all actions, whether true or false
     ["create", "extract", "update", "delete"].forEach((action) => {
       const backendKey = `${action}${moduleKey}`;
       flatPermissions[backendKey] = !!actions[action as keyof typeof actions];
@@ -46,7 +45,7 @@ export const updateBusinessRoleApi = async (
           "Something went wrong. Please check your connection and try again"
       );
     } else {
-      throw error; // Rethrow non-Axios errors to preserve custom messages
+      throw error;
     }
   }
 };
