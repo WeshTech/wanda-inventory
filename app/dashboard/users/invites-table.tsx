@@ -65,10 +65,10 @@ export function InvitesTable() {
     }
   }, [isAuthLoading]);
 
-  // ✅ Now the API already returns invited users only
+  //  Now the API already returns invited users only
   const invites = data?.data ?? [];
 
-  // ✅ Merge all loading states together
+  //  Merge all loading states together
   const isLoading = isAuthLoading || queryLoading || isFetching;
 
   const columns: ColumnDef<BusinessUserResponseData>[] = useMemo(

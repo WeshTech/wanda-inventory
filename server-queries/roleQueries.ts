@@ -44,18 +44,18 @@ export const useGetBusinessRoles = (businessId: string) => {
 };
 
 //get a singe role by id
-export const useGetBusinessRole = (roleId: string) => {
+export const useGetBusinessRole = (businessId: string, roleId: string) => {
   return useQuery<SingleRoleResponse, Error>({
-    queryKey: ["getRoleById", roleId],
-    queryFn: () => getBusinessRoleApi(roleId),
-    enabled: !!roleId,
+    queryKey: ["getRoleById", businessId, roleId],
+    queryFn: () => getBusinessRoleApi(businessId, roleId),
+    enabled: Boolean(businessId && roleId),
     staleTime: 60 * 60 * 1000 * 10,
   });
 };
 
 //update role
 export const useUpdateBusinessRole = (
-  businessId?: string,
+  businessId: string,
   options?: UseMutationOptions<
     UpdateBusinessRoleResponse,
     Error,

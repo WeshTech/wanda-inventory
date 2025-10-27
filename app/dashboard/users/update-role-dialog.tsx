@@ -127,14 +127,14 @@ export function UpdateRoleDialog({
   onRoleUpdate,
 }: UpdateRoleDialogProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const businessId = useAuthBusinessId() ?? "";
 
   // Fetch role data when dialog opens with a roleId
   const {
     data: roleResponse,
     isLoading: isLoadingRole,
     error: roleError,
-  } = useGetBusinessRole(roleId || "");
-  const businessId = useAuthBusinessId() ?? "";
+  } = useGetBusinessRole(businessId, roleId || "");
 
   // Updated hook usage with businessId
   const { mutate: updateRole, isPending } = useUpdateBusinessRole(businessId);
