@@ -204,9 +204,17 @@ export default function BusinessProfilePage() {
           </div>
           <div className="text-white mb-2">
             <h1 className="text-3xl font-bold text-balance">
-              {businessInfo.businessName}
+              {businessInfo.businessName
+                ? businessInfo.businessName.charAt(0).toUpperCase() +
+                  businessInfo.businessName.slice(1).toLowerCase()
+                : ""}{" "}
             </h1>
-            <p className="text-white/80 text-lg">{businessInfo.category}</p>
+            <p className="text-white/80 text-lg">
+              {businessInfo.category
+                ? businessInfo.category.charAt(0).toUpperCase() +
+                  businessInfo.category.slice(1).toLowerCase()
+                : ""}
+            </p>{" "}
           </div>
         </div>
       </div>

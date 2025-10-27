@@ -79,7 +79,7 @@ export default function InventorySummary() {
         </div>
         <div className="px-4 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-1">
-            <div className="text-xl sm:text-3xl font-bold tracking-tight">
+            <div className="text-xl sm:text-2xl font-bold tracking-tight">
               KES{" "}
               {totalAssetValue.toLocaleString(undefined, {
                 minimumFractionDigits: 2,

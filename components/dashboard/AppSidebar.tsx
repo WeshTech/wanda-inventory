@@ -15,6 +15,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
+  useSidebar,
 } from "../ui/sidebar";
 import { sidebarItems } from "@/constants/sidebar";
 import Link from "next/link";
@@ -50,6 +51,10 @@ import { useLogoutUser } from "@/server/auth/logout";
 export const AppSidebar = () => {
   const user = useAuthUser();
   const pathname = usePathname();
+  const { state } = useSidebar();
+
+  // Check if sidebar is collapsed
+  const isCollapsed = state === "collapsed";
 
   const isActivePath = (path: string) => {
     if (path === "/dashboard" && pathname === "/dashboard") return true;
@@ -73,7 +78,10 @@ export const AppSidebar = () => {
                     className="rounded-full h-8 w-8"
                   />
                   <p>
-                    {user?.businessName ? user.businessName : "Wanda Inventory"}
+                    {user?.businessName
+                      ? user.businessName.charAt(0).toUpperCase() +
+                        user.businessName.slice(1).toLowerCase()
+                      : "Wanda Inventory"}
                   </p>
                 </Link>
               </SidebarMenuButton>
@@ -88,46 +96,52 @@ export const AppSidebar = () => {
             </SidebarGroupLabel>{" "}
             <SidebarGroupContent>
               <SidebarMenu>
-                {sidebarItems.map((item) => (
-                  <Tooltip key={item.title}>
-                    <TooltipTrigger asChild>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton
-                          asChild
+                {sidebarItems.map((item) => {
+                  const menuItem = (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        className={cn(
+                          "transition-all duration-200",
+                          isActivePath(item.url) &&
+                            "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
+                        )}
+                      >
+                        <Link href={item.url}>
+                          <item.icon
+                            className={cn(
+                              "transition-colors duration-200",
+                              isActivePath(item.url) &&
+                                "text-primary-foreground"
+                            )}
+                          />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.title === "Inbox" && (
+                        <SidebarMenuBadge
                           className={cn(
-                            "transition-all duration-200",
                             isActivePath(item.url) &&
-                              "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
+                              "bg-secondary text-secondary-foreground"
                           )}
                         >
-                          <Link href={item.url}>
-                            <item.icon
-                              className={cn(
-                                "transition-colors duration-200",
-                                isActivePath(item.url) &&
-                                  "text-primary-foreground"
-                              )}
-                            />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                        {item.title === "Inbox" && (
-                          <SidebarMenuBadge
-                            className={cn(
-                              isActivePath(item.url) &&
-                                "bg-secondary text-secondary-foreground"
-                            )}
-                          >
-                            24
-                          </SidebarMenuBadge>
-                        )}
-                      </SidebarMenuItem>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="ml-2">
-                      {item.title}
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
+                          24
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  );
+
+                  return isCollapsed ? (
+                    <Tooltip key={item.title}>
+                      <TooltipTrigger asChild>{menuItem}</TooltipTrigger>
+                      <TooltipContent side="right" className="ml-2">
+                        {item.title}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <div key={item.title}>{menuItem}</div>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -141,69 +155,111 @@ export const AppSidebar = () => {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuSub>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            id="sidebar-reports-sales"
-                          >
-                            <Link href="/dashboard/reports/sales">
-                              <ShoppingCart className="h-4 w-4" />
-                              Sales report
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="ml-2">
-                        Sales report
-                      </TooltipContent>
-                    </Tooltip>
+                    {isCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              asChild
+                              id="sidebar-reports-sales"
+                            >
+                              <Link href="/dashboard/reports/sales">
+                                <ShoppingCart className="h-4 w-4" />
+                                Sales report
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="ml-2">
+                          Sales report
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          id="sidebar-reports-sales"
+                        >
+                          <Link href="/dashboard/reports/sales">
+                            <ShoppingCart className="h-4 w-4" />
+                            Sales report
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            id="sidebar-reports-access-logs"
-                          >
-                            <Link href="/dashboard/reports/access-logs">
-                              <FileText className="h-4 w-4" />
-                              Access Log reports
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="ml-2">
-                        Access Log reports
-                      </TooltipContent>
-                    </Tooltip>
+                    {isCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              asChild
+                              id="sidebar-reports-access-logs"
+                            >
+                              <Link href="/dashboard/reports/access-logs">
+                                <FileText className="h-4 w-4" />
+                                Access Log reports
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="ml-2">
+                          Access Log reports
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          id="sidebar-reports-access-logs"
+                        >
+                          <Link href="/dashboard/reports/access-logs">
+                            <FileText className="h-4 w-4" />
+                            Access Log reports
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            id="sidebar-reports-transfer-reports"
-                          >
-                            <Link href="/dashboard/reports/transfer-reports">
-                              <ArrowLeftRight className="h-4 w-4" />
-                              Transfer Reports
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="ml-2">
-                        Transfer Reports
-                      </TooltipContent>
-                    </Tooltip>
+                    {isCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              asChild
+                              id="sidebar-reports-transfer-reports"
+                            >
+                              <Link href="/dashboard/reports/transfer-reports">
+                                <ArrowLeftRight className="h-4 w-4" />
+                                Transfer Reports
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="ml-2">
+                          Transfer Reports
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          id="sidebar-reports-transfer-reports"
+                        >
+                          <Link href="/dashboard/reports/transfer-reports">
+                            <ArrowLeftRight className="h-4 w-4" />
+                            Transfer Reports
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
                   </SidebarMenuSub>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Anaytics */}
+          {/* Analytics */}
           <SidebarGroup>
             <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Analytics
@@ -212,24 +268,38 @@ export const AppSidebar = () => {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuSub>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton
-                            asChild
-                            id="sidebar-analytics-sales"
-                          >
-                            <Link href="/dashboard/analytics/sales">
-                              <ShoppingCart className="h-4 w-4" />
-                              Sales analysis
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="ml-2">
-                        Sales analysis
-                      </TooltipContent>
-                    </Tooltip>
+                    {isCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              asChild
+                              id="sidebar-analytics-sales"
+                            >
+                              <Link href="/dashboard/analytics/sales">
+                                <ShoppingCart className="h-4 w-4" />
+                                Sales analysis
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="ml-2">
+                          Sales analysis
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          asChild
+                          id="sidebar-analytics-sales"
+                        >
+                          <Link href="/dashboard/analytics/sales">
+                            <ShoppingCart className="h-4 w-4" />
+                            Sales analysis
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    )}
                   </SidebarMenuSub>
                 </SidebarMenuItem>
               </SidebarMenu>
