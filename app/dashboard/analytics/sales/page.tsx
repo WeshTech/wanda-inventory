@@ -105,7 +105,7 @@ export default function SalesAnalysisPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-lg">
-                  Data Collection Progress
+                  Data Analysis Progress
                 </h3>
                 <span className="text-sm font-medium text-primary">
                   {isLoading
