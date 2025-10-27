@@ -14,6 +14,10 @@ export type GetStoreSaleProductsResult = {
   success: boolean;
   message: string;
   data: StoreSaleProduct[] | null;
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
 };
 
 // search sale product

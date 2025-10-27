@@ -5,11 +5,13 @@ import { AxiosError } from "axios";
 export const getStoreSalesProductsApi = async (
   businessId: string,
   storeId: string,
-  userId: string
+  userId: string,
+  page: number,
+  limit: number
 ): Promise<GetStoreSaleProductsResult> => {
   try {
     const response = await axiosApi.get<GetStoreSaleProductsResult>(
-      `/sales/products/${businessId}/${storeId}/${userId}`
+      `/sales/products/${businessId}/${storeId}/${userId}?page=${page}&limit=${limit}`
     );
 
     if (response.data?.success) {
@@ -17,6 +19,10 @@ export const getStoreSalesProductsApi = async (
         success: true,
         message: response.data?.message || "Products extracted successfully",
         data: response.data?.data,
+        total: response.data?.total,
+        page: response.data?.page,
+        limit: response.data?.limit,
+        pages: response.data?.pages,
       };
     } else {
       throw new Error("Failed to fetch products. Please try again.");

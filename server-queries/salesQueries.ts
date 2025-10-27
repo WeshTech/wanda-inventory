@@ -11,20 +11,60 @@ import {
   GetStoreSaleProductsResult,
   SearchStoreSaleProductsResponse,
 } from "@/types/sales";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 //get store sale products
 export const useStoreSalesProducts = (
   businessId: string,
   storeId: string,
-  userId: string
+  userId: string,
+  page: number,
+  limit: number
 ) => {
-  return useQuery<GetStoreSaleProductsResult, Error>({
-    queryKey: ["storesalesproducts", businessId, storeId, userId],
-    queryFn: () => getStoreSalesProductsApi(businessId, storeId, userId),
+  const queryClient = useQueryClient();
+  const query = useQuery<GetStoreSaleProductsResult, Error>({
+    queryKey: ["storesalesproducts", businessId, storeId, userId, page, limit],
+    queryFn: () =>
+      getStoreSalesProductsApi(businessId, storeId, userId, page, limit),
     enabled: !!businessId && !!storeId && !!userId,
     staleTime: 1000,
   });
+
+  // Prefetch next page when query is successful
+  useEffect(() => {
+    if (query.isSuccess && query.data?.success) {
+      queryClient.prefetchQuery({
+        queryKey: [
+          "storesalesproducts",
+          businessId,
+          storeId,
+          userId,
+          page + 1,
+          limit,
+        ],
+        queryFn: () =>
+          getStoreSalesProductsApi(
+            businessId,
+            storeId,
+            userId,
+            page + 1,
+            limit
+          ),
+      });
+    }
+  }, [
+    query.isSuccess,
+    query.data,
+    businessId,
+    storeId,
+    userId,
+    page,
+    limit,
+    queryClient,
+  ]);
+
+  return query;
 };
 
 //search store sale products

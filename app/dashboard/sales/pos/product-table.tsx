@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -8,6 +8,7 @@ import {
   getPaginationRowModel,
   useReactTable,
   type VisibilityState,
+  type PaginationState,
 } from "@tanstack/react-table";
 
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,12 @@ export function ProductTable({
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
+  // Pagination state
+  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
   // Get auth data
   const authLoading = useAuthStore((state) => state.isLoading);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -84,28 +91,39 @@ export function ProductTable({
   // Debounce the search term (500ms)
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Fetch ALL products for the selected store (no search)
-  const { data: productsData, isLoading: productsLoading } =
-    useStoreSalesProducts(
-      businessId ?? "",
-      selectedStoreId && selectedStoreId !== "all"
-        ? selectedStoreId
-        : stores[0]?.storeId ?? "",
-      userId
-    );
+  // Ensure page and pageSize are valid positive integers
+  const page = Math.max(1, Math.floor(Number(pageIndex) + 1));
+  const limit = Math.max(1, Math.floor(Number(pageSize)));
 
-  // Fetch SEARCHED products using the new hook
+  // Debug logging
+  useEffect(() => {
+    console.log("Pagination values:", {
+      page,
+      limit,
+      businessId,
+      selectedStoreId,
+      userId,
+    });
+  }, [page, limit, businessId, selectedStoreId, userId]);
+
+  // Fetch ALL products for the selected store (server-side pagination)
+  const selectedStore =
+    selectedStoreId && selectedStoreId !== "all"
+      ? selectedStoreId
+      : stores[0]?.storeId ?? "";
+  const { data: productsData, isLoading: productsLoading } =
+    useStoreSalesProducts(businessId ?? "", selectedStore, userId, page, limit);
+
+  // Fetch SEARCHED products
   const { data: searchProductsData, isLoading: searchLoading } =
     useSearchStoreSalesProducts(
       businessId ?? "",
-      selectedStoreId && selectedStoreId !== "all"
-        ? selectedStoreId
-        : stores[0]?.storeId ?? "",
+      selectedStore,
       userId,
       debouncedSearchTerm
     );
 
-  // Transform ALL products data (for when no search)
+  // Transform ALL products data
   const allProducts: Product[] = useMemo(() => {
     if (
       authLoading ||
@@ -147,7 +165,7 @@ export function ProductTable({
     isAuthenticated,
   ]);
 
-  // Transform SEARCHED products data
+  // Transform SEARCHED products data (unchanged)
   const searchedProducts: Product[] = useMemo(() => {
     if (
       authLoading ||
@@ -205,6 +223,16 @@ export function ProductTable({
     storesLoading ||
     (debouncedSearchTerm ? searchLoading : productsLoading) ||
     !isAuthenticated;
+
+  // Get total rows for pagination
+  const totalRows = debouncedSearchTerm
+    ? searchedProducts.length
+    : productsData?.total ?? 0;
+
+  // Reset page to 0 when store or search term changes
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [selectedStoreId, debouncedSearchTerm]);
 
   const columns: ColumnDef<Product>[] = useMemo(
     () => [
@@ -290,16 +318,22 @@ export function ProductTable({
     data: tableProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // Use manual pagination for non-searched data, client-side for searched
+    manualPagination: !debouncedSearchTerm,
+    getPaginationRowModel: debouncedSearchTerm
+      ? getPaginationRowModel()
+      : undefined,
+    pageCount: debouncedSearchTerm
+      ? Math.ceil(searchedProducts.length / pageSize)
+      : productsData?.pages ?? -1,
+    rowCount: totalRows,
+    onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
       columnVisibility,
       rowSelection,
-      pagination: {
-        pageIndex: 0,
-        pageSize: 10,
-      },
+      pagination: { pageIndex, pageSize },
     },
   });
 
