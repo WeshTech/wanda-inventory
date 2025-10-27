@@ -73,11 +73,10 @@ export default function ExpensesPage() {
 
   const isLoading = isAuthLoading || queryLoading || isFetching || !businessId;
 
-  // 👇 mutation hook
+  //  mutation hook
   const { mutate: deleteExpense, isPending: isDeleting } =
     useDeleteBusinessExpense();
 
-  // 👇 wrapped in useCallback so it's stable and can be used in useMemo deps
   const handleDeleteExpense = useCallback(
     (expenseId: string) => {
       const toastId = toast.loading("Deleting expense...");

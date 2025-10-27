@@ -17,7 +17,13 @@ export const TanstackProvider = ({ children }: TanstackProviderProps) => {
           queries: {
             retry: 1,
             refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
             staleTime: 1000 * 60 * 2,
+            refetchOnMount: false,
+            gcTime: 1000 * 60 * 10,
+          },
+          mutations: {
+            retry: 0,
           },
         },
       })
