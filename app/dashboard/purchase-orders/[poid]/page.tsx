@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { usePurchaseOrderDetail } from "@/server-queries/purchaseorderQueries";
 import PurchaseOrderPDFDocument from "@/components/PurchaseOrderDocument";
 import Image from "next/image";
+import { CreativeLoading } from "../../reports/sales/receipt/[invid]/invoiceLoading";
 
 const getStatusColor = (status: string) => {
   const map: Record<string, string> = {
@@ -50,10 +51,22 @@ export default function PurchaseOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-white">
-        <p className="text-gray-600 text-sm font-helvetica">
-          Loading Purchase Order...
-        </p>
+      <div className="min-h-screen flex items-center justify-center">
+        <CreativeLoading
+          message={
+            isAuthLoading
+              ? "Performing a quick security check..."
+              : "Preparing your Purchase order"
+          }
+          subMessage={
+            isAuthLoading
+              ? "Just a moment while we verify your access..."
+              : "Loading your purchase order..."
+          }
+          size="lg"
+          showDocument={true}
+          showParticles={true}
+        />
       </div>
     );
   }

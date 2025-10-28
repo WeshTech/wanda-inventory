@@ -35,13 +35,16 @@ import {
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { FullscreenImage } from "./coverImage";
-import { useAuthBusinessId, useAuthUser } from "@/stores/authStore"; // Adjust path
-
-// Create a minimal schema for password change only
-// schemas/passwordChangeSchema.ts
+import {
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthUser,
+} from "@/stores/authStore";
 import { z } from "zod";
 import { useBusinessInfo } from "@/server-queries/settingsQueries";
+import { CreativeLoading } from "../reports/sales/receipt/[invid]/invoiceLoading";
 
+// Schema
 export const passwordChangeSchema = z
   .object({
     oldPassword: z.string().min(1, "Old password is required"),
@@ -60,16 +63,18 @@ export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 export default function BusinessProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // Get IDs from auth store
+  // Auth state
+  const isAuthLoading = useAuthStore((state) => state.isLoading);
   const businessId = useAuthBusinessId();
   const user = useAuthUser();
   const userId = typeof user === "object" && user !== null ? user.userId : "";
 
-  // Fetch business info
   const {
     data: businessResponse,
     isLoading,
+    isError,
     error,
+    isFetching,
   } = useBusinessInfo({
     businessId: businessId ?? "",
     userId: userId ?? "",
@@ -77,7 +82,7 @@ export default function BusinessProfilePage() {
 
   const businessInfo = businessResponse?.data;
 
-  // Form setup - only for password
+  // Form setup
   const form = useForm<PasswordChangeFormData>({
     resolver: zodResolver(passwordChangeSchema),
     defaultValues: {
@@ -89,11 +94,9 @@ export default function BusinessProfilePage() {
 
   const onSubmit: SubmitHandler<PasswordChangeFormData> = async (data) => {
     try {
-      // TODO: Replace with real API call
       await new Promise((resolve, reject) => {
         setTimeout(() => {
           if (data.oldPassword !== "oldpassword") {
-            // Mock old password
             reject(new Error("Incorrect old password"));
           } else {
             resolve(true);
@@ -111,15 +114,30 @@ export default function BusinessProfilePage() {
     }
   };
 
-  if (isLoading) {
+  // === 1. First Load Spinner ===
+  if (isLoading && !businessResponse) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <CreativeLoading
+          message={
+            isAuthLoading
+              ? "Performing a quick security check..."
+              : "Preparing your business profile"
+          }
+          subMessage={
+            isAuthLoading
+              ? "Just a moment while we verify your access..."
+              : "Loading your business details..."
+          }
+          size="lg"
+          showDocument={true}
+          showParticles={true}
+        />
       </div>
     );
   }
 
-  if (error || !businessInfo) {
+  if (isError) {
     return (
       <div className="container mx-auto p-6">
         <Card className="border-destructive">
@@ -136,6 +154,10 @@ export default function BusinessProfilePage() {
         </Card>
       </div>
     );
+  }
+
+  if (!businessInfo) {
+    return null;
   }
 
   const formatDate = (dateString: string) => {
@@ -174,6 +196,15 @@ export default function BusinessProfilePage() {
 
   return (
     <div className="min-h-screen bg-background bg-gradient-to-br from-primary/5 via-background to-secondary/10">
+      {/* Optional: Show subtle "updating" indicator during background refetch */}
+      {isFetching && !isLoading && (
+        <div className="fixed top-4 right-4 z-50 animate-pulse">
+          <Badge variant="secondary" className="text-xs">
+            Updating...
+          </Badge>
+        </div>
+      )}
+
       {/* Header Image Section */}
       <div className="relative h-64 bg-gradient-to-r from-primary/20 to-secondary/20 overflow-hidden">
         <FullscreenImage />
@@ -207,14 +238,14 @@ export default function BusinessProfilePage() {
               {businessInfo.businessName
                 ? businessInfo.businessName.charAt(0).toUpperCase() +
                   businessInfo.businessName.slice(1).toLowerCase()
-                : ""}{" "}
+                : ""}
             </h1>
             <p className="text-white/80 text-lg">
               {businessInfo.category
                 ? businessInfo.category.charAt(0).toUpperCase() +
                   businessInfo.category.slice(1).toLowerCase()
                 : ""}
-            </p>{" "}
+            </p>
           </div>
         </div>
       </div>
@@ -226,7 +257,7 @@ export default function BusinessProfilePage() {
             className="grid grid-cols-1 lg:grid-cols-3 gap-8"
           >
             {/* Main Profile Section */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="col-span-1 lg:col-span-2 space-y-6">
               {/* Business Information Card */}
               <Card>
                 <CardHeader>
