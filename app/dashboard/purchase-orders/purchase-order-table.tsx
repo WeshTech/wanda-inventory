@@ -5,10 +5,9 @@ import {
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   createColumnHelper,
-  flexRender, // Fixed: Import flexRender from @tanstack/react-table instead of @/components/ui/table
+  flexRender,
   type SortingState,
   type ColumnFiltersState,
 } from "@tanstack/react-table";
@@ -27,7 +26,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow, // Removed flexRender from this import
+  TableRow,
 } from "@/components/ui/table";
 import {
   Tooltip,
@@ -68,6 +67,8 @@ export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { isLoading: isAuthLoading } = useAuthStore();
   const businessId = useAuthBusinessId() ?? "";
@@ -76,13 +77,14 @@ export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
     data: purchaseOrdersResponse,
     isLoading: isQueryLoading,
     isError,
-  } = useGetPurchaseOrders(businessId);
+  } = useGetPurchaseOrders(businessId, page, pageSize);
 
   const data = useMemo(
     () => purchaseOrdersResponse?.data || [],
     [purchaseOrdersResponse]
   );
 
+  const totalPages = purchaseOrdersResponse?.pagination?.totalPages || 1;
   const columns = useMemo(
     () => [
       columnHelper.accessor("purchaseOrderId", {
@@ -286,15 +288,25 @@ export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: "includesString",
+    manualPagination: true, // Enable server-side pagination
+    pageCount: totalPages,
     state: {
       sorting,
       columnFilters,
       globalFilter,
+      pagination: { pageIndex: page - 1, pageSize },
+    },
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater;
+      setPage(newState.pageIndex + 1);
+      setPageSize(newState.pageSize);
     },
   });
 

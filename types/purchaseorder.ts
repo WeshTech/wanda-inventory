@@ -22,11 +22,20 @@ export interface PurchaseOrderResponseItem {
   productCount: number;
 }
 
+//purchase order pagination metadata
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 //get purchase order response structure
 export interface PurchaseOrderResponse {
   success: boolean;
   message: string;
   data: PurchaseOrderResponseItem[] | null;
+  pagination: PaginationMeta | null;
 }
 
 // Product used in UI

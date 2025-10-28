@@ -57,13 +57,15 @@ export const useGeneratePurchaseOrder = (): UseMutationResult<
 
 // Get purchase orders
 export const useGetPurchaseOrders = (
-  businessId: string
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10
 ): UseQueryResult<PurchaseOrderResponse, Error> => {
   return useQuery<PurchaseOrderResponse, Error>({
-    queryKey: ["purchaseOrders", businessId],
-    queryFn: () => getPurchaseordersApi(businessId),
+    queryKey: ["purchaseOrders", businessId, page, pageSize],
+    queryFn: () => getPurchaseordersApi(businessId, { page, pageSize }),
     enabled: !!businessId,
-    staleTime: 5,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
