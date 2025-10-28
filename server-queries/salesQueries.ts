@@ -11,7 +11,12 @@ import {
   GetStoreSaleProductsResult,
   SearchStoreSaleProductsResponse,
 } from "@/types/sales";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect } from "react";
 
 //get store sale products
@@ -23,17 +28,25 @@ export const useStoreSalesProducts = (
   limit: number
 ) => {
   const queryClient = useQueryClient();
+
   const query = useQuery<GetStoreSaleProductsResult, Error>({
     queryKey: ["storesalesproducts", businessId, storeId, userId, page, limit],
     queryFn: () =>
       getStoreSalesProductsApi(businessId, storeId, userId, page, limit),
+    placeholderData: keepPreviousData,
     enabled: !!businessId && !!storeId && !!userId,
-    staleTime: 1000,
+    staleTime: 1000, // 1 second
+    gcTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
   });
 
-  // Prefetch next page when query is successful
+  // Prefetch next and previous pages
   useEffect(() => {
-    if (query.isSuccess && query.data?.success) {
+    if (!query.isSuccess || !query.data?.success) return;
+
+    const hasMore = query.data?.data?.length === limit;
+
+    // Prefetch next page if there might be more data
+    if (hasMore) {
       queryClient.prefetchQuery({
         queryKey: [
           "storesalesproducts",
@@ -51,6 +64,30 @@ export const useStoreSalesProducts = (
             page + 1,
             limit
           ),
+        staleTime: 1000,
+      });
+    }
+
+    // Prefetch previous page
+    if (page > 1) {
+      queryClient.prefetchQuery({
+        queryKey: [
+          "storesalesproducts",
+          businessId,
+          storeId,
+          userId,
+          page - 1,
+          limit,
+        ],
+        queryFn: () =>
+          getStoreSalesProductsApi(
+            businessId,
+            storeId,
+            userId,
+            page - 1,
+            limit
+          ),
+        staleTime: 1000,
       });
     }
   }, [

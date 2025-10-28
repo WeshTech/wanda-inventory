@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   UseMutationResult,
   useQuery,
@@ -65,22 +66,36 @@ export const useBusinessProducts = (
   pageSize: number = 10
 ) => {
   const queryClient = useQueryClient();
+
   const query = useQuery<GetBusinessProductsResponse, Error>({
     queryKey: ["getbusinessproducts", businessId, page, pageSize],
     queryFn: () => getBusinessProductsApi(businessId, page, pageSize),
+    placeholderData: keepPreviousData,
     enabled: !!businessId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
-  // Prefetch the next page
+
+  // Prefetch next and previous pages
   useEffect(() => {
-    if (
-      query.data?.pagination &&
-      query.data.pagination.currentPage < query.data.pagination.totalPages
-    ) {
-      const nextPage = page + 1;
+    if (!query.data?.pagination) return;
+
+    const { currentPage, totalPages } = query.data.pagination;
+
+    // Prefetch next page
+    if (currentPage < totalPages) {
       queryClient.prefetchQuery({
-        queryKey: ["getbusinessproducts", businessId, nextPage, pageSize],
-        queryFn: () => getBusinessProductsApi(businessId, nextPage, pageSize),
+        queryKey: ["getbusinessproducts", businessId, page + 1, pageSize],
+        queryFn: () => getBusinessProductsApi(businessId, page + 1, pageSize),
+        staleTime: 10 * 60 * 1000,
+      });
+    }
+
+    // Prefetch previous page (for better back navigation)
+    if (currentPage > 1) {
+      queryClient.prefetchQuery({
+        queryKey: ["getbusinessproducts", businessId, page - 1, pageSize],
+        queryFn: () => getBusinessProductsApi(businessId, page - 1, pageSize),
         staleTime: 10 * 60 * 1000,
       });
     }

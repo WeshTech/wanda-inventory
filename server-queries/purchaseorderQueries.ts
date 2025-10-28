@@ -4,6 +4,7 @@ import {
   useQuery,
   UseQueryResult,
   useQueryClient,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import {
   CreatePurchaseOrderResponse,
@@ -22,6 +23,7 @@ import { updatePurchaseorderByIdApi } from "@/server/purchaseorder/update-PO-byI
 import { searchBusinessProductsPOApi } from "@/server/purchaseorder/search-products";
 import { createPurchaseordersApi } from "@/server/purchaseorder/create-PO";
 import { UpdatePurchaseOrderFormData } from "@/schemas/purchaseorder/updatePOSchema";
+import { useEffect } from "react";
 
 // Hook to generate a purchase order
 export const useGeneratePurchaseOrder = (): UseMutationResult<
@@ -61,12 +63,45 @@ export const useGetPurchaseOrders = (
   page: number = 1,
   pageSize: number = 10
 ): UseQueryResult<PurchaseOrderResponse, Error> => {
-  return useQuery<PurchaseOrderResponse, Error>({
+  const queryClient = useQueryClient();
+
+  const query = useQuery<PurchaseOrderResponse, Error>({
     queryKey: ["purchaseOrders", businessId, page, pageSize],
     queryFn: () => getPurchaseordersApi(businessId, { page, pageSize }),
+    placeholderData: keepPreviousData,
     enabled: !!businessId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
+
+  // Prefetch next and previous pages
+  useEffect(() => {
+    if (!query.data?.pagination) return;
+
+    const { page, totalPages } = query.data.pagination;
+
+    // Prefetch next page
+    if (page < totalPages) {
+      queryClient.prefetchQuery({
+        queryKey: ["purchaseOrders", businessId, page + 1, pageSize],
+        queryFn: () =>
+          getPurchaseordersApi(businessId, { page: page + 1, pageSize }),
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+
+    // Prefetch previous page
+    if (page > 1) {
+      queryClient.prefetchQuery({
+        queryKey: ["purchaseOrders", businessId, page - 1, pageSize],
+        queryFn: () =>
+          getPurchaseordersApi(businessId, { page: page - 1, pageSize }),
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+  }, [query.data, businessId, page, pageSize, queryClient]);
+
+  return query;
 };
 
 // Get purchase order by ID

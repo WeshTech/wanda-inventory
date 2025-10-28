@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { PurchaseReceiptFormData } from "@/schemas/purchase-receipts/addPurchaseReceiptSchema";
 import {
   CreatePRResponse,
@@ -11,6 +16,7 @@ import { createPurchaseReceiptApi } from "@/server/purchasereceipts/create-purch
 import { getPurchaseReceiptsApi } from "@/server/purchasereceipts/get-all-PRs";
 import { getPurchaseReceiptByIdApi } from "@/server/purchasereceipts/get-PR-byId";
 import { updatePurchaseReceiptApi } from "@/server/purchasereceipts/update-PR";
+import { useEffect } from "react";
 
 // Create Purchase Receipt Mutation
 interface CreatePurchaseReceiptParams {
@@ -41,12 +47,43 @@ export const usePurchaseReceipts = (
   page: number = 1,
   pageSize: number = 10
 ) => {
-  return useQuery<GetPurchaseReceiptsResponse, Error>({
+  const queryClient = useQueryClient();
+
+  const query = useQuery<GetPurchaseReceiptsResponse, Error>({
     queryKey: ["purchaseReceipts", businessId, page, pageSize],
     queryFn: () => getPurchaseReceiptsApi(businessId, page, pageSize),
+    placeholderData: keepPreviousData,
     enabled: !!businessId,
     staleTime: 10 * 60 * 60 * 1000, // 10 hours
+    gcTime: 24 * 60 * 60 * 1000, // Keep data in cache for 24 hours
   });
+
+  // Prefetch next and previous pages
+  useEffect(() => {
+    if (!query.data?.pagination) return;
+
+    const { currentPage, totalPages } = query.data.pagination;
+
+    // Prefetch next page
+    if (currentPage < totalPages) {
+      queryClient.prefetchQuery({
+        queryKey: ["purchaseReceipts", businessId, page + 1, pageSize],
+        queryFn: () => getPurchaseReceiptsApi(businessId, page + 1, pageSize),
+        staleTime: 10 * 60 * 60 * 1000,
+      });
+    }
+
+    // Prefetch previous page
+    if (currentPage > 1) {
+      queryClient.prefetchQuery({
+        queryKey: ["purchaseReceipts", businessId, page - 1, pageSize],
+        queryFn: () => getPurchaseReceiptsApi(businessId, page - 1, pageSize),
+        staleTime: 10 * 60 * 60 * 1000,
+      });
+    }
+  }, [query.data, businessId, page, pageSize, queryClient]);
+
+  return query;
 };
 
 // ------------------------------------
