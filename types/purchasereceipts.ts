@@ -42,11 +42,17 @@ export type PurchaseReceiptData = {
   createdBy: string | null;
 };
 
-//PR response structure
+//PR response structure with pagination
 export type GetPurchaseReceiptsResponse = {
   success: boolean;
   message: string;
   data: PurchaseReceiptData[] | null;
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalRecords: number;
+    totalPages: number;
+  };
 };
 
 // single product line

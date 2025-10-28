@@ -29,13 +29,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ArrowUpDown, Eye, Edit, Trash2 } from "lucide-react";
-import { DataTablePagination } from "@/components/dashboard/TablePagination";
 import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
 import { PurchaseReceiptData } from "@/types/purchasereceipts";
 import { usePurchaseReceipts } from "@/server-queries/purchaseReceiptsQueries";
 import { formatToKenyanTime } from "@/utils/time-format";
 import Loader from "@/components/ui/loading-spiner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ServerSidePagination } from "./pagination";
 
 interface PurchaseReceiptsTableProps {
   onDeleteReceipt: (receiptId: string) => void;
@@ -48,13 +48,17 @@ export function PurchaseReceiptsTable({
 }: PurchaseReceiptsTableProps) {
   const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const { isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const businessId = useAuthBusinessId() || "";
+
   const {
     data: receiptsData,
     isLoading: isReceiptsLoading,
     error,
-  } = usePurchaseReceipts(businessId);
+  } = usePurchaseReceipts(businessId, currentPage, pageSize);
 
   const columns = [
     columnHelper.accessor("receiptNumber", {
@@ -279,6 +283,8 @@ export function PurchaseReceiptsTable({
     state: {
       sorting,
     },
+    manualPagination: true, // Enable server-side pagination
+    pageCount: receiptsData?.pagination?.totalPages ?? 0,
   });
 
   if (isAuthLoading || isReceiptsLoading) {
@@ -361,7 +367,17 @@ export function PurchaseReceiptsTable({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      <ServerSidePagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalPages={receiptsData?.pagination?.totalPages ?? 0}
+        totalRecords={receiptsData?.pagination?.totalRecords ?? 0}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }

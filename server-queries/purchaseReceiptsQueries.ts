@@ -36,10 +36,14 @@ export const useCreatePurchaseReceipt = () => {
 // ------------------------------------
 // Get All Purchase Receipts
 // ------------------------------------
-export const usePurchaseReceipts = (businessId: string) => {
+export const usePurchaseReceipts = (
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10
+) => {
   return useQuery<GetPurchaseReceiptsResponse, Error>({
-    queryKey: ["purchaseReceipts", businessId],
-    queryFn: () => getPurchaseReceiptsApi(businessId),
+    queryKey: ["purchaseReceipts", businessId, page, pageSize],
+    queryFn: () => getPurchaseReceiptsApi(businessId, page, pageSize),
     enabled: !!businessId,
     staleTime: 10 * 60 * 60 * 1000, // 10 hours
   });
