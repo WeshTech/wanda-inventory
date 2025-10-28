@@ -28,7 +28,6 @@ import {
   type SortingState,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
@@ -73,7 +72,6 @@ const getStatusColor = (status: string) => {
 const mapBusinessProductToProduct = (
   businessProduct: BusinessProductStoreRow
 ): Product => {
-  // Map status to match Product type's ProductStatus
   const mapStatus = (
     status: "InStock" | "lowStock" | "out of stock"
   ): ProductStatus => {
@@ -104,7 +102,13 @@ const mapBusinessProductToProduct = (
 export default function ProductTable() {
   const { isLoading: isAuthLoading } = useAuthStore();
   const businessId = useAuthBusinessId() ?? "";
-  const { data, isLoading, error } = useBusinessProducts(businessId);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const { data, isLoading, error } = useBusinessProducts(
+    businessId,
+    page,
+    pageSize
+  );
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
   const router = useRouter();
@@ -114,6 +118,16 @@ export default function ProductTable() {
   const [categoryFilter, setCategoryFilter] = useState<string | "all">("all");
 
   const products = useMemo(() => data?.data || [], [data]);
+  const pagination = useMemo(
+    () =>
+      data?.pagination || {
+        totalItems: 0,
+        currentPage: 1,
+        pageSize: 10,
+        totalPages: 0,
+      },
+    [data]
+  );
 
   const uniqueCategories = useMemo(() => {
     const categories = new Set<string>();
@@ -122,6 +136,129 @@ export default function ProductTable() {
     );
     return Array.from(categories).sort();
   }, [products]);
+
+  // import { useState, useMemo } from "react";
+  // import Image from "next/image";
+  // import {
+  //   Table,
+  //   TableBody,
+  //   TableCell,
+  //   TableHead,
+  //   TableHeader,
+  //   TableRow,
+  // } from "@/components/ui/table";
+  // import { Badge } from "@/components/ui/badge";
+  // import { Input } from "@/components/ui/input";
+  // import {
+  //   Select,
+  //   SelectContent,
+  //   SelectItem,
+  //   SelectTrigger,
+  //   SelectValue,
+  // } from "@/components/ui/select";
+  // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+  // import { Button } from "@/components/ui/button";
+  // import { Plus, XCircle, ArrowUpDown } from "lucide-react";
+  // import {
+  //   type ColumnDef,
+  //   type ColumnFilter,
+  //   type SortingState,
+  //   flexRender,
+  //   getCoreRowModel,
+  //   getPaginationRowModel,
+  //   getFilteredRowModel,
+  //   getSortedRowModel,
+  //   useReactTable,
+  // } from "@tanstack/react-table";
+  // import { ProductActionsCell } from "./product-action-cells";
+  // import { DataTablePagination } from "@/components/dashboard/TablePagination";
+  // import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+  // import { useBusinessProducts } from "@/server-queries/inventoryQueries";
+  // import type { BusinessProductStoreRow } from "@/types/inventory";
+  // import Loader from "@/components/ui/loading-spiner";
+  // import { useRouter } from "next/navigation";
+
+  // // Define the ProductStatus type
+  // export type ProductStatus = "In Stock" | "Low Stock" | "Out of Stock";
+
+  // // Define the Product type
+  // export type Product = {
+  //   id: string;
+  //   serialNumber: string;
+  //   name: string;
+  //   category: string;
+  //   quantity: number;
+  //   price: number;
+  //   status: ProductStatus;
+  //   image: string;
+  // };
+
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "InStock":
+  //       return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+  //     case "lowStock":
+  //       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+  //     case "out of stock":
+  //       return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+  //     default:
+  //       return "";
+  //   }
+  // };
+
+  // // Helper function to convert BusinessProductStoreRow to Product type
+  // const mapBusinessProductToProduct = (
+  //   businessProduct: BusinessProductStoreRow
+  // ): Product => {
+  //   // Map status to match Product type's ProductStatus
+  //   const mapStatus = (
+  //     status: "InStock" | "lowStock" | "out of stock"
+  //   ): ProductStatus => {
+  //     switch (status) {
+  //       case "InStock":
+  //         return "In Stock";
+  //       case "lowStock":
+  //         return "Low Stock";
+  //       case "out of stock":
+  //         return "Out of Stock";
+  //       default:
+  //         return "In Stock";
+  //     }
+  //   };
+
+  //   return {
+  //     id: businessProduct.businessProductId,
+  //     serialNumber: businessProduct.barcode || "",
+  //     name: businessProduct.productName || "",
+  //     category: businessProduct.categoryName || "",
+  //     quantity: businessProduct.quantity,
+  //     price: businessProduct.sellingPrice || 0,
+  //     status: mapStatus(businessProduct.status),
+  //     image: businessProduct.imageUrl || "",
+  //   };
+  // };
+
+  // export default function ProductTable() {
+  //   const { isLoading: isAuthLoading } = useAuthStore();
+  //   const businessId = useAuthBusinessId() ?? "";
+  //   const { data, isLoading, error } = useBusinessProducts(businessId);
+  //   const [globalFilter, setGlobalFilter] = useState("");
+  //   const [sorting, setSorting] = useState<SortingState>([]);
+  //   const router = useRouter();
+  //   const [statusFilter, setStatusFilter] = useState<
+  //     "InStock" | "lowStock" | "out of stock" | "all"
+  //   >("all");
+  //   const [categoryFilter, setCategoryFilter] = useState<string | "all">("all");
+
+  //   const products = useMemo(() => data?.data || [], [data]);
+
+  //   const uniqueCategories = useMemo(() => {
+  //     const categories = new Set<string>();
+  //     products.forEach(
+  //       (product) => product.categoryName && categories.add(product.categoryName)
+  //     );
+  //     return Array.from(categories).sort();
+  //   }, [products]);
 
   const columns: ColumnDef<BusinessProductStoreRow>[] = [
     {
@@ -325,21 +462,29 @@ export default function ProductTable() {
     data: products,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    onSortingChange: setSorting,
+    manualPagination: true, // Enable manual pagination
+    pageCount: pagination.totalPages,
     state: {
       globalFilter,
       columnFilters: currentColumnFilters,
       sorting,
-    },
-    initialState: {
       pagination: {
-        pageSize: 10,
+        pageIndex: page - 1,
+        pageSize,
       },
     },
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater;
+      setPage(newState.pageIndex + 1);
+      setPageSize(newState.pageSize);
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
   });
 
   const handleClearFilters = () => {
@@ -449,7 +594,7 @@ export default function ProductTable() {
                     Error: {error.message || "Failed to fetch products."}
                   </TableCell>
                 </TableRow>
-              ) : products.length === 0 ? (
+              ) : products.length === 0 && page === 1 ? (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}

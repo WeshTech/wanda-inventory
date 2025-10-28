@@ -51,6 +51,12 @@ export type GetBusinessProductsResponse = {
   success: boolean;
   message: string;
   data: BusinessProductStoreRow[] | null;
+  pagination: {
+    totalItems: number;
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
 };
 
 //stats data structure

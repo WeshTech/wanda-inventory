@@ -17,6 +17,7 @@ import { createBusinessProductApi } from "@/server/inventory/create-business-pro
 import { getBusinessProductsApi } from "@/server/inventory/get-business-products";
 import { getInventoryStatsApi } from "@/server/inventory/get-inventory-stats";
 import { searchBusinessProductsApi } from "@/server/inventory/search-business-product";
+import { useEffect } from "react";
 
 interface CreateProductInput {
   formData: InventoryFormData;
@@ -58,13 +59,34 @@ export const useCreateBusinessProduct = (): UseMutationResult<
 };
 
 // get business products
-export const useBusinessProducts = (businessId: string) => {
-  return useQuery<GetBusinessProductsResponse, Error>({
-    queryKey: ["getbusinessproducts", businessId],
-    queryFn: () => getBusinessProductsApi(businessId),
+export const useBusinessProducts = (
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10
+) => {
+  const queryClient = useQueryClient();
+  const query = useQuery<GetBusinessProductsResponse, Error>({
+    queryKey: ["getbusinessproducts", businessId, page, pageSize],
+    queryFn: () => getBusinessProductsApi(businessId, page, pageSize),
     enabled: !!businessId,
-    staleTime: 60 * 60 * 1000 * 10,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
+  // Prefetch the next page
+  useEffect(() => {
+    if (
+      query.data?.pagination &&
+      query.data.pagination.currentPage < query.data.pagination.totalPages
+    ) {
+      const nextPage = page + 1;
+      queryClient.prefetchQuery({
+        queryKey: ["getbusinessproducts", businessId, nextPage, pageSize],
+        queryFn: () => getBusinessProductsApi(businessId, nextPage, pageSize),
+        staleTime: 10 * 60 * 1000,
+      });
+    }
+  }, [query.data, businessId, page, pageSize, queryClient]);
+
+  return query;
 };
 
 // get inventory stats
