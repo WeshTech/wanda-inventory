@@ -8,9 +8,19 @@ export const DEFAULT_LOGIN_REDIRECT = "/dashboard"; // where logged-in users go
 export const DEFAULT_LOGOUT_REDIRECT = "/auth/login"; // where logged-out users go
 
 export async function middleware(req: NextRequest) {
-  const accessToken = req.cookies.get("secure_access_token")?.value;
-  const refreshToken = req.cookies.get("secure_refresh_token")?.value;
-  const sessionToken = req.cookies.get("secure_token")?.value;
+  const accessToken = req.cookies.get(
+    process.env.NODE_ENV === "production"
+      ? "__Secure-Access-Token"
+      : "secure_access_token"
+  )?.value;
+  const refreshToken = req.cookies.get(
+    process.env.NODE_ENV === "production"
+      ? "__Secure-Refresh-Token"
+      : "secure_refresh_token"
+  )?.value;
+  const sessionToken = req.cookies.get(
+    process.env.NODE_ENV === "production" ? "__Secure-Token" : "secure_token"
+  )?.value;
 
   // console.log("Middleware cookies =>", {
   //   accessToken: accessToken || "missing",

@@ -77,7 +77,7 @@ export default function PurchaseOrderDetailPage() {
         <p className="text-gray-700 mb-4 font-helvetica text-sm">
           Failed to load Purchase Order.
         </p>
-        <Link href="/purchase-orders">
+        <Link href="/dashboard/purchase-orders">
           <Button
             variant="outline"
             className="font-helvetica text-sm border-gray-400 hover:bg-gray-100"

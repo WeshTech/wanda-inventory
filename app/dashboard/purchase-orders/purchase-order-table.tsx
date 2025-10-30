@@ -348,11 +348,11 @@ export function PurchaseOrdersTable({ onDelete }: PurchaseOrdersTableProps) {
           <AvatarFallback>PO</AvatarFallback>
         </Avatar>
         <p className="text-muted-foreground">No purchase orders found</p>
-        <Button asChild>
+        {/* <Button asChild>
           <Link href="/dashboard/purchase-orders/new">
             Generate Purchase Order
           </Link>
-        </Button>
+        </Button> */}
       </div>
     );
   }
