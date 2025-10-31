@@ -1,4 +1,4 @@
-import { RegisterSchema } from "@/schemas/registrationSchema";
+import { RegisterSchema } from "@/schemas/auth/registrationSchema";
 import { axiosApi } from "@/utils/axios";
 import { z } from "zod";
 import { registerSuccessData } from "@/types/auth/register";

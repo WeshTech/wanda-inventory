@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type FormData, RegisterSchema } from "@/schemas/registrationSchema";
+import {
+  type FormData,
+  RegisterSchema,
+} from "@/schemas/auth/registrationSchema";
 import { RegisterUser } from "@/server/auth/register";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";

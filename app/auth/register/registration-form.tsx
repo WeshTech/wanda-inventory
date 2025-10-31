@@ -40,7 +40,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import Link from "next/link";
 import { AreaData, Constituency, Ward } from "./areaData";
-import type { FormData } from "@/schemas/registrationSchema";
+import type { FormData } from "@/schemas/auth/registrationSchema";
 
 const images = [
   "/images/pharmacy.jpg",

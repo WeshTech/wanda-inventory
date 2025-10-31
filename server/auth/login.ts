@@ -1,4 +1,4 @@
-import { loginSchema } from "@/schemas/loginSchema";
+import { loginSchema } from "@/schemas/auth/loginSchema";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 import z from "zod";

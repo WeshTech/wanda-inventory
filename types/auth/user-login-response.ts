@@ -4,3 +4,11 @@ export type InitializeLoginResponse = {
   message: string;
   twoFactor: boolean;
 };
+
+//forgot password response
+export type ForgotPasswordResponse = {
+  success: boolean;
+  message: string;
+  code: boolean;
+  password: boolean;
+};

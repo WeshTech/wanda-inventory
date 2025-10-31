@@ -33,7 +33,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import { loginSchema, LoginFormValues } from "@/schemas/loginSchema";
+import { loginSchema, LoginFormValues } from "@/schemas/auth/loginSchema";
 import { LoginUser } from "@/server/auth/login";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -135,6 +135,7 @@ export default function Component() {
     form.resetField("twoFactorCode", { defaultValue: "" });
     setError("");
     setSuccess("");
+    router.push("/auth/login");
   };
 
   return (
@@ -345,7 +346,7 @@ export default function Component() {
                 {showTwoFactor && (
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="link"
                     className="w-full"
                     onClick={handleBackToLogin}
                     disabled={isLoading}
