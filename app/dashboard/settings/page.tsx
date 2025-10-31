@@ -43,6 +43,7 @@ import {
 import { z } from "zod";
 import { useBusinessInfo } from "@/server-queries/settingsQueries";
 import { CreativeLoading } from "../reports/sales/receipt/[invid]/invoiceLoading";
+import { SuccessBox } from "@/components/ui/success-box";
 
 // Schema
 export const passwordChangeSchema = z
@@ -228,7 +229,7 @@ export default function BusinessProfilePage() {
               size="sm"
               variant="secondary"
               className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-              onClick={() => toast.success("Logo upload coming soon!")}
+              onClick={() => toast.success("Logo upload under maintainance")}
             >
               <Camera className="h-4 w-4" />
             </Button>
@@ -355,7 +356,9 @@ export default function BusinessProfilePage() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setIsChangingPassword(true)}
+                      onClick={() => {
+                        setIsChangingPassword(true);
+                      }}
                       className="w-full"
                     >
                       <Lock className="h-4 w-4 mr-2" />
@@ -364,6 +367,10 @@ export default function BusinessProfilePage() {
                   ) : (
                     <>
                       <Separator />
+                      <SuccessBox
+                        title="Password update"
+                        message="Please use the forgot password feature in the login page for the best experience."
+                      />
                       <div>
                         <h4 className="font-medium mb-3 flex items-center gap-2">
                           <Lock className="h-4 w-4 text-primary" />
@@ -380,7 +387,7 @@ export default function BusinessProfilePage() {
                                   <Input
                                     {...field}
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -397,7 +404,7 @@ export default function BusinessProfilePage() {
                                   <Input
                                     {...field}
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -414,7 +421,7 @@ export default function BusinessProfilePage() {
                                   <Input
                                     {...field}
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                   />
                                 </FormControl>
                                 <FormMessage />

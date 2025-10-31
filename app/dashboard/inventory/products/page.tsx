@@ -556,7 +556,7 @@ export default function AddInventoryPage() {
                                 type="button"
                                 variant="outline"
                                 onClick={() =>
-                                  toast.success("Feature coming soon!")
+                                  toast.success("Feature under maintainance!")
                                 }
                                 disabled={isPending}
                                 className="w-48"

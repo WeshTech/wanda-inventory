@@ -72,7 +72,7 @@ export function RolesTable() {
   }, [rolesResponse]);
 
   const handleExportData = () => {
-    toast.info("Feature Coming Soon", {
+    toast.info("Feature under maintainance", {
       description: "Exporting roles data is not yet implemented.",
     });
   };

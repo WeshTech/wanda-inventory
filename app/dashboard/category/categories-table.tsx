@@ -178,12 +178,12 @@ export function CategoriesTable() {
 
   const handleExport = useCallback(() => {
     // Implement export logic
-    toast.success("Feature coming soon");
+    toast.success("Feature under maintainance");
   }, []);
 
   const handleImport = useCallback(() => {
     // Implement import logic
-    toast.success("Feature coming soon");
+    toast.success("Feature under maintainance");
   }, []);
 
   const handleClearSearch = useCallback(() => {
