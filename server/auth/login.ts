@@ -16,6 +16,7 @@ export const LoginUser = async (formData: LoginFormValues) => {
     const response = await axiosApi.post("/auth/login", {
       email: email.toLowerCase(),
       password,
+      code: formData.twoFactorCode,
     });
 
     console.log("Login response:", response);
