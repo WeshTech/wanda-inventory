@@ -23,6 +23,7 @@ import { useEffect } from "react";
 interface CreateProductInput {
   formData: InventoryFormData;
   businessId: string;
+  userId: string;
 }
 
 // find product by barcode
@@ -48,8 +49,8 @@ export const useCreateBusinessProduct = (): UseMutationResult<
   const queryClient = useQueryClient();
 
   return useMutation<CreateBusinessProductResponse, Error, CreateProductInput>({
-    mutationFn: ({ formData, businessId }: CreateProductInput) =>
-      createBusinessProductApi(formData, businessId),
+    mutationFn: ({ formData, businessId, userId }: CreateProductInput) =>
+      createBusinessProductApi(formData, businessId, userId),
 
     onSuccess: (_, { businessId }) => {
       queryClient.invalidateQueries({

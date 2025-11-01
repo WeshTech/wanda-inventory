@@ -5,9 +5,10 @@ import { AxiosError } from "axios";
 
 export const createBusinessProductApi = async (
   formData: InventoryFormData,
-  businessId: string
+  businessId: string,
+  userId: string
 ): Promise<CreateBusinessProductResponse> => {
-  const submitData = { ...formData, businessId };
+  const submitData = { ...formData, businessId, userId };
   console.log("Submitting data:", submitData);
   try {
     const response = await axiosApi.post<CreateBusinessProductResponse>(

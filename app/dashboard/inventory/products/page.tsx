@@ -49,7 +49,7 @@ import {
   useFindProductByBarcode,
 } from "@/server-queries/inventoryQueries";
 import { CreateBusinessProductResponse } from "@/types/inventory";
-import { useAuthBusinessId } from "@/stores/authStore";
+import { useAuthBusinessId, useAuthUser } from "@/stores/authStore";
 
 // Define types
 export type FoundAtType = "catalogue" | "business";
@@ -70,6 +70,8 @@ export interface FindProductByBarcodeResponse {
 
 export default function AddInventoryPage() {
   const businessId = useAuthBusinessId() ?? "";
+  const user = useAuthUser();
+  const userId = typeof user === "object" && user !== null ? user.userId : "";
 
   const { data: suppliersData } = useBusinessSuppliersQuery(businessId);
   const { data: storesQuery } = useGetBusinessStores(businessId);
@@ -184,7 +186,7 @@ export default function AddInventoryPage() {
     toast.loading("Adding product...", { id: "addProduct" });
 
     mutate(
-      { formData: data, businessId },
+      { formData: data, businessId, userId },
       {
         onSuccess: (response: CreateBusinessProductResponse) => {
           if (response.success) {
