@@ -17,8 +17,10 @@ import { SidebarTrigger } from "../ui/sidebar";
 import { useAuthUser } from "@/stores/authStore";
 import { getInitials } from "@/utils/getInitials";
 import { useLogoutUser } from "@/server/auth/logout";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
+  const router = useRouter();
   const { setTheme } = useTheme();
   const user = useAuthUser();
   const logoutUser = useLogoutUser();
@@ -73,11 +75,11 @@ const Navbar = () => {
           <DropdownMenuContent align="end" sideOffset={10} alignOffset={-8}>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem disabled>
               <User className="h-[1.2rem] w-[1.2rem] mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("dashboard/settings")}>
               <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
               Settings
             </DropdownMenuItem>

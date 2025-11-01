@@ -479,6 +479,7 @@ export default function BusinessProfilePage() {
                       {planInfo.description}
                     </p>
                     <Button
+                      type="button"
                       variant="default"
                       className="w-full font-medium"
                       onClick={() =>

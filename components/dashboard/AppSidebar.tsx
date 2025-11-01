@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +9,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -28,6 +28,7 @@ import {
 } from "../ui/dropdown-menu";
 import {
   ChevronUp,
+  LayoutDashboard,
   LogOut,
   Settings,
   ShoppingCart,
@@ -41,15 +42,19 @@ import {
   TooltipProvider,
 } from "../ui/tooltip";
 
-import { useAuthUser } from "@/stores/authStore";
-import { usePathname } from "next/navigation";
+import { useAuthPermissions, useAuthUser } from "@/stores/authStore";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLogoutUser } from "@/server/auth/logout";
+import { useMemo } from "react";
+import { filterByPermissions } from "@/utils/permissions";
 
 export const AppSidebar = () => {
+  const router = useRouter();
   const user = useAuthUser();
   const pathname = usePathname();
   const { state } = useSidebar();
+  const userRole = user?.role;
 
   // Check if sidebar is collapsed
   const isCollapsed = state === "collapsed";
@@ -59,6 +64,13 @@ export const AppSidebar = () => {
     if (path !== "/dashboard" && pathname.startsWith(path)) return true;
     return false;
   };
+
+  const permissions = useAuthPermissions();
+
+  // Filter sidebar items based on user permissions
+  const visibleItems = useMemo(() => {
+    return filterByPermissions(sidebarItems, permissions);
+  }, [permissions]);
 
   return (
     <TooltipProvider>
@@ -93,7 +105,7 @@ export const AppSidebar = () => {
               Application
             </SidebarGroupLabel>{" "}
             <SidebarGroupContent>
-              <SidebarMenu>
+              {/* <SidebarMenu>
                 {sidebarItems.map((item) => {
                   const menuItem = (
                     <SidebarMenuItem>
@@ -140,53 +152,128 @@ export const AppSidebar = () => {
                     <div key={item.title}>{menuItem}</div>
                   );
                 })}
+              </SidebarMenu> */}
+
+              {/* dashboard */}
+              {userRole === "owner" && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className={cn(
+                      "transition-all duration-200",
+                      isActivePath("/dashboard") &&
+                        "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
+                    )}
+                  >
+                    <Link href="/dashboard">
+                      <LayoutDashboard
+                        className={cn(
+                          "transition-colors duration-200",
+                          isActivePath("/dashboard") &&
+                            "text-primary-foreground"
+                        )}
+                      />
+                      <span>Dashboard</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              <SidebarMenu>
+                {visibleItems.map((item) => (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      className={cn(
+                        "transition-all duration-200",
+                        isActivePath(item.url) &&
+                          "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
+                      )}
+                    >
+                      <Link href={item.url}>
+                        <item.icon
+                          className={cn(
+                            "transition-colors duration-200",
+                            isActivePath(item.url) && "text-primary-foreground"
+                          )}
+                        />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
+
+              {/* Settings Menu Item */}
+              {userRole === "owner" && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className={cn(
+                      "transition-all duration-200",
+                      isActivePath("/dashboard/settings") &&
+                        "bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-sm"
+                    )}
+                  >
+                    <Link href="/dashboard/settings">
+                      <Settings
+                        className={cn(
+                          "transition-colors duration-200",
+                          isActivePath("/dashboard/settings") &&
+                            "text-primary-foreground"
+                        )}
+                      />
+                      <span>Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarGroupContent>
           </SidebarGroup>
 
           {/* Reports */}
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Reports
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuSub>
-                    {isCollapsed ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              asChild
-                              id="sidebar-reports-sales"
-                            >
-                              <Link href="/dashboard/reports/sales">
-                                <ShoppingCart className="h-4 w-4" />
-                                Sales report
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="ml-2">
-                          Sales report
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          asChild
-                          id="sidebar-reports-sales"
-                        >
-                          <Link href="/dashboard/reports/sales">
-                            <ShoppingCart className="h-4 w-4" />
+          {userRole === "owner" && (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Reports
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuSub>
+                      {isCollapsed ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                id="sidebar-reports-sales"
+                              >
+                                <Link href="/dashboard/reports/sales">
+                                  <ShoppingCart className="h-4 w-4" />
+                                  Sales report
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="ml-2">
                             Sales report
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    )}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            id="sidebar-reports-sales"
+                          >
+                            <Link href="/dashboard/reports/sales">
+                              <ShoppingCart className="h-4 w-4" />
+                              Sales report
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )}
 
-                    {/* {isCollapsed ? (
+                      {/* {isCollapsed ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarMenuSubItem>
@@ -251,58 +338,61 @@ export const AppSidebar = () => {
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     )} */}
-                  </SidebarMenuSub>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                    </SidebarMenuSub>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
           {/* Analytics */}
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Analytics
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuSub>
-                    {isCollapsed ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              asChild
-                              id="sidebar-analytics-sales"
-                            >
-                              <Link href="/dashboard/analytics/sales">
-                                <ShoppingCart className="h-4 w-4" />
-                                Sales analysis
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="ml-2">
-                          Sales analysis
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          asChild
-                          id="sidebar-analytics-sales"
-                        >
-                          <Link href="/dashboard/analytics/sales">
-                            <ShoppingCart className="h-4 w-4" />
+          {userRole === "owner" && (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Analytics
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuSub>
+                      {isCollapsed ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuSubItem>
+                              <SidebarMenuSubButton
+                                asChild
+                                id="sidebar-analytics-sales"
+                              >
+                                <Link href="/dashboard/analytics/sales">
+                                  <ShoppingCart className="h-4 w-4" />
+                                  Sales analysis
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="ml-2">
                             Sales analysis
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    )}
-                  </SidebarMenuSub>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            id="sidebar-analytics-sales"
+                          >
+                            <Link href="/dashboard/analytics/sales">
+                              <ShoppingCart className="h-4 w-4" />
+                              Sales analysis
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )}
+                    </SidebarMenuSub>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
         </SidebarContent>
 
         {/* footer */}
@@ -317,20 +407,28 @@ export const AppSidebar = () => {
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
-                    <User className="h-[1.2rem] w-[1.2rem] mr-2" />
-                    Account
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem className="hover:bg-accent hover:text-accent-foreground">
-                    <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-
+                  {userRole === "owner" && (
+                    <DropdownMenuItem
+                      className="hover:bg-accent hover:text-accent-foreground"
+                      disabled
+                    >
+                      <User className="h-[1.2rem] w-[1.2rem] mr-2" />
+                      Account
+                    </DropdownMenuItem>
+                  )}
+                  {userRole === "owner" && (
+                    <DropdownMenuItem
+                      className="hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => router.push("/dashboard/settings")}
+                    >
+                      <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     variant="destructive"
                     onClick={useLogoutUser}
-                    className="hover:bg-destructive hover:text-destructive-foreground"
+                    className="hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900 dark:hover:text-red-300"
                   >
                     <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
                     Sign Out
