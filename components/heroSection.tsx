@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,8 @@ import {
   BarChart2,
   Users,
 } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import Link from "next/link";
 
 interface ContainerProps {
   children: React.ReactNode;
@@ -24,6 +28,7 @@ function Container({ children, className = "" }: ContainerProps) {
 }
 
 export default function HeroSection() {
+  const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
   return (
     <section className="relative overflow-hidden py-16 sm:py-24 lg:py-20">
       {/* Background Image */}
@@ -100,13 +105,26 @@ export default function HeroSection() {
 
             {/* CTA Button */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              <Button
-                size="lg"
-                className="group bg-gradient-to-r from-primary to-secondary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold px-8 py-6 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
-                Start your 15-day FREE trail
-                <ArrowRight className="ml-2 h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:translate-x-1" />
-              </Button>
+              {isLoggedIn ? (
+                <Button
+                  size="lg"
+                  className="group bg-gradient-to-r from-primary to-secondary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold px-8 py-6 text-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+                  asChild
+                >
+                  <Link href="/dashboard">
+                    Go to your dashboard
+                    <ArrowRight className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:translate-x-1" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="group bg-gradient-to-r from-primary to-secondary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold px-8 py-6 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  Start your 15-day FREE trail
+                  <ArrowRight className="ml-2 h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:translate-x-1" />
+                </Button>
+              )}
             </div>
 
             {/* Trust Indicators */}
