@@ -8,7 +8,7 @@ const FeaturesSection = () => {
   return (
     <section id="features" className="py-4 mt-4 w-full bg-transparent">
       <Container>
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-full mx-auto lg:px-8">
           {/* Header */}
           <div className="text-center mb-8 sm:mb-10 lg:mb-14">
             <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-snug">

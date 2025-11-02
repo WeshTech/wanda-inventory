@@ -8,17 +8,17 @@ export const NavMenu = [
   },
   {
     title: "Features",
-    link: "#features",
+    link: "/#features",
     icon: Zap,
   },
   {
     title: "Pricing",
-    link: "#pricing",
+    link: "/#pricing",
     icon: DollarSign,
   },
   {
     title: "Testimonials",
-    link: "#testimonials",
+    link: "/#testimonials",
     icon: MessageSquare,
   },
   // {

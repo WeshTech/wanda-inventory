@@ -12,8 +12,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { NavMenu } from "@/constants/navMenu";
-import { usePathname } from "next/navigation";
-import { ArrowUpRight, Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 
 interface ContainerProps {
@@ -33,6 +33,7 @@ const NavBar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
   const isLoggedIn = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
@@ -98,7 +99,9 @@ const NavBar = () => {
                   />
                 </Link>
                 <Link href="/">
-                  <h1 className="text-xl font-semibold">Wanda Inventory</h1>
+                  <h1 className="text-lg sm:text-xl md:text-xl font-semibold">
+                    Wanda Inventory
+                  </h1>
                 </Link>
               </div>
 
@@ -133,6 +136,7 @@ const NavBar = () => {
                   <Button
                     size="lg"
                     asChild
+                    onClick={() => router.push("/dashboard")}
                     className="bg-gradient-to-r from-primary to-secondary text-white font-semibold hidden lg:flex  hover:from-blue-700 hover:to-lime-600 transition-colors  items-center gap-2"
                   >
                     <Link href="/dashboard">
@@ -143,13 +147,18 @@ const NavBar = () => {
                 </div>
               ) : (
                 <div className="hidden lg:flex items-center gap-4">
-                  <Button variant="outline" asChild>
+                  <Button
+                    variant="outline"
+                    asChild
+                    onClick={() => router.push("/auth/login")}
+                  >
                     <Link href="/signin">Sign In</Link>
                   </Button>
 
                   <Button
                     size="lg"
                     asChild
+                    onClick={() => router.push("/auth/register")}
                     className="bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:from-blue-700 hover:to-lime-600 transition-colors"
                   >
                     <Link href="/signup">Get Started</Link>
@@ -159,13 +168,24 @@ const NavBar = () => {
 
               {/* Mobile Menu */}
 
-              <div className="flex lg:hidden items-center gap-2">
+              <div className="flex lg:hidden items-center gap-3">
                 {isLoggedIn ? (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={"/dashboard"}>Dashboard</Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    onClick={() => router.push("/dashboard")}
+                  >
+                    <Link href="/dashboard">Dashboard</Link>
                   </Button>
                 ) : (
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    onClick={() => router.push("/auth/register")}
+                  >
                     Sign In
                   </Button>
                 )}
@@ -175,34 +195,57 @@ const NavBar = () => {
                   onOpenChange={setIsMobileMenuOpen}
                 >
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="lg:hidden">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="lg:hidden hover:bg-gray-100 transition-colors"
+                      aria-label="Open navigation menu"
+                    >
                       <Menu className="h-6 w-6" />
-                      <span className="sr-only">Toggle menu</span>
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                    <SheetHeader>
-                      <SheetTitle className="sr-only">
-                        Navigation Menu
-                      </SheetTitle>
+
+                  <SheetContent
+                    side="right"
+                    className="w-[280px] sm:w-[350px] p-0 flex flex-col"
+                  >
+                    <SheetHeader className="sr-only">
+                      <SheetTitle>Navigation Menu</SheetTitle>
                     </SheetHeader>
-                    <div className="flex flex-col h-full">
-                      {/* Mobile Header */}
-                      <div className="flex items-center gap-3 pb-6 border-b">
-                        <Image
-                          src="/images/inventory-logo.png"
-                          alt="logo"
-                          height={40}
-                          width={40}
-                          className="rounded-lg h-10 w-10"
-                        />
-                        <h2 className="text-xl font-semibold">
-                          Wesh Inventory
-                        </h2>
+
+                    {/* Header Section */}
+                    <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Image
+                            src="/images/inventory-logo.png"
+                            alt="Wanda Inventory"
+                            height={40}
+                            width={40}
+                            className="rounded-sm shadow-sm"
+                          />
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-bold text-gray-900">
+                            Wanda Inventory
+                          </h2>
+                        </div>
                       </div>
 
-                      {/* Mobile Navigation */}
-                      <nav className="flex flex-col space-y-2 py-6 flex-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="h-8 w-8 hover:bg-white/50 rounded-full"
+                        aria-label="Close menu"
+                      >
+                        <X className="h-5 w-5 text-gray-600" />
+                      </Button>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <nav className="flex-1 px-4 py-6 overflow-y-auto">
+                      <div className="space-y-1">
                         {NavMenu.map((item) => {
                           const isActive = pathname === item.link;
                           const IconComponent = item.icon;
@@ -210,34 +253,84 @@ const NavBar = () => {
                             <Link
                               key={item.title}
                               href={item.link}
-                              className={`flex items-center gap-3 text-lg font-medium py-3 px-4 rounded-lg transition-all duration-200 ${
-                                isActive
-                                  ? "text-blue-600 bg-blue-50 border-l-4 border-blue-600"
-                                  : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                              }`}
+                              className={`
+                        group flex items-center gap-4 px-4 py-3.5 rounded-xl
+                        transition-all duration-200 ease-in-out
+                        ${
+                          isActive
+                            ? "bg-blue-600 text-white shadow-sm shadow-blue-200"
+                            : "text-gray-700 hover:bg-gray-100 active:bg-gray-200"
+                        }
+                      `}
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
                               <IconComponent
-                                className={`h-5 w-5 ${
-                                  isActive ? "text-blue-600" : "text-gray-500"
+                                className={`h-5 w-5 transition-transform duration-200 ${
+                                  isActive
+                                    ? "text-white"
+                                    : "text-gray-500 group-hover:text-blue-600 group-hover:scale-110"
                                 }`}
                               />
-                              <span>{item.title}</span>
+                              <span
+                                className={`text-base font-medium ${
+                                  isActive ? "font-semibold" : ""
+                                }`}
+                              >
+                                {item.title}
+                              </span>
+                              {isActive && (
+                                <div className="ml-auto h-2 w-2 rounded-full bg-white/80" />
+                              )}
                             </Link>
                           );
                         })}
-                      </nav>
+                      </div>
+                    </nav>
 
-                      {/* Mobile CTA */}
-                      <div className="pt-6 border-t">
+                    {/* Bottom Action Section */}
+                    <div className="p-4 border-t bg-gray-50/50">
+                      {isLoggedIn ? (
                         <Button
                           size="lg"
-                          className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:from-blue-700 hover:to-lime-600 transition-colors"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="
+                    w-full h-12 font-semibold text-base
+                    transition-all duration-300 
+                    shadow-lg hover:shadow-xl active:scale-[0.98]
+                    bg-gradient-to-r from-blue-600 to-indigo-600
+                    hover:from-blue-700 hover:to-indigo-700
+                    text-white rounded-xl
+                  "
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            router.push("/dashboard");
+                          }}
                         >
-                          Get Started
+                          Go to Dashboard →
                         </Button>
-                      </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <Button
+                            size="lg"
+                            className="
+                      w-full h-12 font-semibold text-base
+                      transition-all duration-300 
+                      shadow-lg hover:shadow-xl active:scale-[0.98]
+                      bg-gradient-to-r from-blue-600 to-indigo-600
+                      hover:from-blue-700 hover:to-indigo-700
+                      text-white rounded-xl
+                    "
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              router.push("/auth/register");
+                            }}
+                          >
+                            Get Started →
+                          </Button>
+                          <p className="text-xs text-center text-gray-600">
+                            Free trial • No credit card required
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </SheetContent>
                 </Sheet>

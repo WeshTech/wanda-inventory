@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ContainerProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ function Container({ children, className = "" }: ContainerProps) {
 }
 
 export default function HeroSection() {
+  const router = useRouter();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
   return (
     <section className="relative overflow-hidden py-16 sm:py-24 lg:py-20">
@@ -110,6 +112,7 @@ export default function HeroSection() {
                   size="lg"
                   className="group bg-gradient-to-r from-primary to-secondary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold px-8 py-6 text-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
                   asChild
+                  onClick={() => router.push("/dashboard")}
                 >
                   <Link href="/dashboard">
                     Go to your dashboard
@@ -119,9 +122,10 @@ export default function HeroSection() {
               ) : (
                 <Button
                   size="lg"
-                  className="group bg-gradient-to-r from-primary to-secondary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold px-8 py-6 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="group bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 dark:from-primary dark:to-secondary/80 dark:hover:from-primary/90 dark:hover:to-secondary/70 text-primary-foreground font-semibold px-8 py-6 text-lg transition-all duration-300 shadow-lg hover:shadow-xl dark:shadow-secondary/20 dark:hover:shadow-secondary/30"
+                  onClick={() => router.push("/auth/register")}
                 >
-                  Start your 15-day FREE trail
+                  Start your 15-day FREE trial
                   <ArrowRight className="ml-2 h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:translate-x-1" />
                 </Button>
               )}

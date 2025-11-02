@@ -59,32 +59,32 @@ export default function Questions() {
         {/* Compact Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <HelpCircle className="w-6 h-6 text-primary" />
+            <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-full">
+              <HelpCircle className="w-6 h-6 text-primary dark:text-primary" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
             Getting Started with Your Essential Questions Answered
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 dark:text-gray-400">
             Find quick answers to the most common questions about our platform.
           </p>
         </div>
 
         {/* Single FAQ Card */}
-        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm mb-6">
+        <Card className="shadow-lg border-0 bg-white/90 dark:bg-card/90 backdrop-blur-sm mb-6">
           <CardContent className="p-6">
             <Accordion type="single" collapsible className="w-full">
               {questions.map((faq) => (
                 <AccordionItem
                   key={faq.id}
                   value={faq.id}
-                  className="border-gray-200"
+                  className="border-gray-200 dark:border-border"
                 >
-                  <AccordionTrigger className="text-left hover:text-primary transition-colors py-3 text-base font-medium">
+                  <AccordionTrigger className="text-left hover:text-primary transition-colors py-3 text-base font-medium text-gray-900 dark:text-foreground">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-700 leading-relaxed pb-3 text-sm">
+                  <AccordionContent className="text-gray-700 dark:text-gray-300 leading-relaxed pb-3 text-sm">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -94,12 +94,12 @@ export default function Questions() {
         </Card>
 
         {/* Compact CTA */}
-        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border-primary/20 dark:border-primary/30">
           <CardContent className="p-6 text-center">
-            <h3 className="text-xl font-bold text-gray-900 mb-3">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
               Still have questions?
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Our support team is available 24/7 to help you succeed.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

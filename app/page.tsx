@@ -12,7 +12,6 @@ import Image from "next/image";
 export default function Home() {
   return (
     <>
-      {" "}
       <NavBar />
       <div className="-z-10 fixed inset-0">
         <Image

@@ -81,7 +81,7 @@ export default function Footer() {
     <footer id="footer" className="bg-background border-t border-border">
       <Container>
         {/* Newsletter Section */}
-        <div className="py-12 border-b border-border">
+        <div className="py-12 border-b border-border ">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight mb-2">

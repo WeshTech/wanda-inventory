@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 const testimonials = [
   {
@@ -24,7 +26,7 @@ const testimonials = [
     rating: 5,
     content:
       "The reporting features are exceptional. We can now forecast demand accurately and optimize our purchasing decisions. Our inventory turnover has improved significantly.",
-    avatar: "/placeholder.svg?height=40&width=40&text=DK",
+    avatar: "/images/davidkipchoge.jpg",
   },
   {
     id: 3,
@@ -40,11 +42,11 @@ const testimonials = [
     id: 4,
     name: "Samuel Mutua",
     role: "Inventory Manager",
-    company: "Juma jewels",
+    company: "Juma pharmacy",
     rating: 5,
     content:
       "The multi-location inventory tracking is a game changer. We can monitor stock levels across all our branches in real-time. This has saved us countless hours.",
-    avatar: "/placeholder.svg?height=40&width=40&text=SM",
+    avatar: "/images/samuelmutua.jpg",
   },
   {
     id: 5,
@@ -54,7 +56,7 @@ const testimonials = [
     rating: 5,
     content:
       "Outstanding solution! The automated reorder points and supplier integration have streamlined our procurement process. We've reduced excess inventory by 40%.",
-    avatar: "/placeholder.svg?height=40&width=40&text=FN",
+    avatar: "/images/faithnjeri.jpg",
   },
   {
     id: 6,
@@ -84,7 +86,7 @@ const testimonials = [
     rating: 4,
     content:
       "The integration with our existing systems was seamless. The support team was very helpful during implementation. We're seeing improved efficiency across all operations.",
-    avatar: "/placeholder.svg?height=40&width=40&text=JK",
+    avatar: "/images/jameskamau.jpg",
   },
 ];
 
@@ -106,9 +108,25 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function Testimonials() {
+  const [emblaRef] = useEmblaCarousel(
+    {
+      loop: true,
+      align: "start",
+      slidesToScroll: 1,
+      dragFree: true,
+    },
+    [
+      Autoplay({
+        delay: 3000,
+        stopOnInteraction: false,
+        stopOnMouseEnter: true,
+      }),
+    ]
+  );
+
   return (
     <section id="testimonials" className="py-4 bg-transparent/85">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto ">
         <div className="text-center mb-8 sm:mb-10 md:mb-12 lg:mb-16 px-4">
           <h2 className="scroll-m-20 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight mb-3 sm:mb-4">
             What Our Customers Say
@@ -119,89 +137,46 @@ export default function Testimonials() {
           </p>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div className="flex gap-6 animate-scroll">
-            {/* First set of testimonials */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-6">
             {testimonials.map((testimonial) => (
-              <Card
-                key={testimonial.id}
-                className="flex-shrink-0 w-80 bg-background shadow-lg hover:shadow-xl transition-shadow duration-400"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <Avatar className="w-12 h-12 border-2 border-border">
-                      <AvatarImage
-                        src={testimonial.avatar || "/placeholder.svg"}
-                        alt={testimonial.name}
-                      />
-                      <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
-                        {testimonial.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-foreground">
-                          {testimonial.name}
-                        </h4>
-                        <StarRating rating={testimonial.rating} />
+              <div key={testimonial.id} className="flex-shrink-0 w-80">
+                <Card className="bg-background shadow-lg hover:shadow-xl transition-shadow duration-400">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4 mb-4">
+                      <Avatar className="w-12 h-12 border-2 border-border">
+                        <AvatarImage
+                          src={testimonial.avatar || "/placeholder.svg"}
+                          alt={testimonial.name}
+                        />
+                        <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
+                          {testimonial.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-foreground">
+                            {testimonial.name}
+                          </h4>
+                          <StarRating rating={testimonial.rating} />
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {testimonial.role}
+                        </p>
+                        <Badge variant="secondary" className="text-xs">
+                          {testimonial.company}
+                        </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {testimonial.role}
-                      </p>
-                      <Badge variant="secondary" className="text-xs">
-                        {testimonial.company}
-                      </Badge>
                     </div>
-                  </div>
-                  <blockquote className="text-muted-foreground leading-relaxed">
-                    &quot;{testimonial.content}&quot;
-                  </blockquote>
-                </CardContent>
-              </Card>
-            ))}
-            {/* Duplicate set for seamless loop */}
-            {testimonials.map((testimonial) => (
-              <Card
-                key={`${testimonial.id}-duplicate`}
-                className="flex-shrink-0 w-80 bg-background shadow-lg hover:shadow-xl transition-shadow duration-400"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <Avatar className="w-12 h-12 border-2 border-border">
-                      <AvatarImage
-                        src={testimonial.avatar || "/placeholder.svg"}
-                        alt={testimonial.name}
-                      />
-                      <AvatarFallback className="bg-muted text-muted-foreground font-semibold">
-                        {testimonial.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-foreground">
-                          {testimonial.name}
-                        </h4>
-                        <StarRating rating={testimonial.rating} />
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {testimonial.role}
-                      </p>
-                      <Badge variant="secondary" className="text-xs">
-                        {testimonial.company}
-                      </Badge>
-                    </div>
-                  </div>
-                  <blockquote className="text-muted-foreground leading-relaxed">
-                    &quot;{testimonial.content}&quot;
-                  </blockquote>
-                </CardContent>
-              </Card>
+                    <blockquote className="text-muted-foreground leading-relaxed">
+                      &quot;{testimonial.content}&quot;
+                    </blockquote>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -213,25 +188,6 @@ export default function Testimonials() {
           </Badge>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-scroll {
-          animation: scroll 60s linear infinite;
-        }
-
-        .animate-scroll:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
     </section>
   );
 }
