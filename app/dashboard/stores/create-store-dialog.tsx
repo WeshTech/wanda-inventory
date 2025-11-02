@@ -28,6 +28,7 @@ import {
 import { AreaData, Constituency, Ward } from "@/app/auth/register/areaData";
 import { toast } from "sonner";
 import { useCreateStore } from "@/server-queries/storeQueries";
+import { useAuthBusinessId } from "@/stores/authStore";
 
 interface StoreDialogProps {
   open: boolean;
@@ -65,12 +66,13 @@ export function CreateStoreDialog({
   const watchedConstituency = watch("constituency");
   const watchedWard = watch("ward");
   const watchedStoreStatus = watch("storeStatus");
+  const businessId = useAuthBusinessId() ?? "";
 
   const [availableConstituencies, setAvailableConstituencies] = React.useState<
     Constituency[]
   >([]);
   const [availableWards, setAvailableWards] = React.useState<Ward[]>([]);
-  const { mutate: createStore, isPending } = useCreateStore();
+  const { mutate: createStore, isPending } = useCreateStore(businessId);
 
   React.useEffect(() => {
     if (!open) {

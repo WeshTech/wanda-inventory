@@ -1,4 +1,4 @@
-import { UpdatePurchaseOrderFormData } from "@/schemas/purchaseOrderSchema";
+import { UpdatePurchaseOrderFormData } from "@/schemas/purchaseorder/updatePOSchema";
 import { UpdatePurchaseOrderResponse } from "@/types/purchaseorder";
 import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";

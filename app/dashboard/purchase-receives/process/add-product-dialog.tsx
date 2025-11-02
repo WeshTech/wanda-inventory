@@ -29,20 +29,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  type ProductItem,
+  ProductItemFormData,
   productItemSchema,
 } from "@/schemas/purchase-receipts/addPurchaseReceiptSchema";
 import { useSearchBusinessProducts } from "@/server-queries/inventoryQueries";
 import type { BusinessProductResult } from "@/types/inventory";
-import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+import { useAuthBusinessId } from "@/stores/authStore";
 
 interface ProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (product: ProductItem) => void;
-  product?: ProductItem | null;
+  onSave: (product: ProductItemFormData) => void;
+  product?: ProductItemFormData | null;
   mode: "add" | "edit";
 }
+
+// type ProductItem = {
+//   id: string;
+//   productCode: string;
+//   productName: string;
+//   accepted: number;
+//   rejected: number;
+//   unitPrice: number;
+//   total: number;
+// };
 
 export function ProductDialog({
   open,
@@ -51,7 +61,7 @@ export function ProductDialog({
   product,
   mode,
 }: ProductDialogProps) {
-  const form = useForm<ProductItem>({
+  const form = useForm<ProductItemFormData>({
     resolver: zodResolver(productItemSchema),
     defaultValues: {
       id: "",
@@ -109,7 +119,7 @@ export function ProductDialog({
     }
   }, [open, product, form]);
 
-  const onSubmit = (data: ProductItem) => {
+  const onSubmit = (data: ProductItemFormData) => {
     onSave(data);
     onOpenChange(false);
   };

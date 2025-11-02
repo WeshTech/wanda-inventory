@@ -31,14 +31,18 @@ import {
   InviteUserForm,
   inviteUserSchema,
 } from "@/schemas/users/inviteUserSchema";
-import { useAuthBusinessId, useAuthStore } from "@/stores/authStore";
+import {
+  useAuthBusinessId,
+  useAuthStore,
+  useAuthStoreAccess,
+} from "@/stores/authStore";
 import { toast as sonnerToast } from "sonner";
 import toast from "react-hot-toast";
-import { useGetBusinessStores } from "@/server-queries/storeQueries";
+import { useStoreInfoQuery } from "@/server-queries/storeQueries";
 import { useGetBusinessRoles } from "@/server-queries/roleQueries";
 import { useCreateBusinessUser } from "@/server-queries/userQuery";
 import Loader from "@/components/ui/loading-spiner";
-import { GetStoresResult } from "@/types/stores";
+import { StoreInfo } from "@/types/stores";
 
 interface InviteUserDialogProps {
   isOpen: boolean;
@@ -51,8 +55,9 @@ export function InviteUserDialog({
 }: InviteUserDialogProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
   const businessId = useAuthBusinessId() ?? "";
+  const storeIds = useAuthStoreAccess();
 
-  const storesQuery = useGetBusinessStores();
+  const storesQuery = useStoreInfoQuery(businessId, storeIds);
   const rolesQuery = useGetBusinessRoles(businessId);
 
   const mutation = useCreateBusinessUser();
@@ -111,15 +116,10 @@ export function InviteUserDialog({
     return null;
   }
 
-  const storesData = (
-    storesQuery.data as GetStoresResult & { success: boolean }
-  )?.success
-    ? (
-        storesQuery.data as {
-          data: { stores: Array<{ id: string; name: string; ward: string }> };
-        }
-      ).data
-    : null;
+  const storesData =
+    storesQuery.data?.success && Array.isArray(storesQuery.data.data)
+      ? storesQuery.data.data
+      : null;
 
   const rolesData = rolesQuery.data?.success ? rolesQuery.data.data : null;
 
@@ -242,20 +242,17 @@ export function InviteUserDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {storesData?.stores?.map(
-                              (store: {
-                                id: string;
-                                name: string;
-                                ward: string;
-                              }) => (
-                                <SelectItem key={store.id} value={store.id}>
-                                  {store.name}{" "}
-                                  <span className="text-sm text-muted-foreground">
-                                    ({store.ward})
-                                  </span>
-                                </SelectItem>
-                              )
-                            )}
+                            {storesData?.map((store: StoreInfo) => (
+                              <SelectItem
+                                key={store.storeId}
+                                value={store.storeId}
+                              >
+                                {store.storeName}{" "}
+                                <span className="text-sm text-muted-foreground">
+                                  ({store.ward})
+                                </span>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />

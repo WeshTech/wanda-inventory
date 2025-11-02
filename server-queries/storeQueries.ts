@@ -28,15 +28,14 @@ export const useGetBusinessStores = (businessId: string) => {
 };
 
 // * Create store Query
-export const useCreateStore = (): UseMutationResult<
-  CreateStoreResponse,
-  Error,
-  CreateStoreFormData
-> => {
+export const useCreateStore = (
+  businessId: string
+): UseMutationResult<CreateStoreResponse, Error, CreateStoreFormData> => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createStoreApi,
+    mutationFn: (formData: CreateStoreFormData) =>
+      createStoreApi(formData, businessId),
     mutationKey: ["createStore"],
     onMutate: async (newStore) => {
       // Cancel any outgoing queries for stores

@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Customer } from "./page";
+import { BusinessCustomerData } from "@/types/customers";
 
 const editCustomerSchema = z.object({
   name: z
@@ -38,7 +38,7 @@ type EditCustomerFormData = z.infer<typeof editCustomerSchema>;
 interface EditCustomerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  customer: Customer | null;
+  customer: BusinessCustomerData | null;
   onSubmit: (data: EditCustomerFormData) => void;
 }
 
@@ -59,8 +59,8 @@ export function EditCustomerDialog({
   useEffect(() => {
     if (customer) {
       form.reset({
-        name: customer.name,
-        phone: customer.phone,
+        name: customer.customerName,
+        phone: customer.phone ?? "",
       });
     }
   }, [customer, form]);

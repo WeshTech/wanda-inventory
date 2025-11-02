@@ -7,9 +7,11 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import UsersPageContent from "./users-page-content";
+import { useAuthUser } from "@/stores/authStore";
 
-export default function UsersPage({ params }: { params: { userId?: string } }) {
-  const userName = params.userId ? "John Doe" : null;
+export default function UsersPage() {
+  const user = useAuthUser();
+  const userName = typeof user === "object" && user !== null ? user.email : "";
 
   return (
     <div className="p-4">

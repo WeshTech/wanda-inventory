@@ -40,26 +40,13 @@ import {
   useAuthStore,
   useAuthUser,
 } from "@/stores/authStore";
-import { z } from "zod";
 import { useBusinessInfo } from "@/server-queries/settingsQueries";
 import { CreativeLoading } from "../reports/sales/receipt/[invid]/invoiceLoading";
 import { SuccessBox } from "@/components/ui/success-box";
-
-// Schema
-export const passwordChangeSchema = z
-  .object({
-    oldPassword: z.string().min(1, "Old password is required"),
-    newPassword: z
-      .string()
-      .min(6, "New password must be at least 6 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
+import {
+  PasswordChangeFormData,
+  passwordChangeSchema,
+} from "@/schemas/settings/passwordSchema";
 
 export default function BusinessProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);

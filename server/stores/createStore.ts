@@ -5,12 +5,12 @@ import { axiosApi } from "@/utils/axios";
 import { AxiosError } from "axios";
 
 export const createStoreApi = async (
-  formData: CreateStoreFormData
+  formData: CreateStoreFormData,
+  businessId: string
 ): Promise<CreateStoreResponse> => {
   const { name, county, constituency, ward, storeStatus } = formData;
-  const { user, isLoading } = useAuthStore.getState();
+  const { isLoading } = useAuthStore.getState();
 
-  const businessId = user?.businessId;
   if (!isLoading && !businessId) {
     throw new Error("You must be logged in to create a store");
   }

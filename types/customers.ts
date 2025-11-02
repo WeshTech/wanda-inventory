@@ -17,8 +17,8 @@ export type BusinessCustomerData = {
   id: string;
   customerNumber: number;
   customerName: string;
-  email?: string | null;
-  phone?: string | null;
+  email: string | null;
+  phone: string | null;
 };
 
 //get customers response
