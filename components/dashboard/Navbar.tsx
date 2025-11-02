@@ -66,7 +66,7 @@ const Navbar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar>
-              <AvatarImage src="/images/logo.jpg" />
+              <AvatarImage src="/images/inventory-logo.png" />
               <AvatarFallback>
                 {getInitials(user?.businessName || "Wanda Inventory")}
               </AvatarFallback>

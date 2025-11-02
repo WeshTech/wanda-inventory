@@ -7,6 +7,7 @@ import { Nunito } from "next/font/google";
 import ToastProvider from "@/components/providers/toast-provider";
 import { Toaster } from "sonner";
 import { TanstackProvider } from "@/providers/tanstack-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -46,6 +47,7 @@ export default async function RootLayout({
             </SidebarProvider>
           </TanstackProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
