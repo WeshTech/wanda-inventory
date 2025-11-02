@@ -33,8 +33,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useRouter } from "next/navigation";
 
 export default function PricingSection() {
+  const router = useRouter();
   const plans = [
     {
       name: "Basic",
@@ -57,7 +59,7 @@ export default function PricingSection() {
         { name: "ETIMS (KRA) integration", icon: CreditCard, included: false },
         { name: "Warehouse automation", icon: Zap, included: false },
       ],
-      buttonText: "Start Free Trial",
+      buttonText: "Get started",
       buttonVariant: "outline" as const,
     },
     {
@@ -146,7 +148,7 @@ export default function PricingSection() {
         { name: "Warehouse automation", icon: Zap, included: true },
         { name: "Custom prices", icon: Shield, included: true },
       ],
-      buttonText: "Contact Sales",
+      buttonText: "Get Started",
       buttonVariant: "outline" as const,
     },
   ];
@@ -235,6 +237,7 @@ export default function PricingSection() {
                   variant={plan.buttonVariant}
                   className="w-full"
                   size="lg"
+                  onClick={() => router.push("/dashboard")}
                 >
                   {plan.buttonText}
                 </Button>
