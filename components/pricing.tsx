@@ -161,7 +161,7 @@ export default function PricingSection() {
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12 lg:mb-16 px-4">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 sm:mb-4">
-            Choose Your Inventory Management Plan
+            Choose Your Inventory Management Plan.
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Streamline your inventory operations with our comprehensive
