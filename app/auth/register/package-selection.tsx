@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import PackageDialog from "./package-dialog";
 import { useState } from "react";
 import { packagePlans } from "./package-plans";
+import toast from "react-hot-toast";
 
 interface PackageSelectionProps {
   selectedPackage: string;
@@ -40,6 +41,10 @@ export default function PackageSelection({
   };
 
   const handleSubmit = () => {
+    if (selectedPackage === "ENTERPRISE") {
+      toast.error("Please contact sales for enterprise registration");
+      return;
+    }
     if (selectedPackage) {
       setShowConfirmDialog(true);
     }
