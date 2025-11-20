@@ -29,7 +29,8 @@ const processQueue = (error: AxiosError | null) => {
   failedQueue = [];
 };
 
-const API_BASE_URL = process.env.BACKEND_URL || "http://localhost:3000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.wandainventory.co.ke";
 
 export const axiosApi = axios.create({
   baseURL: API_BASE_URL,
@@ -224,7 +225,7 @@ axiosApi.interceptors.response.use(
 //   failedQueue = [];
 // };
 
-// const API_BASE_URL = process.env.BACKEND_URL || "http://localhost:3000";
+// const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
 // export const axiosApi = axios.create({
 //   baseURL: API_BASE_URL,
@@ -310,7 +311,7 @@ axiosApi.interceptors.response.use(
 
 // // import axios from "axios";
 
-// // const API_BASE_URL = process.env.BACKEND_URL || "http://localhost:3000";
+// // const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
 // // export const axiosApi = axios.create({
 // //   baseURL: API_BASE_URL,
