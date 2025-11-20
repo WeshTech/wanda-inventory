@@ -49,11 +49,11 @@ const images = [
 ];
 
 const eastAfricanCountries = [
-  { value: "kenya", label: "Kenya" },
-  { value: "uganda", label: "Uganda" },
-  { value: "tanzania", label: "Tanzania" },
-  { value: "rwanda", label: "Rwanda" },
-  { value: "ethiopia", label: "Ethiopia" },
+  { value: "kenya", label: "Kenya", disabled: false },
+  { value: "uganda", label: "Uganda", disabled: true },
+  { value: "tanzania", label: "Tanzania", disabled: true },
+  { value: "rwanda", label: "Rwanda", disabled: true },
+  { value: "ethiopia", label: "Ethiopia", disabled: true },
 ];
 
 const businessTypes = [
@@ -163,8 +163,8 @@ export default function RegistrationForm({
             </h2>
 
             <p className="text-xl mb-8 text-gray-200">
-              Join thousands of businesses across East Africa managing their
-              inventory efficiently with our cutting-edge platform.
+              Join thousands of businesses across Kenya managing their inventory
+              efficiently with our cutting-edge platform.
             </p>
 
             <div className="space-y-4">
@@ -331,6 +331,11 @@ export default function RegistrationForm({
                               <SelectItem
                                 key={country.value}
                                 value={country.value}
+                                className={
+                                  country.disabled
+                                    ? "cursor-not-allowed hover:blur-[1px] hover:cursor-not-allowed hover:opacity-40"
+                                    : ""
+                                }
                               >
                                 {country.label}
                               </SelectItem>

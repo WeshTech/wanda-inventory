@@ -65,7 +65,7 @@ const testimonials = [
     company: "Cleanshelf",
     rating: 4,
     content:
-      "The mobile app allows me to check inventory levels on the go. The analytics dashboard provides valuable insights that help us make better business decisions.",
+      "The web app allows me to check inventory levels on the go. The analytics dashboard provides valuable insights that help us make better business decisions.",
     avatar: "/placeholder.svg?height=40&width=40&text=PO",
   },
   {
