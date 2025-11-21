@@ -10,16 +10,18 @@ export const DEFAULT_LOGOUT_REDIRECT = "/auth/login"; // where logged-out users 
 export async function middleware(req: NextRequest) {
   const accessToken = req.cookies.get(
     process.env.NODE_ENV === "production"
-      ? "__Secure-Access-Token"
+      ? "__Wanda-Secure-Access-Token"
       : "secure_access_token"
   )?.value;
   const refreshToken = req.cookies.get(
     process.env.NODE_ENV === "production"
-      ? "__Secure-Refresh-Token"
+      ? "__Wanda-Secure-Refresh-Token"
       : "secure_refresh_token"
   )?.value;
   const sessionToken = req.cookies.get(
-    process.env.NODE_ENV === "production" ? "__Secure-Token" : "secure_token"
+    process.env.NODE_ENV === "production"
+      ? "__Wanda-Secure-Token"
+      : "secure_token"
   )?.value;
 
   // console.log("Middleware cookies =>", {
