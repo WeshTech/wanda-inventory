@@ -20,7 +20,7 @@ export async function middleware(req: NextRequest) {
   )?.value;
   const sessionToken = req.cookies.get(
     process.env.NODE_ENV === "production"
-      ? "AWSALBTG-Wanda_session"
+      ? "__Wanda-Secure-Token"
       : "secure_token"
   )?.value;
 
