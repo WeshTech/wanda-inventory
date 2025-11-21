@@ -19,7 +19,9 @@ export async function middleware(req: NextRequest) {
       : "secure_refresh_token"
   )?.value;
   const sessionToken = req.cookies.get(
-    process.env.NODE_ENV === "production" ? "wanda_session" : "secure_token"
+    process.env.NODE_ENV === "production"
+      ? "AWSALBTG-Wanda_session"
+      : "secure_token"
   )?.value;
 
   // console.log("Middleware cookies =>", {
