@@ -2,7 +2,6 @@ import { PermissionRule } from "@/utils/permissions";
 import {
   ArrowLeftRight,
   Banknote,
-  BotMessageSquare,
   Boxes,
   FileText,
   FileUser,
@@ -126,14 +125,14 @@ export const sidebarItems: SidebarItem[] = [
       check: "any",
     },
   },
-  {
-    title: "Virtual Assistant",
-    url: "/dashboard/assistant",
-    icon: BotMessageSquare,
-    permission: {
-      check: "none", // Virtual assistant is available to all
-    },
-  },
+  // {
+  //   title: "Virtual Assistant",
+  //   url: "/dashboard/assistant",
+  //   icon: BotMessageSquare,
+  //   permission: {
+  //     check: "none", // Virtual assistant is available to all
+  //   },
+  // },
   // {
   //   title: "Settings",
   //   url: "/dashboard/settings",
