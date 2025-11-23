@@ -91,10 +91,14 @@ export function CreateRoleDialog({
 
     createRole(values, {
       onSuccess: (response) => {
+        if (response.success) {
+          sonnerToast.dismiss(toastId);
+          hotToast.success(response.message || "Role created successfully");
+          onOpenChange(false);
+          form.reset();
+        }
         sonnerToast.dismiss(toastId);
-        hotToast.success(response.message || "Role created successfully");
-        onOpenChange(false);
-        form.reset();
+        hotToast.error(response.message || "Role created successfully");
       },
       onError: (error) => {
         sonnerToast.dismiss(toastId);

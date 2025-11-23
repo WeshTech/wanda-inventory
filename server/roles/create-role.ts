@@ -20,21 +20,25 @@ export const createBusinessRoleApi = async (
   });
 
   try {
-    const response = await axiosApi.post("/roles", {
+    const response = await axiosApi.post<CreateBusinessRoleResponse>("/roles", {
       roleName: title,
       description,
       businessId,
       ...flatPermissions,
     });
 
-    if (response.status === 201 && response.data) {
+    if (response.data && response.data.success === true) {
       return {
         success: true,
         message: response.data?.message || "Role created successfully",
-        data: response.data,
+        data: response.data.data,
       };
     }
-    throw new Error(response.data?.message || "Role creation failed");
+    return {
+      success: false,
+      message: response.data?.message || "Role creation failed",
+      data: null,
+    };
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>;
     throw new Error(
