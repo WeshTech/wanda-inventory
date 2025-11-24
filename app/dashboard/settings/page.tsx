@@ -31,6 +31,7 @@ import {
   Wallet,
   Crown,
   Camera,
+  PlusCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +48,11 @@ import {
   PasswordChangeFormData,
   passwordChangeSchema,
 } from "@/schemas/settings/passwordSchema";
+import { TopUpWalletDialog } from "./topUpDialogBox";
 
 export default function BusinessProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [topUpOpen, setTopUpOpen] = useState(false);
 
   // Auth state
   const isAuthLoading = useAuthStore((state) => state.isLoading);
@@ -488,19 +491,28 @@ export default function BusinessProfilePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center space-y-4">
+                  <div className="text-center space-y-6">
+                    {/* Balance Display */}
                     <div>
-                      <p className="text-xl font-bold text-primary">
+                      <p className="text-3xl font-bold text-primary">
                         KSh{" "}
                         {businessInfo.walletBalance.toLocaleString("en-KE", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                       </p>
-                      <p className="text-sm text-secondary">
+                      <p className="text-sm text-muted-foreground">
                         Available Balance
                       </p>
                     </div>
+                    <Button
+                      onClick={() => setTopUpOpen(true)}
+                      className="w-full max-w-xs"
+                      size="lg"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Top Up Wallet
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -531,6 +543,7 @@ export default function BusinessProfilePage() {
           </form>
         </Form>
       </div>
+      <TopUpWalletDialog open={topUpOpen} onOpenChange={setTopUpOpen} />
     </div>
   );
 }

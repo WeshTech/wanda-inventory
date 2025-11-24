@@ -18,3 +18,9 @@ export type GlobalBusinessInfoResponse = {
   message: string;
   data: GlobalBusinessInfo | null;
 };
+
+export type TopUpResponse = {
+  success: boolean;
+  message: string;
+  data?: null;
+};
