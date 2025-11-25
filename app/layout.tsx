@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { TanstackProvider } from "@/providers/tanstack-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { StructuredData } from "@/components/structured-data";
+import Script from "next/script";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -28,6 +29,21 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-V690Z4VCLQ"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+      // Declare dataLayer for TypeScript
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){window.dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V690Z4VCLQ');
+    `,
+          }}
+        />
         <meta
           name="google-site-verification"
           content="T-ze-va65OTqhSo7_27AXxOOJk2cjeazpQvjINHZzR8"
