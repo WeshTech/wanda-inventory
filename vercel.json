@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "https://wandainventory.co.ke/:path*",
+      "destination": "https://www.wandainventory.co.ke/:path*",
+      "permanent": true
+    }
+  ]
+}
