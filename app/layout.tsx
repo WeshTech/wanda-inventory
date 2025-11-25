@@ -28,6 +28,10 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta
+          name="google-site-verification"
+          content="T-ze-va65OTqhSo7_27AXxOOJk2cjeazpQvjINHZzR8"
+        />
         <StructuredData />
       </head>
       <body className={`${nunito.className} antialiased flex`}>
