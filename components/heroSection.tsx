@@ -159,10 +159,10 @@ export default function HeroSection() {
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl rounded-full" />
               <div className="relative">
                 <Image
-                  src="/images/dash3.jpg"
+                  src="/images/dash1.png"
                   alt="Inventory Management Dashboard"
                   width={1200}
-                  height={600}
+                  height={1200}
                   className="w-full h-auto rounded-2xl shadow-2xl border border-border/50"
                   priority
                 />

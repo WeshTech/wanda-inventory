@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   Package,
   Mail,
-  Phone,
   MapPin,
   Twitter,
   Linkedin,
@@ -17,6 +16,7 @@ import {
   Users,
   BarChart3,
   FacebookIcon,
+  MessageCircle,
 } from "lucide-react";
 
 interface ContainerProps {
@@ -140,12 +140,12 @@ export default function Footer() {
               {/* Contact Info */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  <span>+254 700 123 456</span>
+                  <MessageCircle className="h-4 w-4" />
+                  <span>+254 798 853 079</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
-                  <span>hello@inventrypro.co.ke</span>
+                  <span>wandainventory@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
