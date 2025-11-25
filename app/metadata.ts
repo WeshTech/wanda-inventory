@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    default: "Wanda Inventory",
-    template: "%s | Wanda Inventory",
+    default: "Wanda Inventory KE",
+    template: "%s | Wanda Inventory KE",
   },
   description:
     "Streamline your business operations with Wanda Inventory. Manage multiple stores, track inventory in real-time, monitor sales, and control user access all in one powerful platform.",
@@ -31,8 +31,12 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke"
   ),
   alternates: {
-    canonical: "/",
+    canonical: new URL(
+      "/",
+      process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke"
+    ),
   },
+
   openGraph: {
     title: "Wanda Inventory - Smart Business & Inventory Management",
     description:
@@ -55,7 +59,12 @@ export const metadata: Metadata = {
     title: "Wanda Inventory - Smart Business Management",
     description:
       "Real-time inventory tracking and multi-store management made easy.",
-    images: ["/twitter-image.png"],
+    images: [
+      `${
+        process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke"
+      }/og-image.png`,
+    ],
+
     // creator: '@wandainventory',
   },
   robots: {

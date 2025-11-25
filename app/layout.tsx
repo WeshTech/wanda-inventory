@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -16,7 +15,7 @@ const nunito = Nunito({
   display: "swap",
 });
 
-export { Metadata };
+export { metadata } from "./metadata";
 
 export default async function RootLayout({
   children,

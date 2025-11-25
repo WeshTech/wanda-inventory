@@ -158,9 +158,9 @@ export default function Testimonials() {
                       </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-foreground">
+                          <h3 className="font-semibold text-foreground">
                             {testimonial.name}
-                          </h4>
+                          </h3>
                           <StarRating rating={testimonial.rating} />
                         </div>
                         <p className="text-sm text-muted-foreground mb-1">
