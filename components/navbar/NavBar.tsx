@@ -91,18 +91,18 @@ const NavBar = () => {
               <div className="flex gap-3 items-center">
                 <Link href="/">
                   <Image
-                    src="/images/inventory-logo.png"
+                    src="/images/wanda-new-logo.png"
                     alt="logo"
                     height={2000}
                     width={2000}
-                    className="rounded-sm h-10 w-10"
+                    className="rounded-sm h-10 w-28"
                   />
                 </Link>
-                <Link href="/">
+                {/* <Link href="/">
                   <h1 className="text-lg sm:text-xl md:text-xl font-semibold">
                     Wanda Inventory
                   </h1>
-                </Link>
+                </Link> */}
               </div>
 
               {/* Desktop Menu */}
