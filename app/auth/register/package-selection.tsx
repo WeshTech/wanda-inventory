@@ -52,16 +52,16 @@ export default function PackageSelection({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12 pt-8">
           <div className="flex items-center justify-center mb-6">
             <Package className="h-12 w-12 text-primary mr-4" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Wanda Inventory
             </h1>
           </div>
-          <h2 className="text-3xl font-bold mb-4">Choose Your Perfect Plan</h2>
+          <h2 className="text-2xl font-bold mb-4">Choose Your Perfect Plan</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Select the package that best fits your business needs. You can
             upgrade or downgrade at any time.
@@ -69,7 +69,7 @@ export default function PackageSelection({
         </div>
 
         {/* Package Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {packagePlans.map((plan) => (
             <Card
               key={plan.id}
@@ -92,10 +92,10 @@ export default function PackageSelection({
                 </CardTitle>
                 <div className="mt-4">
                   {plan.price === "Custom" ? (
-                    <div className="text-3xl font-bold">Custom Pricing</div>
+                    <div className="text-xl font-bold">Custom Pricing</div>
                   ) : (
                     <div className="flex items-baseline justify-center">
-                      <span className="text-4xl font-bold">
+                      <span className="text-2xl font-bold">
                         {plan.currency} {plan.price}
                       </span>
                       <span className="text-muted-foreground ml-1">
@@ -111,7 +111,7 @@ export default function PackageSelection({
 
               <CardContent className="pt-0">
                 <ul className="space-y-3">
-                  {plan.features.map((feature, index) => (
+                  {plan.features.slice(0, 5).map((feature, index) => (
                     <li key={index} className="flex items-center gap-3">
                       <feature.icon className="h-5 w-5 text-primary flex-shrink-0" />
                       <span className="text-sm">{feature.text}</span>
@@ -132,8 +132,10 @@ export default function PackageSelection({
                       <Check className="mr-2 h-4 w-4" />
                       Selected
                     </>
+                  ) : plan.id === "FREE" ? (
+                    "Start"
                   ) : (
-                    "Select Plan"
+                    "Start 15-day trial"
                   )}
                 </Button>
               </CardContent>

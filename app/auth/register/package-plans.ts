@@ -15,6 +15,31 @@ import {
 } from "lucide-react";
 
 export const packagePlans = [
+   {
+    id: "FREE",
+    name: "Free",
+    price: "0",
+    currency: "KES",
+    period: "month",
+    description: "Free forever",
+    popular: false,
+    features: [
+      { text: "1000 products", icon: Package, included: true },
+      { text: "3 roles", icon: Shield, included: true },
+      { text: "2 stores", icon: Globe, included: true },
+      { text: "3 users", icon: Users, included: true },
+      { text: "Email support", icon: Headphones, included: true },
+      { text: "Basic reports", icon: Database, included: true },
+      { text: "Barcode scanning", icon: Smartphone, included: true },
+      { text: "Basic inventory tracking", icon: BarChart3, included: true },
+      { text: "Advanced Analytics", icon: BarChart3, included: false },
+      { text: "API access", icon: Zap, included: false },
+      { text: "ETIMS (KRA) integration", icon: CreditCard, included: false },
+      { text: "Warehouse automation", icon: Zap, included: false },
+    ],
+    buttonText: "Start Free Trial",
+    buttonVariant: "outline" as const,
+  },
   {
     id: "BASIC",
     name: "Basic",
@@ -24,10 +49,10 @@ export const packagePlans = [
     description: "Perfect for small businesses just getting started",
     popular: false,
     features: [
-      { text: "500 products", icon: Package, included: true },
-      { text: "1 role", icon: Shield, included: true },
-      { text: "1 store", icon: Globe, included: true },
-      { text: "1 user", icon: Users, included: true },
+      { text: "1500 products", icon: Package, included: true },
+      { text: "6 roles", icon: Shield, included: true },
+      { text: "4 stores", icon: Globe, included: true },
+      { text: "6 users", icon: Users, included: true },
       { text: "Email support", icon: Headphones, included: true },
       { text: "Basic reports", icon: Database, included: true },
       { text: "Barcode scanning", icon: Smartphone, included: true },
@@ -49,10 +74,10 @@ export const packagePlans = [
     description: "Ideal for growing businesses with multiple locations",
     popular: true,
     features: [
-      { text: "900 products", icon: Package, included: true },
-      { text: "5 roles", icon: Shield, included: true },
-      { text: "4 stores", icon: Globe, included: true },
-      { text: "5 users", icon: Users, included: true },
+      { text: "2500 products", icon: Package, included: true },
+      { text: "12 roles", icon: Shield, included: true },
+      { text: "8 stores", icon: Globe, included: true },
+      { text: "12 users", icon: Users, included: true },
       { text: "Email support", icon: Headphones, included: true },
       { text: "Barcode scanning", icon: Smartphone, included: true },
       {
@@ -78,10 +103,10 @@ export const packagePlans = [
     description: "For medium businesses needing enhanced capabilities",
     popular: false,
     features: [
-      { text: "1,200 products", icon: Package, included: true },
-      { text: "11 roles", icon: Shield, included: true },
-      { text: "10 stores", icon: Globe, included: true },
-      { text: "11 users", icon: Users, included: true },
+      { text: "3,000 products", icon: Package, included: true },
+      { text: "16 roles", icon: Shield, included: true },
+      { text: "12 stores", icon: Globe, included: true },
+      { text: "16 users", icon: Users, included: true },
       {
         text: "Enterprise inventory management",
         icon: BarChart3,
