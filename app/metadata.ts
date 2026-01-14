@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke";
+
 export const metadata: Metadata = {
   title: {
     default: "Wanda Inventory KE",
     template: "%s | Wanda Inventory KE",
   },
+
   description:
     "Streamline your business operations with Wanda Inventory. Manage multiple stores, track inventory in real-time, monitor sales, and control user access all in one powerful platform.",
+
   keywords: [
     "inventory management",
     "business management",
@@ -19,33 +24,26 @@ export const metadata: Metadata = {
     "POS system",
     "business analytics",
   ],
+
   authors: [{ name: "Wanda Inventory Team" }],
   creator: "Wanda Inventory",
   publisher: "Wanda Inventory",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke"
-  ),
+
+  metadataBase: new URL(siteUrl),
+
   alternates: {
-    canonical: new URL(
-      "/",
-      process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke"
-    ),
+    canonical: siteUrl,
   },
 
   openGraph: {
-    title: "Wanda Inventory - Smart Business & Inventory Management",
+    title: "Wanda Inventory | Smart Business & Inventory Management",
     description:
       "Streamline your business operations with real-time inventory tracking, multi-store management, and powerful analytics.",
-    url: "/",
+    url: siteUrl,
     siteName: "Wanda Inventory",
     images: [
       {
-        url: "/og-image.png",
+        url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Wanda Inventory Dashboard Preview",
@@ -54,19 +52,15 @@ export const metadata: Metadata = {
     locale: "en_KE",
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Wanda Inventory - Smart Business Management",
+    title: "Wanda Inventory | Smart Business Management",
     description:
       "Real-time inventory tracking and multi-store management made easy.",
-    images: [
-      `${
-        process.env.NEXT_PUBLIC_APP_URL || "https://wandainventory.co.ke"
-      }/og-image.png`,
-    ],
-
-    // creator: '@wandainventory',
+    images: [`${siteUrl}/og-image.png`],
   },
+
   robots: {
     index: true,
     follow: true,
@@ -78,5 +72,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+
   category: "technology",
 };
