@@ -8,7 +8,7 @@ export const PUBLIC_ROUTES = [
   "/robots.txt",
   "/pricing",
   "/careers",
-  "/about-us",
+  "/about",
   "/contact-us",
 ];
 export const AUTH_ROUTES = ["/auth/login", "/auth/register"];

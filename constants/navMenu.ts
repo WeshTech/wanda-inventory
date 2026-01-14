@@ -1,10 +1,23 @@
-import { Home, Zap, DollarSign, MessageSquare, Building2 } from "lucide-react";
+import {
+  Home,
+  Zap,
+  DollarSign,
+  MessageSquare,
+  Building2,
+  Briefcase,
+  Pointer,
+} from "lucide-react";
 
 export const NavMenu = [
   {
     title: "Home",
     link: "/",
     icon: Home,
+  },
+  {
+    title: "About",
+    link: "/about",
+    icon: Pointer,
   },
   {
     title: "Features",
@@ -24,6 +37,6 @@ export const NavMenu = [
   {
     title: "Careers",
     link: "/careers",
-    icon: Building2,
+    icon: Briefcase,
   },
 ];
