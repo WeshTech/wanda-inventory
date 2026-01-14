@@ -8,8 +8,7 @@ export const PUBLIC_ROUTES = [
   "/robots.txt",
   "/pricing",
   "/careers",
-  "/about",
-  "/contact-us",
+  "/aboutus",
 ];
 export const AUTH_ROUTES = ["/auth/login", "/auth/register"];
 export const DEFAULT_LOGIN_REDIRECT = "/dashboard"; // where logged-in users go

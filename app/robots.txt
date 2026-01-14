@@ -4,17 +4,12 @@ Allow: /
 # Disallow private / authenticated areas
 Disallow: /dashboard/
 
-
-# Prevent query-based duplicate pages
-Disallow: /*?*
-Disallow: /*&*
-
-# Allow necessary static resources
+# Allow static assets (good for rendering & Core Web Vitals)
 Allow: /assets/
 Allow: /images/
 Allow: /fonts/
 Allow: /css/
 Allow: /js/
 
-# Sitemap for faster discovery
+# Sitemap
 Sitemap: https://wandainventory.co.ke/sitemap.xml

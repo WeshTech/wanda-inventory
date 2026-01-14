@@ -1,11 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
+  <!-- Home -->
   <url>
     <loc>https://wandainventory.co.ke/</loc>
     <lastmod>2025-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+
+  <!-- Pricing -->
+  <url>
+    <loc>https://wandainventory.co.ke/pricing</loc>
+    <lastmod>2025-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Careers -->
+  <url>
+    <loc>https://wandainventory.co.ke/careers</loc>
+    <lastmod>2025-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- About Us -->
+  <url>
+    <loc>https://wandainventory.co.ke/aboutus</loc>
+    <lastmod>2025-11-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 
 </urlset>

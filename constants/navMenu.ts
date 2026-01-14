@@ -3,7 +3,6 @@ import {
   Zap,
   DollarSign,
   MessageSquare,
-  Building2,
   Briefcase,
   Pointer,
 } from "lucide-react";
@@ -16,7 +15,7 @@ export const NavMenu = [
   },
   {
     title: "About",
-    link: "/about",
+    link: "/aboutus",
     icon: Pointer,
   },
   {
