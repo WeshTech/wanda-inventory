@@ -1,4 +1,4 @@
-import { Home, Zap, DollarSign, MessageSquare } from "lucide-react";
+import { Home, Zap, DollarSign, MessageSquare, Building2 } from "lucide-react";
 
 export const NavMenu = [
   {
@@ -21,9 +21,9 @@ export const NavMenu = [
     link: "/#testimonials",
     icon: MessageSquare,
   },
-  // {
-  //   title: "Company",
-  //   link: "/company",
-  //   icon: Building2,
-  // },
+  {
+    title: "Careers",
+    link: "/careers",
+    icon: Building2,
+  },
 ];
