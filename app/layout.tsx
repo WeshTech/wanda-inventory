@@ -77,7 +77,7 @@ export default async function RootLayout({
                 <div className="px-4">{children}</div>
               </main>
               <ToastProvider />
-              <Toaster position="top-center" theme="system" />
+              <Toaster position="top-center" theme="light" />
             </SidebarProvider>
           </TanstackProvider>
         </ThemeProvider>
