@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Route configs
-export const PUBLIC_ROUTES = ["/", "/sitemap.xml", "/robots.txt"];
+export const PUBLIC_ROUTES = ["/", "/sitemap.xml", "/robots.txt", "/pricing"];
 export const AUTH_ROUTES = ["/auth/login", "/auth/register"];
 export const DEFAULT_LOGIN_REDIRECT = "/dashboard"; // where logged-in users go
 export const DEFAULT_LOGOUT_REDIRECT = "/auth/login"; // where logged-out users go

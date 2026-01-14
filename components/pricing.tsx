@@ -15,7 +15,7 @@ import {
   X,
   Network,
   Banknote,
-  AppWindow,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,124 +36,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
+import { plans } from "@/constants/plans";
 
 export default function PricingSection() {
   const router = useRouter();
-  const plans = [
-    {
-      name: "Basic",
-      price: "KES 549",
-      period: "/month",
-      annualPrice: "KES 5,999/year",
-      description: "Perfect for small businesses just getting started",
-      badge: null,
-      features: [
-        { name: "500 products", icon: Package, included: true },
-        { name: "1 role", icon: Shield, included: true },
-        { name: "1 store", icon: Globe, included: true },
-        { name: "1 user", icon: Users, included: true },
-        { name: "Email support", icon: Headphones, included: true },
-        { name: "Basic reports", icon: Database, included: true },
-        { name: "Barcode scanning", icon: Smartphone, included: true },
-        { name: "Basic inventory tracking", icon: BarChart3, included: true },
-        { name: "Advanced Analytics", icon: BarChart3, included: false },
-        { name: "API access", icon: Zap, included: false },
-        { name: "ETIMS (KRA) integration", icon: CreditCard, included: false },
-        { name: "Warehouse automation", icon: Zap, included: false },
-      ],
-      buttonText: "Get started",
-      buttonVariant: "outline" as const,
-    },
-    {
-      name: "Professional",
-      price: "KES 1,949",
-      period: "/month",
-      annualPrice: "KES 22,849/year",
-      description: "Ideal for growing businesses with multiple locations",
-      badge: "Most Popular",
-      features: [
-        { name: "900 products", icon: Package, included: true },
-        { name: "5 roles", icon: Shield, included: true },
-        { name: "4 stores", icon: Globe, included: true },
-        { name: "5 users", icon: Users, included: true },
-        { name: "Email support", icon: Headphones, included: true },
-        { name: "Barcode scanning", icon: Smartphone, included: true },
-        {
-          name: "Advanced Inventory Tracking",
-          icon: BarChart3,
-          included: true,
-        },
-        { name: "Advanced Analytics", icon: BarChart3, included: true },
-        { name: "Basic reports", icon: Database, included: true },
-        { name: "API access", icon: Zap, included: false },
-        { name: "ETIMS (KRA) integration", icon: CreditCard, included: false },
-        { name: "Warehouse automation", icon: Zap, included: false },
-      ],
-      buttonText: "Get Started",
-      buttonVariant: "default" as const,
-    },
-    {
-      name: "Advanced",
-      price: "KES 4,999",
-      period: "/month",
-      annualPrice: "KES 57,999/year",
-      description: "For medium businesses needing enhanced capabilities",
-      badge: "Recommended",
-      features: [
-        { name: "1,200 products", icon: Package, included: true },
-        { name: "11 roles", icon: Shield, included: true },
-        { name: "10 stores", icon: Globe, included: true },
-        { name: "11 users", icon: Users, included: true },
-        {
-          name: "Enterprise inventory management",
-          icon: BarChart3,
-          included: true,
-        },
-        { name: "Barcode + RFID", icon: Smartphone, included: true },
-        { name: "SKU access", icon: Database, included: true },
-        { name: "Advanced Analytics", icon: BarChart3, included: true },
-        { name: "API access", icon: Zap, included: true },
-        { name: "ETIMS (KRA) integration", icon: CreditCard, included: false },
-        { name: "Warehouse automation", icon: Zap, included: false },
-        { name: "Custom reports", icon: Database, included: false },
-      ],
-      buttonText: "Get Started",
-      buttonVariant: "default" as const,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      period: "/month",
-      description: "Custom pricing for large businesses with complex needs",
-      badge: "Advanced",
-      features: [
-        { name: "Unlimited products", icon: Package, included: true },
-        { name: "Unlimited roles", icon: Shield, included: true },
-        { name: "Unlimited stores", icon: Globe, included: true },
-        { name: "Unlimited users", icon: Users, included: true },
-        { name: "Access log auditing", icon: Shield, included: true },
-        { name: "API access", icon: Zap, included: true },
-        { name: "SKU access", icon: Database, included: true },
-        { name: "Custom reports", icon: Database, included: true },
-        { name: "ETIMS (KRA) integration", icon: CreditCard, included: true },
-        { name: "Barcode + RFID + Barcodes", icon: Smartphone, included: true },
-        { name: "IP Address Management", icon: Network, included: true },
-        { name: "Bank Integration", icon: Banknote, included: true },
-        { name: "Mpesa Till Integration", icon: CreditCard, included: true },
-        { name: "Application", icon: AppWindow, included: true },
-
-        {
-          name: "Enterprise inventory management",
-          icon: BarChart3,
-          included: true,
-        },
-        { name: "Warehouse automation", icon: Zap, included: true },
-        { name: "Custom prices", icon: Shield, included: true },
-      ],
-      buttonText: "Get Started",
-      buttonVariant: "outline" as const,
-    },
-  ];
 
   return (
     <section id="pricing" className="py-4 bg-transparent/70">
@@ -171,8 +57,8 @@ export default function PricingSection() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 px-2">
-          {plans.map((plan, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16 px-2 max-w-5xl mx-auto">
+          {plans.slice(0, 3).map((plan, index) => (
             <Card
               key={plan.name}
               className={`relative flex flex-col ${
@@ -246,6 +132,16 @@ export default function PricingSection() {
               </CardFooter>
             </Card>
           ))}
+        </div>
+        <div className="flex items-center justify-center mb-4 sm:mb-6 lg:mb-8">
+          <Button
+            className="group flex items-center gap-2 text-center"
+            size="default"
+            onClick={() => router.push("/pricing")}
+          >
+            Explore More Plans
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+          </Button>
         </div>
 
         {/* Feature Comparison Table */}

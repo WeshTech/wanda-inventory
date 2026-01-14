@@ -13,7 +13,7 @@ export const NavMenu = [
   },
   {
     title: "Pricing",
-    link: "/#pricing",
+    link: "/pricing",
     icon: DollarSign,
   },
   {

@@ -1,6 +1,6 @@
 // these routes do not requre a user to logged in the system
 
-export const PUBLICROUTES = ["/", "/sitemap.xml", "/robots.txt"];
+export const PUBLICROUTES = ["/", "/sitemap.xml", "/robots.txt", "/pricing"];
 
 export const AUTHROUTES = ["/auth/login", "/auth/register"];
 
