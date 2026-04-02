@@ -95,7 +95,7 @@ export default function SeasonalProductsPage() {
     data: response,
     isLoading: isFetching,
     isError,
-  } = useSeasonalProducts(MOCK_FILTERS, true);
+  } = useSeasonalProducts(MOCK_FILTERS, true, !isAuthLoading);
 
   const isLoading = isAuthLoading || isFetching;
 

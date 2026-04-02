@@ -34,6 +34,7 @@ export const useGetBusinessAnalysisTime = (businessId: string) => {
 export const useRegionalRecommendations = (
   filters: RegionalRecommendationsFilters,
   enabled = true,
+  isAuthready = true,
 ): UseQueryResult<RegionalRecommendationsData, Error> => {
   return useQuery({
     queryKey: ["regional-recommendations", filters],
@@ -44,7 +45,7 @@ export const useRegionalRecommendations = (
       );
       return response.data.data;
     },
-    enabled,
+    enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
   });
 };
@@ -53,6 +54,7 @@ export const useRegionalRecommendations = (
 export const useRestock = (
   filters: RestockRecommendationsFilters,
   enabled = true,
+  isAuthready = true,
 ): UseQueryResult<RestockRecommendationsData, Error> => {
   return useQuery({
     queryKey: ["restock-recommendations", filters],
@@ -63,7 +65,7 @@ export const useRestock = (
       );
       return response.data.data;
     },
-    enabled,
+    enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
   });
 };
@@ -72,6 +74,7 @@ export const useRestock = (
 export const useWeekendHotSales = (
   filters: WeekendHotSalesFilters,
   enabled = true,
+  isAuthready = true,
 ): UseQueryResult<WeekendHotSalesData, Error> => {
   return useQuery({
     queryKey: ["weekend-hot-sales", filters],
@@ -82,7 +85,7 @@ export const useWeekendHotSales = (
       );
       return response.data.data;
     },
-    enabled,
+    enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
   });
 };
@@ -91,6 +94,7 @@ export const useWeekendHotSales = (
 export const useSeasonalProducts = (
   filters: SeasonalFilters,
   enabled = true,
+  isAuthready = true,
 ): UseQueryResult<SeasonalProductsData, Error> => {
   return useQuery({
     queryKey: ["seasonal-products", filters],
@@ -101,7 +105,7 @@ export const useSeasonalProducts = (
       );
       return response.data.data;
     },
-    enabled,
+    enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
   });
 };
@@ -110,6 +114,7 @@ export const useSeasonalProducts = (
 export const useFastMovingGoods = (
   filters: FastMovingFilters,
   enabled = true,
+  isAuthready = true,
 ): UseQueryResult<FastMovingGoodsData, Error> => {
   return useQuery({
     queryKey: ["fast-moving-goods", filters],
@@ -120,7 +125,7 @@ export const useFastMovingGoods = (
       );
       return response.data.data;
     },
-    enabled,
+    enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
   });
 };

@@ -69,7 +69,7 @@ export default function FastMovingGoodsPage() {
     data: response,
     isLoading: isFetching,
     isError,
-  } = useFastMovingGoods(MOCK_FILTERS, true);
+  } = useFastMovingGoods(MOCK_FILTERS, true, !isAuthLoading);
 
   const isLoading = isAuthLoading || isFetching;
 

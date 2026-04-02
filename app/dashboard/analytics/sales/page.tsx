@@ -124,13 +124,6 @@ function DashboardContent() {
           </div>
         </section>
 
-        {/* Analytics Section */}
-        <section className="space-y-6 mb-12">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Analytics</h2>
-          </div>
-        </section>
-
         {/* Recommendations Section */}
         <section className="">
           {/* Fast Moving Goods */}

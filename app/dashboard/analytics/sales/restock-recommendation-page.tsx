@@ -96,7 +96,7 @@ export default function RestockRecommendationsPage() {
     data: response,
     isLoading: isFetching,
     isError,
-  } = useRestock(MOCK_FILTERS, true);
+  } = useRestock(MOCK_FILTERS, true, !isAuthLoading);
 
   const isLoading = isAuthLoading || isFetching;
 

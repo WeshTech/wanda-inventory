@@ -62,7 +62,7 @@ export default function WeekendHotSalesPage() {
     data: response,
     isLoading: isFetching,
     isError,
-  } = useWeekendHotSales(MOCK_FILTERS, true);
+  } = useWeekendHotSales(MOCK_FILTERS, true, !isAuthLoading);
 
   const isLoading = isAuthLoading || isFetching;
 
