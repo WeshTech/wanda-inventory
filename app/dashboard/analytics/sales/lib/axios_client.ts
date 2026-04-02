@@ -13,6 +13,7 @@ const API_BASE_URL =
 const client: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/prediction`,
   timeout: 30000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
