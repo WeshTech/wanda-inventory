@@ -21,6 +21,7 @@ import { useAuthBusinessId, useAuthStoreAccess } from "@/stores/authStore";
 import RegionalRecommendationsPage from "./recommendations/recommendations_chart";
 import RestockRecommendationsPage from "./restock-recommendation-page";
 import WeekendHotSalesPage from "./weekend-hot-sales-page";
+import SeasonalProductsPage from "./seasonal-products-page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -227,24 +228,7 @@ function DashboardContent() {
           <WeekendHotSalesPage />
 
           {/* Seasonal Products */}
-          {/* <RecommendationsSection
-            title="Seasonal Products"
-            description="Products with seasonal demand patterns"
-            isLoading={seasonalQuery.isLoading}
-            isEmpty={!seasonalQuery.data?.products?.length}
-            emptyMessage="No seasonal products found"
-          >
-            {seasonalQuery.data?.products?.map((product) => (
-              <RecommendationCard
-                key={product.business_product_id}
-                productName={product.product_name}
-                value={product.seasonal_trend}
-                insight={product.insight}
-                valueLabel="Seasonal Trend"
-                variant="default"
-              />
-            ))}
-          </RecommendationsSection> */}
+          <SeasonalProductsPage />
 
           {/* Restock Items */}
           <RestockRecommendationsPage />

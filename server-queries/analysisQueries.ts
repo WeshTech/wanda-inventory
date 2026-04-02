@@ -8,6 +8,9 @@ import {
   RestockRecommendationsData,
   RestockRecommendationsFilters,
   RestockRecommendationsResponse,
+  SeasonalFilters,
+  SeasonalProductsData,
+  SeasonalProductsResponse,
   WeekendHotSalesData,
   WeekendHotSalesFilters,
   WeekendHotSalesResponse,
@@ -72,6 +75,25 @@ export const useWeekendHotSales = (
     queryFn: async () => {
       const response = await client.get<WeekendHotSalesResponse>(
         "/recommendations/weekend-hot-sales",
+        { params: filters },
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+//seasonal products query
+export const useSeasonalProducts = (
+  filters: SeasonalFilters,
+  enabled = true,
+): UseQueryResult<SeasonalProductsData, Error> => {
+  return useQuery({
+    queryKey: ["seasonal-products", filters],
+    queryFn: async () => {
+      const response = await client.get<SeasonalProductsResponse>(
+        "/recommendations/seasonal-products",
         { params: filters },
       );
       return response.data.data;

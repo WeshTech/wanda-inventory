@@ -116,3 +116,35 @@ export interface WeekendHotSalesResponse {
   message: string;
   data: WeekendHotSalesData;
 }
+
+//seasonal product types
+
+export interface SeasonalFilters {
+  store_id: string;
+  days?: number; // default: 3650, min: 30, max: 3650
+  limit?: number; // default: 20, min: 1, max: 100
+}
+export interface SeasonalProductItem {
+  business_product_id: string;
+  product_name: string;
+  brand: string;
+  sale_month: number;
+  total_quantity: number;
+  total_revenue: number;
+  season: string;
+  insight: string;
+}
+
+export interface SeasonalProductsData {
+  store_id: string;
+  days: number;
+  limit: number;
+  total_items: number;
+  items: SeasonalProductItem[];
+}
+
+export interface SeasonalProductsResponse {
+  success: boolean;
+  message: string;
+  data: SeasonalProductsData;
+}
