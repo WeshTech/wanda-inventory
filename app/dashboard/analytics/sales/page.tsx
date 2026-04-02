@@ -19,6 +19,7 @@ import { RecommendationsSection } from "./recommendations/recommendation_section
 
 import { useAuthBusinessId, useAuthStoreAccess } from "@/stores/authStore";
 import RegionalRecommendationsPage from "./recommendations/recommendations_chart";
+import RestockRecommendationsPage from "./restock-recommendation-page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -200,7 +201,7 @@ function DashboardContent() {
         </section>
 
         {/* Recommendations Section */}
-        <section className="space-y-12">
+        <section className="">
           {/* Fast Moving Goods */}
           {/* <RecommendationsSection
             title="Fast Moving Goods"
@@ -262,25 +263,9 @@ function DashboardContent() {
           </RecommendationsSection> */}
 
           {/* Restock Items */}
-          {/* <RecommendationsSection
-            title="Restock Recommendations"
-            description="Products that need attention for restocking"
-            isLoading={restockQuery.isLoading}
-            isEmpty={!restockQuery.data?.products?.length}
-            emptyMessage="No restock items recommended"
-          >
-            {restockQuery.data?.products?.map((product) => (
-              <RestockCard
-                key={product.business_product_id}
-                productName={product.product_name}
-                signal={product.restock_signal}
-                insight={product.insight}
-              />
-            ))}
-          </RecommendationsSection> */}
+          <RestockRecommendationsPage />
 
           {/* Regional Recommendations */}
-
           <RegionalRecommendationsPage />
         </section>
       </div>

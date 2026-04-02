@@ -5,6 +5,9 @@ import {
   RegionalRecommendationsData,
   RegionalRecommendationsFilters,
   RegionalRecommendationsResponse,
+  RestockRecommendationsData,
+  RestockRecommendationsFilters,
+  RestockRecommendationsResponse,
 } from "@/types/analysis";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
@@ -28,6 +31,25 @@ export const useRegionalRecommendations = (
     queryFn: async () => {
       const response = await client.get<RegionalRecommendationsResponse>(
         "/recommendations/regional",
+        { params: filters },
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+//restock recommendation
+export const useRestock = (
+  filters: RestockRecommendationsFilters,
+  enabled = true,
+): UseQueryResult<RestockRecommendationsData, Error> => {
+  return useQuery({
+    queryKey: ["restock-recommendations", filters],
+    queryFn: async () => {
+      const response = await client.get<RestockRecommendationsResponse>(
+        "/recommendations/restock",
         { params: filters },
       );
       return response.data.data;
