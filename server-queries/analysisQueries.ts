@@ -2,6 +2,9 @@ import client from "@/app/dashboard/analytics/sales/lib/axios_client";
 import { getBusinessAnalysisTimeApi } from "@/server/analysis/get-analysis-time";
 import {
   AnalysisTimeResponse,
+  FastMovingFilters,
+  FastMovingGoodsData,
+  FastMovingGoodsResponse,
   RegionalRecommendationsData,
   RegionalRecommendationsFilters,
   RegionalRecommendationsResponse,
@@ -94,6 +97,25 @@ export const useSeasonalProducts = (
     queryFn: async () => {
       const response = await client.get<SeasonalProductsResponse>(
         "/recommendations/seasonal-products",
+        { params: filters },
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+//fast moving goods
+export const useFastMovingGoods = (
+  filters: FastMovingFilters,
+  enabled = true,
+): UseQueryResult<FastMovingGoodsData, Error> => {
+  return useQuery({
+    queryKey: ["fast-moving-goods", filters],
+    queryFn: async () => {
+      const response = await client.get<FastMovingGoodsResponse>(
+        "/recommendations/fast-moving",
         { params: filters },
       );
       return response.data.data;

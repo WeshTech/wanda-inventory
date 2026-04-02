@@ -22,6 +22,7 @@ import RegionalRecommendationsPage from "./recommendations/recommendations_chart
 import RestockRecommendationsPage from "./restock-recommendation-page";
 import WeekendHotSalesPage from "./weekend-hot-sales-page";
 import SeasonalProductsPage from "./seasonal-products-page";
+import FastMovingGoodsPage from "./fast-moving-goods-page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,15 +59,6 @@ function DashboardContent() {
     !!filters.storeId,
   );
 
-  // Analytics queries
-  const historyQuery = useStoreSalesHistory(
-    {
-      store_id: filters.storeId,
-      days: filters.days,
-    },
-    !!filters.storeId,
-  );
-
   // Recommendation queries
   const fastMovingQuery = useFastMovingGoods(
     {
@@ -75,47 +67,6 @@ function DashboardContent() {
       limit: filters.limit,
     },
     !!filters.storeId,
-  );
-
-  const weekendQuery = useWeekendHotSales(
-    {
-      store_id: filters.storeId,
-      days: filters.days,
-      limit: filters.limit,
-    },
-    !!filters.storeId,
-  );
-
-  const seasonalQuery = useSeasonalProducts(
-    {
-      store_id: filters.storeId,
-      days: filters.days,
-      limit: filters.limit,
-    },
-    !!filters.storeId,
-  );
-
-  const restockQuery = useRestock(
-    {
-      business_type: filters.businessType,
-      county: filters.county,
-      constituency: filters.constituency,
-      ward: filters.ward,
-      days: filters.days,
-      limit: filters.limit,
-    },
-    !!filters.businessType,
-  );
-
-  const regionalQuery = useRegionalRecommendations(
-    {
-      county: filters.county,
-      constituency: filters.constituency,
-      ward: filters.ward,
-      days: filters.days,
-      limit: filters.limit,
-    },
-    !!(filters.county || filters.constituency || filters.ward),
   );
 
   const handleFilterChange = (newFilters: DashboardFilterValues) => {
@@ -178,51 +129,12 @@ function DashboardContent() {
           <div>
             <h2 className="text-2xl font-bold mb-4">Analytics</h2>
           </div>
-
-          <div className="grid grid-cols-1 gap-6">
-            {historyQuery.isLoading ? (
-              <div className="h-80 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-2">
-                  <Spinner className="w-8 h-8" />
-                  <p className="text-sm text-muted-foreground">
-                    Loading sales history...
-                  </p>
-                </div>
-              </div>
-            ) : historyQuery.isError ? (
-              <div className="h-80 flex items-center justify-center text-red-600">
-                <p>Failed to load sales history. Please try again.</p>
-              </div>
-            ) : historyQuery.data ? (
-              <SalesHistoryChart
-                data={historyQuery.data}
-                title="Daily Sales History"
-              />
-            ) : null}
-          </div>
         </section>
 
         {/* Recommendations Section */}
         <section className="">
           {/* Fast Moving Goods */}
-          {/* <RecommendationsSection
-            title="Fast Moving Goods"
-            description="Top products with the highest sales velocity"
-            isLoading={fastMovingQuery.isLoading}
-            isEmpty={!fastMovingQuery.data?.products?.length}
-            emptyMessage="No fast-moving products found"
-          >
-            {fastMovingQuery.data?.products?.map((product) => (
-              <RecommendationCard
-                key={product.business_product_id}
-                productName={product.product_name}
-                value={`$${product.total_revenue.toLocaleString()}`}
-                insight={product.insight}
-                valueLabel="Total Revenue"
-                variant="success"
-              />
-            ))}
-          </RecommendationsSection> */}
+          <FastMovingGoodsPage />
 
           {/* Weekend Hot Sales */}
           <WeekendHotSalesPage />

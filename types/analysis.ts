@@ -148,3 +148,34 @@ export interface SeasonalProductsResponse {
   message: string;
   data: SeasonalProductsData;
 }
+
+//fast moving goods
+export interface FastMovingFilters {
+  store_id: string;
+  days?: number; // default: 3650, min: 1, max: 3650
+  limit?: number; // default: 10, min: 1, max: 50
+}
+
+export interface FastMovingGoodItem {
+  business_product_id: string;
+  product_name: string;
+  brand: string;
+  total_quantity: number;
+  total_revenue: number;
+  rank: number;
+  insight: string;
+}
+
+export interface FastMovingGoodsData {
+  store_id: string;
+  days: number;
+  limit: number;
+  total_items: number;
+  items: FastMovingGoodItem[];
+}
+
+export interface FastMovingGoodsResponse {
+  success: boolean;
+  message: string;
+  data: FastMovingGoodsData;
+}
