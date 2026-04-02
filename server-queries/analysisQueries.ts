@@ -8,6 +8,9 @@ import {
   RestockRecommendationsData,
   RestockRecommendationsFilters,
   RestockRecommendationsResponse,
+  WeekendHotSalesData,
+  WeekendHotSalesFilters,
+  WeekendHotSalesResponse,
 } from "@/types/analysis";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
@@ -50,6 +53,25 @@ export const useRestock = (
     queryFn: async () => {
       const response = await client.get<RestockRecommendationsResponse>(
         "/recommendations/restock",
+        { params: filters },
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+//Weekend hot sales
+export const useWeekendHotSales = (
+  filters: WeekendHotSalesFilters,
+  enabled = true,
+): UseQueryResult<WeekendHotSalesData, Error> => {
+  return useQuery({
+    queryKey: ["weekend-hot-sales", filters],
+    queryFn: async () => {
+      const response = await client.get<WeekendHotSalesResponse>(
+        "/recommendations/weekend-hot-sales",
         { params: filters },
       );
       return response.data.data;

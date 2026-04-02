@@ -86,3 +86,33 @@ export interface RestockRecommendationsResponse {
   message: string;
   data: RestockRecommendationsData;
 }
+
+//weekend hot sales data
+
+export interface WeekendHotSalesFilters {
+  store_id: string;
+  days?: number; // default: 3650, min: 1, max: 3650
+  limit?: number; // default: 10, min: 1, max: 50
+}
+export interface WeekendHotSaleItem {
+  business_product_id: string;
+  product_name: string;
+  total_quantity: number;
+  total_revenue: number;
+  rank: number;
+  insight: string;
+}
+
+export interface WeekendHotSalesData {
+  store_id: string;
+  days: number;
+  limit: number;
+  total_items: number;
+  items: WeekendHotSaleItem[];
+}
+
+export interface WeekendHotSalesResponse {
+  success: boolean;
+  message: string;
+  data: WeekendHotSalesData;
+}

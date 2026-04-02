@@ -20,6 +20,7 @@ import { RecommendationsSection } from "./recommendations/recommendation_section
 import { useAuthBusinessId, useAuthStoreAccess } from "@/stores/authStore";
 import RegionalRecommendationsPage from "./recommendations/recommendations_chart";
 import RestockRecommendationsPage from "./restock-recommendation-page";
+import WeekendHotSalesPage from "./weekend-hot-sales-page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -223,24 +224,7 @@ function DashboardContent() {
           </RecommendationsSection> */}
 
           {/* Weekend Hot Sales */}
-          {/* <RecommendationsSection
-            title="Weekend Hot Sales"
-            description="Products performing well on weekends"
-            isLoading={weekendQuery.isLoading}
-            isEmpty={!weekendQuery.data?.products?.length}
-            emptyMessage="No weekend hot sales data found"
-          >
-            {weekendQuery.data?.products?.map((product) => (
-              <RecommendationCard
-                key={product.business_product_id}
-                productName={product.product_name}
-                value={`${product.weekend_sales.toLocaleString()} sales`}
-                insight={product.insight}
-                valueLabel="Weekend Sales"
-                variant="default"
-              />
-            ))}
-          </RecommendationsSection> */}
+          <WeekendHotSalesPage />
 
           {/* Seasonal Products */}
           {/* <RecommendationsSection
