@@ -137,8 +137,7 @@ const calculateDeadStockRisk = (
   stockHealthScore: number,
   stockoutRiskAverage: number,
 ): { score: number; level: DeadStockRiskLevel; label: string } => {
-  const rawScore = (100 - stockHealthScore) * (1 - stockoutRiskAverage / 100);
-  const score = Math.min(100, Math.max(0, rawScore));
+  const score = stockHealthScore - stockoutRiskAverage;
 
   let level: DeadStockRiskLevel;
   let label: string;
