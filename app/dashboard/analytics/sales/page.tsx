@@ -3,26 +3,16 @@
 import { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { DashboardFilters, DashboardFilterValues } from "./filters";
-import {
-  useFastMovingGoods,
-  useRegionalRecommendations,
-  useRestock,
-  useSeasonalProducts,
-  useStoreSalesForecast,
-  useStoreSalesHistory,
-  useWeekendHotSales,
-} from "./hooks/use_predictions";
+import { useStoreSalesForecast } from "./hooks/use_predictions";
 import { Spinner } from "./spinner";
 import { StoreSalesForecastChart } from "./charts/sales-forecast-chart";
-import { SalesHistoryChart } from "./charts/sales-history-chart";
-import { RecommendationsSection } from "./recommendations/recommendation_section";
-
 import { useAuthBusinessId, useAuthStoreAccess } from "@/stores/authStore";
 import RegionalRecommendationsPage from "./recommendations/recommendations_chart";
 import RestockRecommendationsPage from "./restock-recommendation-page";
 import WeekendHotSalesPage from "./weekend-hot-sales-page";
 import SeasonalProductsPage from "./seasonal-products-page";
 import FastMovingGoodsPage from "./fast-moving-goods-page";
+import StoreIntelligencePage from "./product-store-analysis";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,14 +50,14 @@ function DashboardContent() {
   );
 
   // Recommendation queries
-  const fastMovingQuery = useFastMovingGoods(
-    {
-      store_id: filters.storeId,
-      days: filters.days,
-      limit: filters.limit,
-    },
-    !!filters.storeId,
-  );
+  // const fastMovingQuery = useFastMovingGoods(
+  //   {
+  //     store_id: filters.storeId,
+  //     days: filters.days,
+  //     limit: filters.limit,
+  //   },
+  //   !!filters.storeId,
+  // );
 
   const handleFilterChange = (newFilters: DashboardFilterValues) => {
     setFilters(newFilters);
@@ -123,6 +113,9 @@ function DashboardContent() {
             ) : null}
           </div>
         </section>
+
+        {/* Recommendations Section */}
+        <StoreIntelligencePage />
 
         {/* Recommendations Section */}
         <section className="">

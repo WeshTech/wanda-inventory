@@ -179,3 +179,116 @@ export interface FastMovingGoodsResponse {
   message: string;
   data: FastMovingGoodsData;
 }
+
+//intelligenct types
+// ─── Filters ────────────────────────────────────────────────────────────────
+
+export interface StoreIntelligenceFilters {
+  store_id: string;
+  county: string;
+  constituency: string;
+  ward: string;
+  lookback_days: number;
+}
+
+// ─── Store Rank ──────────────────────────────────────────────────────────────
+
+export interface StoreRank {
+  store_id: string;
+  ward: string;
+  county: string;
+  constituency: string;
+  ward_rank: number;
+  total_stores_in_ward: number;
+  composite_score: number;
+  sale_volume_average: number;
+  revenue_gain_average: number;
+  total_transactions: number;
+  active_sale_days: number;
+  unique_products_sold: number;
+  avg_transaction_value: number;
+  supply_average: number;
+  supply_quality_score: number;
+  unique_suppliers: number;
+  po_fulfilment_rate: number;
+  stock_health_score: number;
+  out_of_stock_count: number;
+  low_stock_count: number;
+  stockout_risk_average: number;
+  days_of_inventory_average: number;
+}
+
+// ─── Product Item ─────────────────────────────────────────────────────────────
+
+export type ForecastTrend = "up" | "down" | "stable";
+
+export type StockoutRiskLevel = "low" | "medium" | "high" | "critical";
+
+export type DeadStockRiskLevel = "low" | "medium" | "high";
+
+export type SuggestedAction =
+  | "healthy"
+  | "reorder immediately"
+  | "reorder soon"
+  | "liquidate"
+  | "monitor"
+  | "discontinue";
+
+export interface StoreIntelligenceItem {
+  store_product_id: string;
+  business_product_id: string;
+  product_catalogue_id: string | null;
+  barcode: string | null;
+  sku: string | null;
+  name: string;
+  brand: string | null;
+  unit: string;
+  category_name: string;
+  selling_price: number;
+  quantity_on_hand: number;
+  min_stock_level: number;
+  instock: boolean;
+
+  // Sales rates
+  ward_daily_sale_rate: number;
+  store_daily_sale_rate: number;
+  blended_daily_sale_rate: number;
+  ward_sale_frequency: number;
+  store_sale_frequency: number;
+  sale_frequency: number;
+
+  // Forecasting
+  prophet_daily_forecast: number;
+  forecast_next_7_days_units: number;
+  forecast_next_30_days_units: number;
+  forecast_trend: ForecastTrend;
+
+  // Risk & inventory health
+  days_of_inventory: number;
+  stockout_risk_score: number;
+  stockout_risk_level: StockoutRiskLevel;
+  dead_stock_risk_score: number;
+  dead_stock_risk_level: DeadStockRiskLevel;
+
+  // Activity
+  last_sale_at: string; // ISO 8601 datetime string
+  days_since_last_sale: number;
+  suggested_action: SuggestedAction;
+}
+
+// ─── Data Payload ─────────────────────────────────────────────────────────────
+
+export interface StoreIntelligenceData {
+  filters: StoreIntelligenceFilters;
+  store_rank: StoreRank;
+  total_products: number;
+  items: StoreIntelligenceItem[];
+}
+
+// ─── Top-level API Response ───────────────────────────────────────────────────
+
+export interface StoreIntelligenceResponse {
+  success: boolean;
+  message: string;
+  data: StoreIntelligenceData;
+}

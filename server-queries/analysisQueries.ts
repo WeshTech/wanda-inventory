@@ -14,6 +14,9 @@ import {
   SeasonalFilters,
   SeasonalProductsData,
   SeasonalProductsResponse,
+  StoreIntelligenceData,
+  StoreIntelligenceFilters,
+  StoreIntelligenceResponse,
   WeekendHotSalesData,
   WeekendHotSalesFilters,
   WeekendHotSalesResponse,
@@ -121,6 +124,27 @@ export const useFastMovingGoods = (
     queryFn: async () => {
       const response = await client.get<FastMovingGoodsResponse>(
         "/recommendations/fast-moving",
+        { params: filters },
+      );
+      return response.data.data;
+    },
+    enabled: enabled && isAuthready,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+//store Intelligence
+export const useStoreIntelligence = (
+  filters: StoreIntelligenceFilters,
+  enabled = true,
+  isAuthready = true,
+): UseQueryResult<StoreIntelligenceData, Error> => {
+  return useQuery({
+    queryKey: ["store-intelligence-analytics", filters],
+    queryFn: async () => {
+      console.log(filters);
+      const response = await client.get<StoreIntelligenceResponse>(
+        "/intelligence/store",
         { params: filters },
       );
       return response.data.data;
