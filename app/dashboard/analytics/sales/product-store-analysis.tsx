@@ -501,7 +501,7 @@ export default function StoreIntelligencePage() {
         {/* Header — always visible */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Store Intelligence
+            Product Intelligence
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             Fetching store intelligence data&hellip;
