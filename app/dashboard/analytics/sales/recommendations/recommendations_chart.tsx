@@ -71,7 +71,7 @@ export default function RegionalRecommendationsPage() {
     data: response,
     isLoading: isFetching,
     isError,
-  } = useRegionalRecommendations(MOCK_FILTERS, true, isAuthLoading);
+  } = useRegionalRecommendations(MOCK_FILTERS, true, !isAuthLoading);
 
   const isLoading = isAuthLoading || isFetching;
 

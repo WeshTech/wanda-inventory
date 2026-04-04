@@ -30,6 +30,8 @@ export const useGetBusinessAnalysisTime = (businessId: string) => {
     queryFn: () => getBusinessAnalysisTimeApi(businessId),
     enabled: !!businessId,
     staleTime: 1000 * 60 * 3600 * 13,
+    //     staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
 
@@ -50,6 +52,8 @@ export const useRegionalRecommendations = (
     },
     enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
+    //     staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
 
@@ -70,6 +74,8 @@ export const useRestock = (
     },
     enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
+    //     staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
 
@@ -90,6 +96,8 @@ export const useWeekendHotSales = (
     },
     enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
+    //     staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
 
@@ -110,6 +118,8 @@ export const useSeasonalProducts = (
     },
     enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
+    // staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
 
@@ -130,6 +140,8 @@ export const useFastMovingGoods = (
     },
     enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
+    //     staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
 
@@ -151,5 +163,7 @@ export const useStoreIntelligence = (
     },
     enabled: enabled && isAuthready,
     staleTime: 1000 * 60 * 10,
+    //     staleTime: 1000 * 60 * 60 * 12,
+    // gcTime: 1000 * 60 * 60 * 12,
   });
 };
